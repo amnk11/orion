@@ -1,0 +1,3 @@
+{
+  "extends": ["@orion/typescript-config/node.json"]
+}

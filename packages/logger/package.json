@@ -1,0 +1,15 @@
+{
+  "name": "@orion/logger",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {},
+  "devDependencies": {
+    "@orion/eslint-config": "workspace:*",
+    "@orion/typescript-config": "workspace:*",
+    "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "winston": "^3.19.0",
+    "zod": "^4.3.5"
+  }
+}

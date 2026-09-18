@@ -1,0 +1,26 @@
+{
+  "name": "orion",
+  "private": true,
+  "scripts": {
+    "dev": "dotenv -- turbo dev",
+    "build": "turbo build",
+    "lint": "turbo run lint",
+    "check-types": "turbo run check-types",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "db:generate": "dotenv -- turbo db:generate",
+    "db:migrate": "dotenv -- turbo db:migrate",
+    "db:studio": "dotenv -- turbo db:studio"
+  },
+  "devDependencies": {
+    "prettier": "^3.7.4",
+    "turbo": "^2.7.2",
+    "typescript": "5.9.2"
+  },
+  "dependencies": {
+    "dotenv-cli": "^11.0.0"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  }
+}
