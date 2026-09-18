@@ -1,31 +1,13 @@
-import express from "express";
-import cors from "cors";
-import { logger } from "@orion/logger";
-import { env } from "./env";
+import http from "node:http";
+import { app } from "./app";
+import { config } from "./lib/config";
+import { logger } from "./lib/logger";
 
-export const app = express();
+const server = http.createServer(app);
 
-if (env.NODE_ENV !== "production") {
-  app.use(cors({ origin: "*" }));
-} else {
-  app.use(cors({ origin: env.CORS_ORIGIN, credentials: true }));
-}
-
-app.use(express.json({ limit: "1mb" }));
-
-app.get("/", (_req, res) => {
-  res.json({ name: "Orion API", status: "running" });
+server.listen(config.PORT, () => {
+  logger.info(`Orion API listening on port ${config.PORT} [${config.NODE_ENV}]`);
 });
 
-app.get("/health", (_req, res) => {
-  res.json({ ok: true, ts: new Date().toISOString() });
-});
-
-// TODO: mount route modules here as they are built
-// app.use("/api/v1/auth", authRouter);
-// app.use("/api/v1/facilities", facilitiesRouter);
-// app.use("/api/v1/handoffs", handoffsRouter);
-
-logger.info("Express app configured");
-
-export default app;
+export { server };
+export default server;

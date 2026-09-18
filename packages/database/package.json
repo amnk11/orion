@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
+    "dev": "dotenv -- drizzle-kit studio",
+    "typecheck": "tsc --noEmit",
     "db:generate": "dotenv -- drizzle-kit generate",
     "db:migrate": "dotenv -- drizzle-kit migrate",
     "db:studio": "dotenv -- drizzle-kit studio"
@@ -18,7 +20,7 @@
   },
   "dependencies": {
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "pg": "^8.16.3",
     "zod": "^4.3.5"
   }
