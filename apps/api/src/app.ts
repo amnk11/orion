@@ -8,6 +8,9 @@ import { errorMiddleware } from "./middleware/error.middleware";
 import { toNodeHandler } from "better-auth/node";
 import { auth } from "./lib/auth";
 import { authRouter } from "./modules/auth/auth.routes";
+import { patientsRouter } from "./modules/patients/patients.routes";
+import { facilitiesRouter } from "./modules/facilities/facilities.routes";
+import { handoffsRouter } from "./modules/handoffs/handoffs.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -41,6 +44,11 @@ export function createApp(): Express {
 
   // Orion auth routes
   app.use("/api/v1/auth", authRouter);
+
+  // Phase 3 routes
+  app.use("/api/v1/patients", patientsRouter);
+  app.use("/api/v1/facilities", facilitiesRouter);
+  app.use("/api/v1/handoffs", handoffsRouter);
 
   // 404 handler for unmatched routes
   app.use(notFoundMiddleware);

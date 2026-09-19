@@ -14,7 +14,6 @@
     "seed": "dotenv -- tsx scripts/seed.ts"
   },
   "devDependencies": {
-    "@better-auth/cli": "^1.4.21",
     "@orion/eslint-config": "workspace:*",
     "@orion/typescript-config": "workspace:*",
     "@swc/core": "^1.15.8",
@@ -33,7 +32,9 @@
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.7.5",
     "@orion/db": "workspace:*",
+    "@orion/domain": "workspace:^",
     "@orion/logger": "workspace:*",
+    "@orion/protocols": "workspace:^",
     "@orion/shared": "workspace:^",
     "better-auth": "^1.7.5",
     "cors": "^2.8.5",

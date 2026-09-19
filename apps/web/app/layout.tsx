@@ -16,6 +16,8 @@ export const metadata: Metadata = {
   description: "Care Access & Referral Coordination",
 };
 
+import { ReactQueryProvider } from "~/components/providers/query-provider";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -24,7 +26,9 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
-        {children}
+        <ReactQueryProvider>
+          {children}
+        </ReactQueryProvider>
       </body>
     </html>
   );

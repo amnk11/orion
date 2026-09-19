@@ -1,106 +1,156 @@
 "use client";
 
-import * as React from "react";
+import { useQuery } from "@tanstack/react-query";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
-import { useSession, signOut } from "~/lib/auth/auth-client";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "~/components/ui/card";
+import { formatDistanceToNow } from "date-fns";
+import { FilePlus2, Search, ArrowRight, Activity, Clock, Inbox } from "lucide-react";
 import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
 import { Badge } from "~/components/ui/badge";
-import { Spinner } from "~/components/ui/spinner";
+import { Skeleton } from "~/components/ui/skeleton";
 
-export default function OriginHomePage() {
-  const router = useRouter();
-  const { data: session, isPending } = useSession();
+interface Handoff {
+  id: string;
+  publicCode: string;
+  patientId: string;
+  destinationFacilityId: string;
+  protocolCode: string;
+  urgency: string;
+  state: string;
+  createdAt: string;
+}
 
-  const handleLogout = async () => {
-    await signOut();
-    router.push("/login");
-  };
-
-  if (isPending) {
-    return (
-      <main className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950 p-4">
-        <div className="flex items-center gap-3 text-slate-500">
-          <Spinner className="size-5" />
-          <span>Verifying session...</span>
-        </div>
-      </main>
-    );
-  }
-
-  const user = session?.user as {
-    name?: string;
-    email?: string;
-    role?: string;
-    facilityId?: string;
-  } | undefined;
+export default function MyReferralsPage() {
+  const { data, isLoading, error } = useQuery<{ ok: boolean; data: Handoff[] }>({
+    queryKey: ["handoffs"],
+    queryFn: async () => {
+      const res = await fetch("/api/v1/handoffs");
+      if (!res.ok) throw new Error("Failed to fetch");
+      return res.json();
+    },
+  });
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 flex items-center justify-center">
-      <Card className="max-w-lg w-full shadow-lg border-slate-200/80 dark:border-slate-800">
-        <CardHeader className="space-y-1">
-          <div className="flex items-center justify-between">
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">
-              Origin Portal (CHO / MO)
-            </Badge>
-            {user?.role && (
-              <Badge className="bg-emerald-600 text-white capitalize">
-                Role: {user.role}
-              </Badge>
-            )}
-          </div>
-          <CardTitle className="text-2xl pt-2">Orion Referral Network</CardTitle>
-          <CardDescription>
-            Care Access &amp; Referral Coordination — Origin Facility Workspace
-          </CardDescription>
-        </CardHeader>
+    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
+            My Referrals
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+            Track and manage outbound patient handoffs.
+          </p>
+        </div>
+        <Link href="/app/new/patient">
+          <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
+            <FilePlus2 className="size-4" />
+            New Referral
+          </Button>
+        </Link>
+      </div>
 
-        <CardContent className="space-y-4">
-          {session ? (
-            <div className="bg-slate-100 dark:bg-slate-900 rounded-lg p-4 space-y-2 border border-slate-200/60 dark:border-slate-800">
-              <h3 className="text-sm font-semibold text-slate-900 dark:text-white">
-                Active Staff Session
-              </h3>
-              <div className="text-sm grid grid-cols-[100px_1fr] gap-1 text-slate-600 dark:text-slate-300">
-                <span className="font-medium text-slate-400">Name:</span>
-                <span>{user?.name || "Staff Member"}</span>
+      {/* Filters */}
+      <div className="flex items-center gap-3">
+        <div className="relative flex-1 max-w-sm">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
+          <Input
+            placeholder="Search by ID or Patient..."
+            className="pl-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+          />
+        </div>
+      </div>
 
-                <span className="font-medium text-slate-400">Email:</span>
-                <span>{user?.email}</span>
-
-                <span className="font-medium text-slate-400">Role:</span>
-                <span className="capitalize">{user?.role}</span>
-
-                <span className="font-medium text-slate-400">Facility ID:</span>
-                <span className="font-mono text-xs truncate">{user?.facilityId || "None"}</span>
-              </div>
-            </div>
-          ) : (
-            <div className="text-center py-4 space-y-3">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
-                You are currently viewing as guest. Sign in to access your facility referral desk.
-              </p>
-              <Link href="/login">
-                <Button className="bg-blue-600 hover:bg-blue-700 text-white">Go to Login</Button>
-              </Link>
-            </div>
-          )}
-
-          <div className="text-xs text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/40 p-3 rounded border border-amber-200 dark:border-amber-900">
-            ⚠️ <strong>Phase 1 Milestone</strong>: Database schema, migrations, Better Auth authentication, and role-based redirects are active. Referral form and Handoff creation will be introduced in Phase 2 &amp; 3.
-          </div>
-        </CardContent>
-
-        {session && (
-          <CardFooter className="flex justify-between border-t border-slate-100 dark:border-slate-800 pt-4">
-            <span className="text-xs text-slate-400">Authenticated with Better Auth</span>
-            <Button variant="outline" size="sm" onClick={handleLogout}>
-              Logout
-            </Button>
-          </CardFooter>
-        )}
-      </Card>
-    </main>
+      {/* Table */}
+      <div className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm text-left">
+            <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-medium border-b border-slate-200 dark:border-slate-800">
+              <tr>
+                <th className="px-6 py-4">ID</th>
+                <th className="px-6 py-4">Protocol</th>
+                <th className="px-6 py-4">Urgency</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Created</th>
+                <th className="px-6 py-4 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100 dark:divide-slate-800/60">
+              {isLoading ? (
+                Array.from({ length: 5 }).map((_, i) => (
+                  <tr key={i}>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-16" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-5 w-16 rounded-full" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-5 w-20 rounded-full" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-4 w-24" /></td>
+                    <td className="px-6 py-4"><Skeleton className="h-8 w-8 ml-auto" /></td>
+                  </tr>
+                ))
+              ) : error ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-8 text-center text-red-500">
+                    Failed to load referrals. Please try again.
+                  </td>
+                </tr>
+              ) : !data?.data || data.data.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
+                    <div className="flex flex-col items-center justify-center space-y-3">
+                      <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                        <Inbox className="size-6 text-slate-400" />
+                      </div>
+                      <p>No referrals found</p>
+                      <Link href="/app/new/patient">
+                        <Button variant="link" className="text-blue-600 h-auto p-0">
+                          Create your first handoff →
+                        </Button>
+                      </Link>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                data.data.map((handoff) => (
+                  <tr key={handoff.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
+                    <td className="px-6 py-4 font-mono text-slate-900 dark:text-slate-100 font-medium">
+                      {handoff.publicCode}
+                    </td>
+                    <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
+                      <div className="flex items-center gap-2">
+                        <Activity className="size-4 text-slate-400" />
+                        {handoff.protocolCode === "anc_danger" ? "ANC Danger Signs" : "Adult General"}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4">
+                      {handoff.urgency === "red" && <Badge className="bg-red-500 hover:bg-red-600 text-white border-transparent">Red</Badge>}
+                      {handoff.urgency === "orange" && <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-transparent">Orange</Badge>}
+                      {handoff.urgency === "green" && <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-transparent">Green</Badge>}
+                    </td>
+                    <td className="px-6 py-4">
+                      <Badge variant="outline" className="capitalize text-slate-600 dark:text-slate-300">
+                        {handoff.state.replace("_", " ")}
+                      </Badge>
+                    </td>
+                    <td className="px-6 py-4 text-slate-500 dark:text-slate-400 tabular-nums">
+                      <div className="flex items-center gap-2">
+                        <Clock className="size-3.5" />
+                        {formatDistanceToNow(new Date(handoff.createdAt), { addSuffix: true })}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <Link href={`/app/handoff/${handoff.id}`}>
+                        <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                          <ArrowRight className="size-4" />
+                        </Button>
+                      </Link>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
   );
 }
