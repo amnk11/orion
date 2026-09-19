@@ -7,23 +7,31 @@ import {
   uuid,
   index,
 } from "drizzle-orm/pg-core";
+import { facilities } from "./facilities";
 
-export const users = pgTable("users", {
-  id: uuid("id")
-    .default(sql`pg_catalog.gen_random_uuid()`)
-    .primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  emailVerified: boolean("email_verified").default(false).notNull(),
-  image: text("image"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at")
-    .defaultNow()
-    .$onUpdate(() => /* @__PURE__ */ new Date())
-    .notNull(),
-  role: text("role").default("origin").notNull(),
-  facilityId: text("facility_id"),
-});
+export const users = pgTable(
+  "users",
+  {
+    id: uuid("id")
+      .default(sql`pg_catalog.gen_random_uuid()`)
+      .primaryKey(),
+    name: text("name").notNull(),
+    email: text("email").notNull().unique(),
+    emailVerified: boolean("email_verified").default(false).notNull(),
+    image: text("image"),
+    createdAt: timestamp("created_at").defaultNow().notNull(),
+    updatedAt: timestamp("updated_at")
+      .defaultNow()
+      .$onUpdate(() => /* @__PURE__ */ new Date())
+      .notNull(),
+    role: text("role").default("origin").notNull(), // origin | destination | supervisor | admin
+    designation: text("designation"), // e.g. CHO | ANM | MO | Referral Desk
+    // Proper UUID FK to facilities. Nullable: supervisors/admins are org-scoped.
+    // Better Auth maps the camelCase `facilityId` additional field to this column.
+    facilityId: uuid("facility_id").references(() => facilities.id),
+  },
+  (table) => [index("idx_users_facility_id").on(table.facilityId)]
+);
 
 export const sessions = pgTable(
   "sessions",

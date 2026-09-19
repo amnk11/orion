@@ -1,5 +1,5 @@
-import { db, facilities, capabilities, eq, desc } from "@orion/db";
-import type { Facility, Capability } from "@orion/db";
+import { db, facilities, capabilitySnapshots, eq, desc } from "@orion/db";
+import type { Facility, CapabilitySnapshot } from "@orion/db";
 
 export class FacilitiesService {
   /**
@@ -26,18 +26,18 @@ export class FacilitiesService {
    * Retrieves capabilities for a facility.
    * Gets the latest attested capability for each service.
    */
-  async getCapabilitiesByFacility(facilityId: string): Promise<Capability[]> {
+  async getCapabilitiesByFacility(facilityId: string): Promise<CapabilitySnapshot[]> {
     // In PostgreSQL, to get the "latest" per serviceCode without complex subqueries in Drizzle,
     // we can select all for the facility, order by attestedAt desc, and filter in memory,
     // or use a generic select and reduce. Since capabilities count per facility is small,
     // memory reduction is efficient and clean.
     const allCaps = await db
       .select()
-      .from(capabilities)
-      .where(eq(capabilities.facilityId, facilityId))
-      .orderBy(desc(capabilities.attestedAt));
+      .from(capabilitySnapshots)
+      .where(eq(capabilitySnapshots.facilityId, facilityId))
+      .orderBy(desc(capabilitySnapshots.attestedAt));
 
-    const latestPerService = new Map<string, Capability>();
+    const latestPerService = new Map<string, CapabilitySnapshot>();
     for (const cap of allCaps) {
       if (!latestPerService.has(cap.serviceCode)) {
         latestPerService.set(cap.serviceCode, cap);

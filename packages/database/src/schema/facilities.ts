@@ -7,7 +7,8 @@ export const facilities = pgTable(
     id: uuid("id").primaryKey().defaultRandom(),
     orgId: uuid("org_id").references(() => organizations.id),
     name: text("name").notNull(),
-    tier: text("tier").notNull(), // AAM | sub_centre | phc | chc | dh
+    type: text("type"), // facility classification, e.g. aam | phc | chc | rh | sdh | dh
+    tier: text("tier").notNull(), // care level/tier: AAM | sub_centre | phc | chc | rh | sdh | dh | medical_college
     isFru: boolean("is_fru").notNull().default(false),
     block: text("block"),
     district: text("district"),

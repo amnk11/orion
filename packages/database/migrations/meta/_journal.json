@@ -8,6 +8,20 @@
       "when": 1789758632976,
       "tag": "0000_steep_whiplash",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1789833259699,
+      "tag": "0001_target_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1789833400000,
+      "tag": "0002_rename_capabilities",
+      "breakpoints": true
     }
   ]
 }

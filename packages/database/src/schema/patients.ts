@@ -1,4 +1,4 @@
-import { pgTable, uuid, text, integer, timestamp, index } from "drizzle-orm/pg-core";
+import { pgTable, uuid, text, integer, boolean, timestamp, index } from "drizzle-orm/pg-core";
 import { facilities } from "./facilities";
 
 export const patients = pgTable(
@@ -8,7 +8,8 @@ export const patients = pgTable(
     displayName: text("display_name").notNull(),
     age: integer("age"),
     sex: text("sex"), // male | female | other
-    abhaMock: text("abha_mock"), // Synthetic demo placeholder only
+    abhaMock: text("abha_mock"), // Synthetic demo placeholder only — never a real ABHA id
+    isSynthetic: boolean("is_synthetic").notNull().default(true),
     createdByFacilityId: uuid("created_by_facility_id").references(() => facilities.id),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },

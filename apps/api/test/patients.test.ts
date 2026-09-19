@@ -4,12 +4,12 @@ import { app } from "../src/app";
 
 describe("Phase 3 Patients API", () => {
   const originCredentials = {
-    email: "cho.rampur@orion.local",
+    email: "cho.wadgaon@orion.local",
     password: "OrionDemoPass123!",
   };
 
   const destinationCredentials = {
-    email: "desk.chcpurnia@orion.local",
+    email: "desk.rajgurunagar@orion.local",
     password: "OrionDemoPass123!",
   };
 
