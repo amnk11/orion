@@ -19,9 +19,16 @@ const TRANSITIONS: StateTransitions = {
     sent: "handoff_sent",
   },
   sent: {
+    acknowledged: "handoff_acknowledged",
+  },
+  acknowledged: {
     accepted: "handoff_accepted",
     cannot_accept: "handoff_cannot_accept",
     redirected: "handoff_redirected",
+  },
+  cannot_accept: {
+    redirected: "handoff_redirected",
+    closed: "handoff_closed",
   },
   redirected: {
     sent: "handoff_sent",
@@ -31,15 +38,18 @@ const TRANSITIONS: StateTransitions = {
     no_show: "patient_no_show",
   },
   arrived: {
-    return_noted: "return_note_added",
+    in_care: "care_started",
   },
-  return_noted: {
-    closed: "handoff_closed",
+  in_care: {
+    outcome_recorded: "outcome_recorded",
+  },
+  outcome_recorded: {
+    follow_up_pending: "follow_up_created",
+  },
+  follow_up_pending: {
+    closed: "episode_closed",
   },
   no_show: {
-    closed: "handoff_closed",
-  },
-  cannot_accept: {
     closed: "handoff_closed",
   },
   closed: {}, // terminal

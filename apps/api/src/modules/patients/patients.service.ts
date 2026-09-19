@@ -1,4 +1,4 @@
-import { db, patients, eq, desc } from "@orion/db";
+import { db, patients, handoffs, eq, desc, and, or } from "@orion/db";
 import type { NewPatient, Patient } from "@orion/db";
 
 export class PatientsService {
@@ -36,11 +36,13 @@ export class PatientsService {
   }
 
   /**
-   * Retrieves a specific patient, ensuring they belong to the requesting facility.
+   * Retrieves a specific patient, ensuring they belong to the requesting facility
+   * or the facility is a party to a handoff involving the patient.
    */
   async getPatientByIdAndFacility(
     patientId: string,
-    facilityId: string
+    facilityId: string,
+    userRole: string = "origin"
   ): Promise<Patient | null> {
     const [patient] = await db
       .select()
@@ -48,11 +50,40 @@ export class PatientsService {
       .where(eq(patients.id, patientId))
       .limit(1);
 
-    if (!patient || patient.createdByFacilityId !== facilityId) {
-      return null;
+    if (!patient) return null;
+
+    if (userRole === "admin" || userRole === "supervisor") {
+      return patient; // Admins and supervisors can see patients
     }
 
-    return patient;
+    if (patient.createdByFacilityId === facilityId) {
+      return patient;
+    }
+
+    // Check if the facility is party to any handoff for this patient
+    // Note: We'd typically import handoffs here, but since it's a Drizzle model,
+    // we can use it. Let's make sure it's imported at the top of the file.
+    // I will dynamically add the handoffs import to this file later if not present.
+    const [participant] = await db
+      .select({ id: handoffs.id })
+      .from(handoffs)
+      .where(
+        and(
+          eq(handoffs.patientId, patientId),
+          or(
+            eq(handoffs.originFacilityId, facilityId),
+            eq(handoffs.destinationFacilityId, facilityId),
+            eq(handoffs.currentDestinationFacilityId, facilityId)
+          )
+        )
+      )
+      .limit(1);
+
+    if (participant) {
+      return patient;
+    }
+
+    return null;
   }
 }
 

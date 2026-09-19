@@ -49,7 +49,7 @@ export default function LoginPage() {
   const handleRoleRedirect = (role?: string) => {
     switch (role) {
       case "destination":
-        router.push("/inbox");
+        router.push("/destination");
         break;
       case "supervisor":
         router.push("/supervisor");

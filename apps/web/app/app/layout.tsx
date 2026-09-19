@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "~/lib/auth/auth-client";
+import { signOut } from "~/lib/auth/auth-client";
+import { useSessionUser } from "~/hooks/use-session-user";
 import Link from "next/link";
 import { FilePlus2, Inbox, LogOut, Loader2, Menu, X } from "lucide-react";
 
@@ -12,34 +13,33 @@ export default function OriginDashboardLayout({
   children: React.ReactNode;
 }) {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { user, isPending, role, isOrigin, isDestination, isSupervisor } = useSessionUser();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     if (!isPending) {
-      if (!session || !session.user) {
+      if (!user) {
         router.replace("/login");
         return;
       }
       
-      const role = (session.user as any).role;
-      if (role === "destination") {
+      if (isDestination) {
         router.replace("/inbox");
-      } else if (role === "supervisor") {
+      } else if (isSupervisor) {
         router.replace("/supervisor");
-      } else if (role !== "origin") {
+      } else if (!isOrigin) {
         router.replace("/login");
       }
     }
-  }, [session, isPending, router]);
+  }, [user, isPending, router, isOrigin, isDestination, isSupervisor]);
 
   // Close mobile menu on route change
   useEffect(() => {
     setIsMobileMenuOpen(false);
   }, []);
 
-  if (isPending || !session?.user) {
+  if (isPending || !user) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-950">
         <Loader2 className="size-6 animate-spin text-slate-400" />
@@ -108,10 +108,10 @@ export default function OriginDashboardLayout({
         </nav>
         <div className="p-4 border-t border-slate-200 dark:border-slate-800">
           <div className="text-sm font-medium text-slate-900 dark:text-white truncate">
-            {session.user.name}
+            {user.name}
           </div>
           <div className="text-xs text-slate-500 dark:text-slate-400 truncate mb-4">
-            {session.user.email}
+            {user.email}
           </div>
           <button
             onClick={handleLogout}

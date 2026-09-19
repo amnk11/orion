@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  transpilePackages: ["@orion/protocols", "@orion/domain", "@orion/shared"],
   async rewrites() {
     return [
       {

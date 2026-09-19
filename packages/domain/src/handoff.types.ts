@@ -1,12 +1,15 @@
 export const HANDOFF_STATES = [
   "draft",
   "sent",
+  "acknowledged",
   "accepted",
   "cannot_accept",
   "redirected",
   "arrived",
   "no_show",
-  "return_noted",
+  "in_care",
+  "outcome_recorded",
+  "follow_up_pending",
   "closed",
 ] as const;
 
@@ -24,13 +27,17 @@ export const EVENT_TYPES = [
   "handoff_created",
   "handoff_sent",
   "handoff_viewed",
+  "handoff_acknowledged",
   "handoff_accepted",
   "handoff_cannot_accept",
   "handoff_redirected",
   "patient_arrived",
   "patient_no_show",
-  "return_note_added",
+  "care_started",
+  "outcome_recorded",
+  "follow_up_created",
   "handoff_closed",
+  "episode_closed",
 ] as const;
 
 export type EventType = typeof EVENT_TYPES[number];

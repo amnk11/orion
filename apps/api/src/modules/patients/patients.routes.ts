@@ -84,7 +84,7 @@ patientsRouter.get("/:id", async (req, res, next) => {
     }
 
     const { id } = req.params;
-    const patient = await patientsService.getPatientByIdAndFacility(id, facilityId);
+    const patient = await patientsService.getPatientByIdAndFacility(id, facilityId, req.role);
 
     if (!patient) {
       return res.status(404).json({

@@ -18,6 +18,8 @@ interface Handoff {
   urgency: string;
   state: string;
   createdAt: string;
+  patientName?: string;
+  packetJson?: any;
 }
 
 export default function MyReferralsPage() {
@@ -67,7 +69,7 @@ export default function MyReferralsPage() {
           <table className="w-full text-sm text-left">
             <thead className="bg-slate-50 dark:bg-slate-800/50 text-slate-500 dark:text-slate-400 text-xs uppercase tracking-wider font-medium border-b border-slate-200 dark:border-slate-800">
               <tr>
-                <th className="px-6 py-4">ID</th>
+                <th className="px-6 py-4">ID & Patient</th>
                 <th className="px-6 py-4">Protocol</th>
                 <th className="px-6 py-4">Urgency</th>
                 <th className="px-6 py-4">Status</th>
@@ -112,8 +114,13 @@ export default function MyReferralsPage() {
               ) : (
                 data.data.map((handoff) => (
                   <tr key={handoff.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors group">
-                    <td className="px-6 py-4 font-mono text-slate-900 dark:text-slate-100 font-medium">
-                      {handoff.publicCode}
+                    <td className="px-6 py-4">
+                      <div className="flex flex-col gap-1">
+                        <span className="font-mono text-sm text-slate-500">{handoff.publicCode}</span>
+                        <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
+                          {handoff.patientName || handoff.packetJson?.demographics?.name || "Synthetic Patient"}
+                        </span>
+                      </div>
                     </td>
                     <td className="px-6 py-4 text-slate-600 dark:text-slate-300">
                       <div className="flex items-center gap-2">

@@ -3,7 +3,8 @@
 import * as React from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useSession, signOut } from "~/lib/auth/auth-client";
+import { signOut } from "~/lib/auth/auth-client";
+import { useSessionUser } from "~/hooks/use-session-user";
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "~/components/ui/card";
 import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
@@ -11,7 +12,19 @@ import { Spinner } from "~/components/ui/spinner";
 
 export default function SupervisorDashboardPage() {
   const router = useRouter();
-  const { data: session, isPending } = useSession();
+  const { user, isPending, session, isOrigin, isDestination, isSupervisor } = useSessionUser();
+
+  React.useEffect(() => {
+    if (!isPending) {
+      if (!user) {
+        router.replace("/login");
+        return;
+      }
+      if (isOrigin) router.replace("/app");
+      else if (isDestination) router.replace("/inbox");
+      else if (!isSupervisor) router.replace("/login");
+    }
+  }, [user, isPending, router, isOrigin, isDestination, isSupervisor]);
 
   const handleLogout = async () => {
     await signOut();
@@ -28,13 +41,6 @@ export default function SupervisorDashboardPage() {
       </main>
     );
   }
-
-  const user = session?.user as {
-    name?: string;
-    email?: string;
-    role?: string;
-    facilityId?: string;
-  } | undefined;
 
   return (
     <main className="min-h-screen bg-slate-50 dark:bg-slate-950 p-6 flex items-center justify-center">

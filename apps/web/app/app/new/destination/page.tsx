@@ -47,7 +47,7 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
               {facility.name}
             </CardTitle>
             <CardDescription className="flex items-center gap-1">
-              <MapPin className="size-3" /> {facility.type.toUpperCase()}
+              <MapPin className="size-3" /> {facility.type?.toUpperCase() || "UNKNOWN"}
             </CardDescription>
           </div>
           {selected && <CheckCircle2 className="size-5 text-blue-600" />}

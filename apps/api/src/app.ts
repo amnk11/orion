@@ -11,6 +11,7 @@ import { authRouter } from "./modules/auth/auth.routes";
 import { patientsRouter } from "./modules/patients/patients.routes";
 import { facilitiesRouter } from "./modules/facilities/facilities.routes";
 import { handoffsRouter } from "./modules/handoffs/handoffs.routes";
+import { episodesRouter } from "./modules/episodes/episodes.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -49,6 +50,7 @@ export function createApp(): Express {
   app.use("/api/v1/patients", patientsRouter);
   app.use("/api/v1/facilities", facilitiesRouter);
   app.use("/api/v1/handoffs", handoffsRouter);
+  app.use("/api/v1/episodes", episodesRouter);
 
   // 404 handler for unmatched routes
   app.use(notFoundMiddleware);

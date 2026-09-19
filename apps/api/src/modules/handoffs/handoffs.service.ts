@@ -1,4 +1,4 @@
-import { db, handoffs, handoffEvents, outboxJobs, eq, desc, and, or } from "@orion/db";
+import { db, handoffs, handoffEvents, outboxJobs, careEpisodes, assessments, patients, eq, desc, and, or } from "@orion/db";
 import type { Handoff, HandoffEvent } from "@orion/db";
 import { evaluateProtocol, ANC_DANGER_PROTOCOL, ADULT_GENERAL_PROTOCOL } from "@orion/protocols";
 import { assertTransition } from "@orion/domain";
@@ -14,12 +14,9 @@ export class HandoffsService {
     return null;
   }
 
-  /**
-   * Generates a 6-character public code (e.g. HF-7K2P)
-   */
-  private generatePublicCode(): string {
+  private generatePublicCode(prefix = "HF"): string {
     const chars = "23456789ABCDEFGHJKLMNPQRSTUVWXYZ"; // Unambiguous characters
-    let result = "HF-";
+    let result = `${prefix}-`;
     for (let i = 0; i < 4; i++) {
       result += chars.charAt(Math.floor(Math.random() * chars.length));
     }
@@ -107,7 +104,10 @@ export class HandoffsService {
 
     const triageResult = evaluateProtocol(protocol, packetJson);
     if (!triageResult.can_submit) {
-      throw new Error("INCOMPLETE_PROTOCOL");
+      throw {
+        message: "INCOMPLETE_PROTOCOL",
+        missingFields: triageResult.completeness.missing,
+      };
     }
 
     const urgency = triageResult.urgency;
@@ -118,15 +118,49 @@ export class HandoffsService {
 
     while (attempts < MAX_ATTEMPTS) {
       attempts++;
-      const publicCode = this.generatePublicCode();
+      const handoffPublicCode = this.generatePublicCode("HF");
+      const episodePublicCode = this.generatePublicCode("CE");
 
       try {
         const newHandoff = await db.transaction(async (tx) => {
-          // Insert Handoff
+          // 3a. Insert Care Episode
+          const [insertedEpisode] = await tx
+            .insert(careEpisodes)
+            .values({
+              publicCode: episodePublicCode,
+              patientId,
+              openedByFacilityId: originFacilityId,
+              status: "open",
+            })
+            .returning();
+
+          if (!insertedEpisode) {
+            throw new Error("Failed to insert care episode");
+          }
+
+          // 3b. Insert Assessment
+          const [insertedAssessment] = await tx
+            .insert(assessments)
+            .values({
+              episodeId: insertedEpisode.id,
+              protocolCode,
+              answersJson: packetJson,
+              triageJson: triageResult,
+              assessedBy: userId,
+            })
+            .returning();
+
+          if (!insertedAssessment) {
+            throw new Error("Failed to insert assessment");
+          }
+
+          // 3c. Insert Handoff
           const [insertedHandoff] = await tx
             .insert(handoffs)
             .values({
-              publicCode,
+              publicCode: handoffPublicCode,
+              episodeId: insertedEpisode.id,
+              assessmentId: insertedAssessment.id,
               patientId,
               originFacilityId,
               destinationFacilityId,
@@ -134,12 +168,12 @@ export class HandoffsService {
               protocolCode,
               urgency,
               state: "sent",
-              packetJson,
+              packetJson, // kept for backward compatibility as per schema
               createdBy: userId,
               idempotencyKey,
             })
             .returning();
-            
+
           if (!insertedHandoff) {
             throw new Error("Failed to insert handoff");
           }
@@ -164,7 +198,7 @@ export class HandoffsService {
               jobType: "sms_notification",
               payload: {
                 handoffId: insertedHandoff.id,
-                message: `New ${urgency} referral ${publicCode} from your origin facility.`,
+                message: `New ${urgency} referral ${handoffPublicCode} from your origin facility.`,
               },
             });
 
@@ -205,10 +239,42 @@ export class HandoffsService {
   /**
    * Get Handoffs for a facility (Origin view)
    */
-  async getHandoffsByFacility(facilityId: string): Promise<Handoff[]> {
-    return db
-      .select()
+  async getHandoffsByFacility(facilityId: string, role?: string): Promise<Handoff[]> {
+    if (role === "inbound") {
+      const rows = await db
+        .select({
+          handoff: handoffs,
+          patientName: patients.displayName,
+        })
+        .from(handoffs)
+        .leftJoin(patients, eq(handoffs.patientId, patients.id))
+        .where(
+          and(
+            eq(handoffs.currentDestinationFacilityId, facilityId),
+            or(
+              eq(handoffs.state, "sent"),
+              eq(handoffs.state, "acknowledged"),
+              eq(handoffs.state, "accepted"),
+              eq(handoffs.state, "cannot_accept"),
+              eq(handoffs.state, "redirected"),
+              eq(handoffs.state, "arrived"),
+              eq(handoffs.state, "in_care"),
+              eq(handoffs.state, "outcome_recorded"),
+              eq(handoffs.state, "no_show")
+            )
+          )
+        )
+        .orderBy(desc(handoffs.createdAt));
+      return rows.map((r) => ({ ...r.handoff, patientName: r.patientName }));
+    }
+
+    const rows = await db
+      .select({
+        handoff: handoffs,
+        patientName: patients.displayName,
+      })
       .from(handoffs)
+      .leftJoin(patients, eq(handoffs.patientId, patients.id))
       .where(
         or(
           eq(handoffs.originFacilityId, facilityId),
@@ -216,27 +282,20 @@ export class HandoffsService {
         )
       )
       .orderBy(desc(handoffs.createdAt));
+      
+    return rows.map((r) => ({ ...r.handoff, patientName: r.patientName }));
   }
 
   /**
    * Get Handoff Detail with Events
    */
   async getHandoffDetail(
-    handoffId: string,
-    facilityId: string
+    handoffId: string
   ): Promise<{ handoff: Handoff; events: HandoffEvent[] } | null> {
     const [handoff] = await db
       .select()
       .from(handoffs)
-      .where(
-        and(
-          eq(handoffs.id, handoffId),
-          or(
-            eq(handoffs.originFacilityId, facilityId),
-            eq(handoffs.currentDestinationFacilityId, facilityId)
-          )
-        )
-      )
+      .where(eq(handoffs.id, handoffId))
       .limit(1);
 
     if (!handoff) return null;

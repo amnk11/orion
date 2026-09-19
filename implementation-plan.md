@@ -597,4 +597,3 @@ Child/NCD protocols · mr/hi i18n · diagnostics lifecycle · medicine visibilit
 
 ---
 
-**No code was written or modified.** Two items need your decision before I start: (1) `@orion/config` deletion, (2) the landing page — keep-and-de-hype vs replace with a minimal entry page. On your approval I'll begin with the Exact First Task (Phase 0 → Phase 1).
