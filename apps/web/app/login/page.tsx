@@ -56,7 +56,7 @@ export default function LoginPage() {
         break;
       case "origin":
       default:
-        router.push("/");
+        router.push("/app");
         break;
     }
   };
