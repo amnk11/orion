@@ -11,8 +11,8 @@ export function StatusBadge({ state, className }: StatusBadgeProps) {
   const normalizedState = state.toLowerCase();
   
   const isPositive = ["accepted", "arrived", "in_care", "outcome_recorded", "completed"].includes(normalizedState);
-  const isWarning = ["draft", "sent", "acknowledged", "follow_up_pending", "redirected"].includes(normalizedState);
-  const isDestructive = ["cannot_accept", "no_show", "rejected", "cancelled"].includes(normalizedState);
+  const isWarning = ["draft", "sent", "acknowledged", "follow_up_pending", "redirected", "offline_queue"].includes(normalizedState);
+  const isDestructive = ["cannot_accept", "no_show", "rejected", "cancelled", "error"].includes(normalizedState);
   const isTerminal = ["closed"].includes(normalizedState);
 
   let variant: "status-success" | "status-warning" | "status-danger" | "status-neutral" = "status-neutral";

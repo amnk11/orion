@@ -39,6 +39,9 @@ export class HandoffsService {
    * Creates a handoff transactionally. Handles idempotency.
    */
   async createHandoff(params: {
+    id?: string;
+    episodeId?: string;
+    assessmentId?: string;
     patientId: string;
     protocolCode: string;
     packetJson: Record<string, unknown>;
@@ -48,6 +51,9 @@ export class HandoffsService {
     idempotencyKey: string;
   }): Promise<{ handoff: Handoff; isDuplicate: boolean }> {
     const {
+      id,
+      episodeId,
+      assessmentId,
       patientId,
       protocolCode,
       packetJson,
@@ -127,6 +133,7 @@ export class HandoffsService {
           const [insertedEpisode] = await tx
             .insert(careEpisodes)
             .values({
+              ...(episodeId ? { id: episodeId } : {}),
               publicCode: episodePublicCode,
               patientId,
               openedByFacilityId: originFacilityId,
@@ -142,6 +149,7 @@ export class HandoffsService {
           const [insertedAssessment] = await tx
             .insert(assessments)
             .values({
+              ...(assessmentId ? { id: assessmentId } : {}),
               episodeId: insertedEpisode.id,
               protocolCode,
               answersJson: packetJson,
@@ -158,6 +166,7 @@ export class HandoffsService {
           const [insertedHandoff] = await tx
             .insert(handoffs)
             .values({
+              ...(id ? { id } : {}),
               publicCode: handoffPublicCode,
               episodeId: insertedEpisode.id,
               assessmentId: insertedAssessment.id,

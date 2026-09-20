@@ -7,9 +7,11 @@ export const patientsRouter = Router();
 
 // Zod schema for patient creation
 const createPatientSchema = z.object({
+  id: z.string().uuid().optional(),
   displayName: z.string().min(1, "Name is required"),
   age: z.number().int().min(0).max(150).optional(),
   sex: z.enum(["male", "female", "other"]).optional(),
+  idempotencyKey: z.string().min(1).optional(),
 });
 
 // All routes require authentication
@@ -62,9 +64,15 @@ patientsRouter.post("/", requireRole("origin"), async (req, res, next) => {
       });
     }
 
-    const patient = await patientsService.createPatient(facilityId, parseResult.data);
-    res.status(201).json({ ok: true, data: patient });
+    const { patient, isDuplicate } = await patientsService.createPatient(facilityId, parseResult.data);
+    res.status(isDuplicate ? 200 : 201).json({ ok: true, data: patient });
   } catch (error) {
+    if ((error as any).message === "IDEMPOTENCY_CONFLICT") {
+      return res.status(409).json({
+        ok: false,
+        error: { code: "CONFLICT", message: "Idempotency key reused with different payload" },
+      });
+    }
     next(error);
   }
 });

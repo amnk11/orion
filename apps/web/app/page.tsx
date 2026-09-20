@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { 
   ArrowRight, 
   Activity, 
@@ -19,21 +20,23 @@ export default function LandingPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
       {/* ─── HEADER ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
-        <div className="max-w-6xl mx-auto px-6 h-16 flex items-center justify-between">
+        <div className="max-w-6xl mx-auto px-6 h-20 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-2">
-              <Activity className="size-5 text-primary" />
+              {/* <Activity className="size-5 text-primary" />
               <span className="font-bold tracking-tight text-foreground">
-                ORION
-              </span>
+                Sahay
+              </span> */}
+              <Image src="/sahay-small.svg" alt="logo" height={36} width={120}/>
+              
             </div>
-            <div className="h-4 w-px bg-border hidden md:block" />
-            <p className="text-xs text-muted-foreground hidden md:block font-medium">
+            {/* <div className="h-4 w-px bg-border hidden md:block" /> */}
+            {/* <p className="text-xs text-muted-foreground hidden md:block font-medium">
               Clinical Referral Coordination
-            </p>
+            </p> */}
           </div>
 
-          <nav className="hidden md:flex items-center gap-6 text-sm font-medium text-muted-foreground">
+          <nav className="hidden md:flex items-center gap-8 text-base font-medium text-muted-foreground">
             <a href="#problem" className="hover:text-foreground transition-colors">The Problem</a>
             <a href="#workflow" className="hover:text-foreground transition-colors">Workflow</a>
             <a href="#capabilities" className="hover:text-foreground transition-colors">Capabilities</a>
@@ -42,10 +45,10 @@ export default function LandingPage() {
 
           <Link
             href="/login"
-            className="inline-flex items-center justify-center gap-2 px-4 py-2 text-sm font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm transition-colors"
+            className="inline-flex items-center justify-center gap-2 px-5 py-2.5 text-base font-medium bg-primary text-primary-foreground hover:bg-primary/90 rounded-sm transition-colors"
           >
             Staff Login
-            <ArrowRight className="size-4" />
+            <ArrowRight className="size-5" />
           </Link>
         </div>
       </header>
@@ -65,7 +68,7 @@ export default function LandingPage() {
               </h1>
               
               <p className="text-lg md:text-xl text-muted-foreground leading-relaxed max-w-2xl">
-                Orion connects primary care facilities with district hospitals to ensure timely, safe, and transparent patient handoffs. No blind dispatching, no lost clinical context.
+                Sahay connects primary care facilities with district hospitals to ensure timely, safe, and transparent patient handoffs. No blind dispatching, no lost clinical context.
               </p>
               
               <div className="pt-4 flex flex-wrap gap-4">
@@ -148,7 +151,7 @@ export default function LandingPage() {
                     Destination facilities receive patients without prior clinical context or advance notification. Patients may arrive at facilities lacking the required specialist capacity, resulting in delays, redirection, and loss of critical time.
                   </p>
                   <p>
-                    Orion replaces informal, disconnected referral mechanisms with an explicit, trackable state machine, ensuring every patient transition is accounted for.
+                    Sahay replaces informal, disconnected referral mechanisms with an explicit, trackable state machine, ensuring every patient transition is accounted for.
                   </p>
                 </div>
               </div>
@@ -190,7 +193,7 @@ export default function LandingPage() {
           <div className="max-w-6xl mx-auto px-6">
             <div className="max-w-2xl mb-16">
               <h2 className="text-3xl font-semibold tracking-tight text-foreground mb-4">
-                How Orion Works
+                How Sahay Works
               </h2>
               <p className="text-muted-foreground text-lg">
                 A structured, chronological approach to patient handoffs.
@@ -256,11 +259,11 @@ export default function LandingPage() {
               Designed with reference to established standards.
             </h2>
             <p className="text-muted-foreground leading-relaxed mb-8">
-              Orion's data structures and workflows are designed with reference to clinical guidelines including WHO IMNCI and the Indian Public Health Standards (IPHS).
+              Sahay's data structures and workflows are designed with reference to clinical guidelines including WHO IMNCI and the Indian Public Health Standards (IPHS).
               Architecture accommodates future interoperability with ABDM and FHIR standards.
             </p>
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded border border-border bg-surface-inset text-xs text-muted-foreground font-mono">
-              Note: Orion is a technical coordination tool, not a substitute for clinical judgment.
+              Note: Sahay is a technical coordination tool, not a substitute for clinical judgment.
             </div>
           </div>
         </section>
@@ -312,10 +315,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto px-6 flex flex-col md:flex-row justify-between items-start gap-8">
           <div className="space-y-4">
             <div className="flex items-center gap-2">
-              <Activity className="size-5 text-primary" />
-              <span className="font-bold tracking-tight text-foreground">
-                ORION
-              </span>
+              <Image src="/sahay-small.svg" alt="Sahay Logo" height={36} width={120} />
             </div>
             <p className="text-sm text-muted-foreground max-w-sm">
               Clinical referral coordination infrastructure for public health systems.
@@ -342,7 +342,7 @@ export default function LandingPage() {
         </div>
         <div className="max-w-6xl mx-auto px-6 mt-12 pt-8 border-t border-border flex flex-col md:flex-row justify-between items-center gap-4">
           <p className="text-xs text-muted-foreground">
-            &copy; {new Date().getFullYear()} Orion Health Systems.
+            &copy; {new Date().getFullYear()} Sahay Health Systems.
           </p>
           <p className="text-xs text-muted-foreground font-mono">
             Clinical Operations Platform

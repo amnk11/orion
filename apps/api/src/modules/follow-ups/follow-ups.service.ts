@@ -26,7 +26,7 @@ export class FollowUpsService {
     }));
   }
 
-  async completeFollowUp(followUpId: string, facilityId: string, userId: string) {
+  async completeFollowUp(followUpId: string, facilityId: string, userId: string, clientEventId?: string): Promise<{ followUp: any; isDuplicate: boolean }> {
     const existingRows = await db
       .select()
       .from(followUps)
@@ -38,7 +38,15 @@ export class FollowUpsService {
     }
 
     const fup = existingRows[0];
-    if (!fup || fup.status !== "pending") {
+
+    if (fup!.status === "completed") {
+      if (clientEventId && fup!.completedClientEventId === clientEventId) {
+        return { followUp: fup, isDuplicate: true };
+      }
+      throw new Error("INVALID_STATE");
+    }
+
+    if (fup!.status !== "pending") {
       throw new Error("INVALID_STATE");
     }
 
@@ -48,12 +56,13 @@ export class FollowUpsService {
         status: "completed",
         completedAt: sql`now()`,
         completedBy: userId,
+        completedClientEventId: clientEventId || null,
         updatedAt: sql`now()`,
       })
       .where(eq(followUps.id, followUpId))
       .returning();
 
-    return updated;
+    return { followUp: updated, isDuplicate: false };
   }
 }
 

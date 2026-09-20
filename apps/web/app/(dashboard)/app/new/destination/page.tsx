@@ -27,9 +27,27 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
   const { data: caps, isLoading } = useQuery<{ ok: boolean; data: Capability[] }>({
     queryKey: ["capabilities", facility.id],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/facilities/${facility.id}/capabilities`);
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      const cacheKey = `capabilities_${facility.id}`;
+      try {
+        const res = await fetch(`/api/v1/facilities/${facility.id}/capabilities`);
+        if (res.ok) {
+          const json = await res.json();
+          if (typeof window !== "undefined") {
+            const { db } = await import("~/lib/offline/db");
+            await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
+          }
+          return json;
+        }
+      } catch (e) {
+        // network error
+      }
+      
+      if (typeof window !== "undefined") {
+        const { db } = await import("~/lib/offline/db");
+        const cached = await db.referenceCache.get(cacheKey);
+        if (cached) return cached.data;
+      }
+      throw new Error("Failed to fetch capabilities");
     },
   });
 
@@ -99,9 +117,27 @@ export default function DestinationSelectionPage() {
   const { data: facilities, isLoading } = useQuery<{ ok: boolean; data: Facility[] }>({
     queryKey: ["facilities"],
     queryFn: async () => {
-      const res = await fetch("/api/v1/facilities");
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      const cacheKey = "all_facilities";
+      try {
+        const res = await fetch("/api/v1/facilities");
+        if (res.ok) {
+          const json = await res.json();
+          if (typeof window !== "undefined") {
+            const { db } = await import("~/lib/offline/db");
+            await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
+          }
+          return json;
+        }
+      } catch (e) {
+        // Network error
+      }
+      
+      if (typeof window !== "undefined") {
+        const { db } = await import("~/lib/offline/db");
+        const cached = await db.referenceCache.get(cacheKey);
+        if (cached) return cached.data;
+      }
+      throw new Error("Failed to fetch facilities");
     },
   });
 

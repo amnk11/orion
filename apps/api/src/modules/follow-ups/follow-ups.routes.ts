@@ -39,8 +39,9 @@ followUpsRouter.post("/:id/complete", requireRole("origin"), async (req, res, ne
     try {
       if (!req.userId) throw new Error("UNAUTHORIZED");
       const userIdStr = req.userId as string;
-      const followUp = await followUpsService.completeFollowUp(req.params.id, facilityId, userIdStr);
-      res.json({ ok: true, data: followUp });
+      const clientEventId = req.body?.clientEventId;
+      const { followUp, isDuplicate } = await followUpsService.completeFollowUp(req.params.id, facilityId, userIdStr, clientEventId);
+      res.status(isDuplicate ? 200 : 201).json({ ok: true, data: followUp });
     } catch (e: any) {
       if (e.message === "NOT_FOUND") {
         return res.status(404).json({ ok: false, error: { code: "NOT_FOUND", message: "Follow-up not found or unauthorized" } });

@@ -2,12 +2,14 @@
 
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import Image from "next/image";
 import { signOut } from "~/lib/auth/auth-client";
 import { useSessionUser } from "~/hooks/use-session-user";
 import Link from "next/link";
-import { FilePlus2, Inbox, LogOut, Loader2, Menu, Activity, LayoutDashboard } from "lucide-react";
+import { FilePlus2, Inbox, LogOut, Loader2, Menu, LayoutDashboard } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "~/components/ui/sheet";
+import { OfflineBanner } from "~/components/offline/offline-banner";
 
 export default function DashboardLayout({
   children,
@@ -62,8 +64,8 @@ export default function DashboardLayout({
         className={cn(
           "flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md transition-colors",
           isActive 
-            ? "bg-accent text-accent-foreground"
-            : "text-muted-foreground hover:bg-muted hover:text-foreground"
+            ? "bg-sidebar-primary/10 text-sidebar-primary" 
+            : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
         )}
       >
         <Icon className="size-4" />
@@ -75,10 +77,7 @@ export default function DashboardLayout({
   const SidebarContent = () => (
     <>
       <div className="h-14 flex items-center px-6 border-b border-sidebar-border">
-        <span className="font-semibold text-sidebar-foreground tracking-tight flex items-center gap-2">
-          <Activity className="size-5 text-sidebar-primary" />
-          Orion
-        </span>
+        <Image src="/sahay-small.svg" alt="Sahay Logo" height={28} width={93} />
       </div>
       
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
@@ -130,10 +129,7 @@ export default function DashboardLayout({
     <div className="flex h-dvh bg-background overflow-hidden">
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-4">
-        <span className="font-semibold text-sidebar-foreground tracking-tight flex items-center gap-2">
-          <Activity className="size-5 text-sidebar-primary" />
-          Orion
-        </span>
+        <Image src="/sahay-small.svg" alt="Sahay Logo" height={24} width={80} />
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <button className="p-2 -mr-2 text-sidebar-foreground" aria-label="Toggle Menu">
@@ -153,6 +149,7 @@ export default function DashboardLayout({
       </aside>
       
       <main className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0 bg-background relative z-0">
+        <OfflineBanner />
         <div className="flex-1 overflow-y-auto w-full max-w-[100vw]">
           {children}
         </div>

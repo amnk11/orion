@@ -1,0 +1,1 @@
+ALTER TABLE "follow_ups" ADD COLUMN "completed_client_event_id" text;

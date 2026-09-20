@@ -12,6 +12,8 @@ export const ClinicalDictionary = {
 
   status: {
     draft: "Draft",
+    offline_queue: "Queued (Offline)",
+    error: "Sync Error",
     sent: "Dispatched",
     acknowledged: "Acknowledged",
     accepted: "Accepted",

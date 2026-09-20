@@ -81,4 +81,34 @@ describe("Phase 3 Handoffs API", () => {
     expect(res3.status).toBe(409);
     expect(res3.body.error.code).toBe("CONFLICT");
   });
+
+  it("should support client-generated IDs for offline sync relational linking", async () => {
+    if (!cookies) return; 
+
+    const idempotencyKey = crypto.randomUUID();
+    const handoffId = crypto.randomUUID();
+    const episodeId = crypto.randomUUID();
+    const assessmentId = crypto.randomUUID();
+
+    const payload = {
+      id: handoffId,
+      episodeId,
+      assessmentId,
+      patientId: validPatientId,
+      protocolCode: "anc_danger",
+      destinationFacilityId: validDestinationId,
+      packetJson: { gestation_weeks: 34, bleeding: true, bp: "120/80" },
+      idempotencyKey,
+    };
+
+    const res = await request(app)
+      .post("/api/v1/handoffs")
+      .set("Cookie", cookies)
+      .send(payload);
+    
+    expect(res.status).toBe(201);
+    expect(res.body.data.id).toBe(handoffId);
+    expect(res.body.data.episodeId).toBe(episodeId);
+    expect(res.body.data.assessmentId).toBe(assessmentId);
+  });
 });

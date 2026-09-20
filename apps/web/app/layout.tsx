@@ -12,7 +12,7 @@ const geistMono = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "Orion",
+  title: "Sahay",
   description: "Care Access & Referral Coordination",
 };
 

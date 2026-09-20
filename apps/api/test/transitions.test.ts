@@ -258,7 +258,7 @@ describe("Phase 4: Handoff Transitions (Domain & API)", () => {
       expect(res.body.error.message).toMatch(/follow-ups/);
     });
 
-    it("should allow origin to fetch follow-ups and complete them", async () => {
+    it("should allow origin to fetch follow-ups and complete them securely with idempotency", async () => {
       const getRes = await request(app).get("/api/v1/follow-ups").set("Cookie", originCookies);
       expect(getRes.status).toBe(200);
       const fups = getRes.body.data;
@@ -266,9 +266,30 @@ describe("Phase 4: Handoff Transitions (Domain & API)", () => {
       const fup = fups.find((f: any) => f.handoffId === handoffId);
       expect(fup).toBeDefined();
 
-      const completeRes = await request(app).post(`/api/v1/follow-ups/${fup.id}/complete`).set("Cookie", originCookies);
-      expect(completeRes.status).toBe(200);
+      const clientEventId = "fup_complete_" + Date.now();
+
+      // 1. First completion
+      const completeRes = await request(app)
+        .post(`/api/v1/follow-ups/${fup.id}/complete`)
+        .set("Cookie", originCookies)
+        .send({ clientEventId });
+      expect(completeRes.status).toBe(201); // Created/Updated
       expect(completeRes.body.data.status).toBe("completed");
+
+      // 2. Duplicate retry with same clientEventId
+      const retryRes = await request(app)
+        .post(`/api/v1/follow-ups/${fup.id}/complete`)
+        .set("Cookie", originCookies)
+        .send({ clientEventId });
+      expect(retryRes.status).toBe(200); // 200 OK for Duplicate
+      expect(retryRes.body.data.status).toBe("completed");
+
+      // 3. Different event attempting to complete an already completed follow-up
+      const invalidRes = await request(app)
+        .post(`/api/v1/follow-ups/${fup.id}/complete`)
+        .set("Cookie", originCookies)
+        .send({ clientEventId: "some-other-id" });
+      expect(invalidRes.status).toBe(409); // Conflict, as it's not a valid idempotent retry
     });
 
     it("should allow origin to close the episode once follow-up is completed", async () => {

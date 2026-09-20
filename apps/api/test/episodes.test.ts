@@ -112,8 +112,6 @@ describe("Phase 3: Care Episodes & Assessments", () => {
   });
 
   it("should not create a duplicate episode for the same idempotency key", async () => {
-    const countBefore = await db.select().from(careEpisodes);
-    
     const res = await request(app)
       .post("/api/v1/handoffs")
       .set("Cookie", originCookies)
@@ -126,8 +124,11 @@ describe("Phase 3: Care Episodes & Assessments", () => {
       });
 
     expect(res.status).toBe(200); // returns existing
-    const countAfter = await db.select().from(careEpisodes);
-    expect(countAfter.length).toBe(countBefore.length);
+    // Check that we didn't create a second episode for this specific patient + idempotency 
+    // by ensuring there's only exactly 1 episode returned for this idempotency key
+    const episodes = await db.select().from(careEpisodes).where(eq(careEpisodes.patientId, patientId));
+    // It should just be the one we created in the previous test
+    expect(episodes.length).toBe(1);
   });
 
   it("should retrieve episode detail via GET /api/v1/episodes/:id", async () => {

@@ -1,12 +1,5 @@
 import { relations, sql } from "drizzle-orm";
-import {
-  pgTable,
-  text,
-  timestamp,
-  boolean,
-  uuid,
-  index,
-} from "drizzle-orm/pg-core";
+import { pgTable, text, timestamp, boolean, uuid, index } from "drizzle-orm/pg-core";
 import { facilities } from "./facilities";
 
 export const users = pgTable(
@@ -30,7 +23,7 @@ export const users = pgTable(
     // Better Auth maps the camelCase `facilityId` additional field to this column.
     facilityId: uuid("facility_id").references(() => facilities.id),
   },
-  (table) => [index("idx_users_facility_id").on(table.facilityId)]
+  (table) => [index("idx_users_facility_id").on(table.facilityId)],
 );
 
 export const sessions = pgTable(

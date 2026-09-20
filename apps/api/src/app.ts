@@ -13,6 +13,7 @@ import { facilitiesRouter } from "./modules/facilities/facilities.routes";
 import { handoffsRouter } from "./modules/handoffs/handoffs.routes";
 import { episodesRouter } from "./modules/episodes/episodes.routes";
 import { followUpsRouter } from "./modules/follow-ups/follow-ups.routes";
+import { syncRouter } from "./modules/sync/sync.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -33,7 +34,7 @@ export function createApp(): Express {
 
   // Root endpoint
   app.get("/", (_req, res) => {
-    res.json({ name: "Orion API", status: "running" });
+    res.json({ name: "Sahay API", status: "running" });
   });
 
   // Health endpoint
@@ -53,6 +54,7 @@ export function createApp(): Express {
   app.use("/api/v1/handoffs", handoffsRouter);
   app.use("/api/v1/episodes", episodesRouter);
   app.use("/api/v1/follow-ups", followUpsRouter);
+  app.use("/api/v1/sync", syncRouter);
 
   // 404 handler for unmatched routes
   app.use(notFoundMiddleware);

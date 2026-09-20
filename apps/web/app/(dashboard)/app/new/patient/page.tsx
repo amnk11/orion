@@ -29,9 +29,26 @@ export default function PatientSelectionPage() {
   const { data: patients, isLoading } = useQuery<{ ok: boolean; data: Patient[] }>({
     queryKey: ["patients"],
     queryFn: async () => {
-      const res = await fetch("/api/v1/patients");
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      const cacheKey = "all_patients";
+      try {
+        const res = await fetch("/api/v1/patients");
+        if (res.ok) {
+          const json = await res.json();
+          if (typeof window !== "undefined") {
+            const { db } = await import("~/lib/offline/db");
+            await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
+          }
+          return json;
+        }
+      } catch (e) {
+        // network failure
+      }
+      if (typeof window !== "undefined") {
+        const { db } = await import("~/lib/offline/db");
+        const cached = await db.referenceCache.get(cacheKey);
+        if (cached) return cached.data;
+      }
+      throw new Error("Failed to fetch");
     },
   });
 
@@ -41,11 +58,32 @@ export default function PatientSelectionPage() {
 
   const createPatient = useMutation({
     mutationFn: async (data: typeof formData) => {
+      const idempotencyKey = crypto.randomUUID();
       const payload = {
         displayName: data.displayName,
         age: data.age ? parseInt(data.age, 10) : undefined,
         sex: data.sex || undefined,
+        idempotencyKey,
       };
+
+      if (typeof window !== "undefined") {
+        const { connectivity } = await import("~/lib/offline/connectivity");
+        if (connectivity.status !== "online") {
+          const { syncEngine } = await import("~/lib/offline/sync-engine");
+          const patientId = crypto.randomUUID();
+          
+          await syncEngine.queuePatientCreation({
+            ...payload,
+            id: patientId,
+          });
+
+          return {
+            offline: true,
+            data: { id: patientId, displayName: payload.displayName, age: payload.age, sex: payload.sex }
+          };
+        }
+      }
+
       const res = await fetch("/api/v1/patients", {
         method: "POST",
         headers: { "Content-Type": "application/json" },

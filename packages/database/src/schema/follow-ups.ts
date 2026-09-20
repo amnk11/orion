@@ -25,6 +25,7 @@ export const followUps = pgTable(
     status: text("status").notNull().default("pending"), // pending | completed | missed | escalated
     completedAt: timestamp("completed_at"),
     completedBy: uuid("completed_by").references(() => users.id),
+    completedClientEventId: text("completed_client_event_id"),
     idempotencyKey: text("idempotency_key"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),

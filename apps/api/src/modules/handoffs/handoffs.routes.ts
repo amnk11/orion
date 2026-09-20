@@ -8,6 +8,9 @@ import { outcomes, followUps, handoffEvents, eq } from "@orion/db";
 export const handoffsRouter = Router();
 
 const createHandoffSchema = z.object({
+  id: z.string().uuid().optional(),
+  episodeId: z.string().uuid().optional(),
+  assessmentId: z.string().uuid().optional(),
   patientId: z.string().uuid(),
   protocolCode: z.string(),
   destinationFacilityId: z.string().uuid(),

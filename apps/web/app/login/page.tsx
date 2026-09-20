@@ -1,6 +1,7 @@
 "use client";
 
 import * as React from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { signIn } from "~/lib/auth/auth-client";
 import { Input } from "~/components/ui/input";
@@ -22,20 +23,20 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     label: "Origin (CHO)",
     role: "origin",
-    email: "cho.rampur@orion.local",
-    facility: "AAM Rampur",
+    email: "cho.wadgaon@orion.local",
+    facility: "AAM Wadgaon",
   },
   {
     label: "Destination (Desk)",
     role: "destination",
-    email: "desk.chcnorth@orion.local",
-    facility: "CHC North Block",
+    email: "desk.rajgurunagar@orion.local",
+    facility: "CHC Rajgurunagar",
   },
   {
     label: "Supervisor",
     role: "supervisor",
-    email: "supervisor.central@orion.local",
-    facility: "District Hospital Central",
+    email: "supervisor.pune@orion.local",
+    facility: "DH Pune",
   },
 ];
 
@@ -103,10 +104,7 @@ export default function LoginPage() {
       {/* Left Column - Branding (Hidden on mobile) */}
       <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-surface-inset border-r border-border p-12">
         <div className="flex items-center gap-3">
-          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
-            <Activity className="size-5" />
-          </div>
-          <span className="text-xl font-bold tracking-tight text-foreground">Orion</span>
+          <Image src="/sahay-small.svg" alt="Sahay Logo" height={40} width={133} />
         </div>
         
         <div className="space-y-6 max-w-lg">
@@ -114,12 +112,12 @@ export default function LoginPage() {
             Coordinated Clinical Operations
           </h2>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Orion connects primary care facilities with district hospitals to ensure timely, safe, and transparent patient referrals across the healthcare network.
+            Sahay connects primary care facilities with district hospitals to ensure timely, safe, and transparent patient referrals across the healthcare network.
           </p>
         </div>
         
         <div className="text-sm font-medium text-muted-foreground">
-          &copy; {new Date().getFullYear()} Orion Health Systems. All rights reserved.
+          &copy; {new Date().getFullYear()} Sahay Health Systems. All rights reserved.
         </div>
       </div>
 
@@ -129,13 +127,8 @@ export default function LoginPage() {
           
           {/* Mobile Brand Header */}
           <div className="flex lg:hidden flex-col items-center text-center space-y-4 mb-8">
-            <div className="flex size-12 items-center justify-center rounded-lg bg-surface-inset text-primary border border-border">
-              <Activity className="size-6" />
-            </div>
+            <Image src="/sahay-small.svg" alt="Sahay Logo" height={48} width={160} />
             <div className="space-y-1">
-              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
-                Orion
-              </h1>
               <p className="text-sm text-muted-foreground">
                 Clinical Operations & Referral Network
               </p>

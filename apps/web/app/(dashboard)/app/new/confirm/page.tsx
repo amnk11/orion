@@ -28,9 +28,27 @@ export default function ConfirmReferralPage() {
     queryKey: ["patients", draft.patientId],
     queryFn: async () => {
       if (!draft.patientId) return null;
-      const res = await fetch(`/api/v1/patients/${draft.patientId}`);
-      if (!res.ok) return null;
-      return res.json();
+      const cacheKey = `patient_${draft.patientId}`;
+      try {
+        const res = await fetch(`/api/v1/patients/${draft.patientId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (typeof window !== "undefined") {
+            const { db } = await import("~/lib/offline/db");
+            await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
+          }
+          return json;
+        }
+      } catch (e) {
+        // network error
+      }
+      if (typeof window !== "undefined") {
+        const { db } = await import("~/lib/offline/db");
+        const cached = await db.referenceCache.get(cacheKey);
+        if (cached) return cached.data;
+      }
+      // Return a fallback so UI doesn't crash completely
+      return { ok: true, data: { displayName: "Offline Patient" } };
     },
     enabled: !!draft.patientId
   });
@@ -39,9 +57,33 @@ export default function ConfirmReferralPage() {
     queryKey: ["facilities", draft.destinationFacilityId],
     queryFn: async () => {
       if (!draft.destinationFacilityId) return null;
-      const res = await fetch(`/api/v1/facilities/${draft.destinationFacilityId}`);
-      if (!res.ok) return null;
-      return res.json();
+      const cacheKey = `facility_${draft.destinationFacilityId}`;
+      try {
+        const res = await fetch(`/api/v1/facilities/${draft.destinationFacilityId}`);
+        if (res.ok) {
+          const json = await res.json();
+          if (typeof window !== "undefined") {
+            const { db } = await import("~/lib/offline/db");
+            await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
+          }
+          return json;
+        }
+      } catch (e) {
+        // network error
+      }
+      
+      if (typeof window !== "undefined") {
+        const { db } = await import("~/lib/offline/db");
+        const cached = await db.referenceCache.get(cacheKey);
+        if (cached) return cached.data;
+        // fallback to list cache
+        const allCached = await db.referenceCache.get("all_facilities");
+        if (allCached?.data?.data) {
+          const f = allCached.data.data.find((f: any) => f.id === draft.destinationFacilityId);
+          if (f) return { ok: true, data: f };
+        }
+      }
+      return { ok: true, data: { name: "Offline Facility", type: "unknown" } };
     },
     enabled: !!draft.destinationFacilityId
   });
@@ -58,6 +100,31 @@ export default function ConfirmReferralPage() {
         idempotencyKey,
       };
 
+      if (typeof window !== "undefined") {
+        const { connectivity } = await import("~/lib/offline/connectivity");
+        if (connectivity.status !== "online") {
+          const { syncEngine } = await import("~/lib/offline/sync-engine");
+          
+          const handoffId = crypto.randomUUID();
+          const episodeId = crypto.randomUUID();
+          const assessmentId = crypto.randomUUID();
+          
+          const offlinePayload = {
+            ...payload,
+            id: handoffId,
+            episodeId,
+            assessmentId,
+          };
+
+          const clientMutationId = await syncEngine.queueHandoffCreation(offlinePayload);
+          
+          return { 
+            offline: true, 
+            data: { id: handoffId, clientMutationId } 
+          };
+        }
+      }
+
       const res = await fetch("/api/v1/handoffs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -73,6 +140,13 @@ export default function ConfirmReferralPage() {
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["handoffs"] });
       clearDraft();
+      
+      if (res.offline) {
+        toast("Saved offline", {
+          description: "This referral will be sent when the connection returns."
+        });
+      }
+      
       router.push(`/app/handoff/${res.data.id}`);
     },
     onError: (err: Error) => {

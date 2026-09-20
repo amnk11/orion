@@ -23,15 +23,50 @@ interface Handoff {
   createdAt: string;
   patientName?: string;
   packetJson?: any;
+  offlineSyncStatus?: string;
 }
 
 export default function MyReferralsPage() {
   const { data, isLoading, error } = useQuery<{ ok: boolean; data: Handoff[] }>({
     queryKey: ["handoffs"],
     queryFn: async () => {
-      const res = await fetch("/api/v1/handoffs");
-      if (!res.ok) throw new Error("Failed to fetch");
-      return res.json();
+      let serverHandoffs: Handoff[] = [];
+      try {
+        const res = await fetch("/api/v1/handoffs");
+        if (res.ok) {
+          const json = await res.json();
+          serverHandoffs = json.data || [];
+        }
+      } catch (e) {
+        // network failure, proceed to merge local
+      }
+
+      if (typeof window !== "undefined") {
+        const { db } = await import("~/lib/offline/db");
+        // Get local handoffs that are pending, syncing, failed, or conflict
+        const localHandoffs = await db.localHandoffs
+          .filter(h => h.syncStatus !== "synced")
+          .toArray();
+        
+        // Remove from serverHandoffs any that match the client mutation (reconciliation safety)
+        const serverIds = new Set(serverHandoffs.map(h => h.id));
+        const localsToMerge = localHandoffs.filter(lh => !serverIds.has(lh.id)).map(lh => ({
+          id: lh.id,
+          publicCode: lh.publicCode || "PENDING SYNC",
+          patientId: lh.patientId,
+          destinationFacilityId: lh.payload.destinationFacilityId,
+          protocolCode: lh.payload.protocolCode,
+          urgency: "local",
+          state: lh.syncStatus === "failed" || lh.syncStatus === "conflict" ? "error" : "offline_queue",
+          createdAt: lh.createdAt,
+          packetJson: lh.payload.packetJson,
+          offlineSyncStatus: lh.syncStatus,
+        } as Handoff));
+
+        return { ok: true, data: [...localsToMerge, ...serverHandoffs].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()) };
+      }
+
+      return { ok: true, data: serverHandoffs };
     },
   });
 
@@ -106,7 +141,21 @@ export default function MyReferralsPage() {
                   </TableCell>
                   <TableCell>
                     <div className="flex flex-col gap-1 min-w-[120px]">
-                      <span className="font-mono text-sm text-muted-foreground">{handoff.publicCode}</span>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-sm text-muted-foreground">{handoff.publicCode}</span>
+                        {handoff.offlineSyncStatus && (
+                          <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
+                            handoff.offlineSyncStatus === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                            handoff.offlineSyncStatus === 'syncing' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                            handoff.offlineSyncStatus === 'synced' ? 'bg-green-100 text-green-800 border-green-200' :
+                            'bg-red-100 text-red-800 border-red-200'
+                          }`}>
+                            {handoff.offlineSyncStatus === 'pending' ? 'Saved Offline' : 
+                             handoff.offlineSyncStatus === 'syncing' ? 'Syncing...' :
+                             handoff.offlineSyncStatus === 'synced' ? 'Synced' : 'Sync Failed'}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-sm font-medium text-foreground">
                         {handoff.patientName || handoff.packetJson?.demographics?.name || "Unknown Patient"}
                       </span>

@@ -51,12 +51,45 @@ export default function HandoffDetailPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
 
-  const { data, isLoading } = useQuery<{ ok: boolean; data: HandoffDetail }>({
+  const { data, isLoading } = useQuery<{ ok: boolean; data: HandoffDetail & { offlineSyncStatus?: string } }>({
     queryKey: ["handoffs", id],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/handoffs/${id}`);
-      if (!res.ok) throw new Error("Failed to fetch handoff");
-      return res.json();
+      // First try fetching from server
+      try {
+        const res = await fetch(`/api/v1/handoffs/${id}`);
+        if (res.ok) return res.json();
+      } catch (e) {
+        // network failure, will fall through to check local DB
+      }
+      
+      // If server fetch failed (404 or network error), check local Dexie DB
+      if (typeof window !== "undefined") {
+        const { db } = await import("~/lib/offline/db");
+        const localHandoff = await db.localHandoffs.get(id);
+        
+        if (localHandoff) {
+          return {
+            ok: true,
+            data: {
+              handoff: {
+                id: localHandoff.id,
+                publicCode: localHandoff.publicCode || "PENDING SYNC",
+                episodeId: localHandoff.episodeId,
+                patientId: localHandoff.patientId,
+                protocolCode: localHandoff.payload.protocolCode,
+                urgency: "local", // or compute locally if needed
+                state: "offline_queue",
+                createdAt: localHandoff.createdAt,
+                packetJson: localHandoff.payload.packetJson,
+              },
+              events: [],
+              offlineSyncStatus: localHandoff.syncStatus,
+            }
+          };
+        }
+      }
+
+      throw new Error("Failed to fetch handoff");
     },
   });
 
@@ -90,11 +123,23 @@ export default function HandoffDetailPage() {
         </Link>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
-            <div className="flex items-center gap-3 mb-2">
+            <div className="flex flex-wrap items-center gap-3 mb-2">
               <h1 className="text-3xl font-semibold tracking-tight text-foreground font-mono">
                 {handoff.publicCode}
               </h1>
-              <StateBadge state={handoff.state} />
+              {detail.offlineSyncStatus && (
+                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
+                  detail.offlineSyncStatus === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-200' :
+                  detail.offlineSyncStatus === 'syncing' ? 'bg-blue-100 text-blue-800 border-blue-200' :
+                  detail.offlineSyncStatus === 'synced' ? 'bg-green-100 text-green-800 border-green-200' :
+                  'bg-red-100 text-red-800 border-red-200'
+                }`}>
+                  {detail.offlineSyncStatus === 'pending' ? 'Saved Offline' : 
+                   detail.offlineSyncStatus === 'syncing' ? 'Syncing...' :
+                   detail.offlineSyncStatus === 'synced' ? 'Synced' : 'Sync Failed'}
+                </span>
+              )}
+              {handoff.state !== "offline_queue" && <StateBadge state={handoff.state} />}
             </div>
             <p className="text-muted-foreground flex items-center gap-2 text-sm">
               <Clock className="size-4" /> Created {formatDistanceToNow(new Date(handoff.createdAt))} ago

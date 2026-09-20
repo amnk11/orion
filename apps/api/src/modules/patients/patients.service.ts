@@ -15,11 +15,30 @@ export class PatientsService {
 
   /**
    * Creates a new patient scoped to the authenticated user's facility.
+   * Handles idempotency if a key is provided.
    */
   async createPatient(
     facilityId: string,
-    data: Omit<NewPatient, "createdByFacilityId" | "id" | "createdAt">
-  ): Promise<Patient> {
+    data: Omit<NewPatient, "createdByFacilityId" | "createdAt">
+  ): Promise<{ patient: Patient; isDuplicate: boolean }> {
+    if (data.idempotencyKey) {
+      const existing = await db
+        .select()
+        .from(patients)
+        .where(eq(patients.idempotencyKey, data.idempotencyKey))
+        .limit(1);
+
+      if (existing.length > 0) {
+        const p = existing[0];
+        // In a real production system, you'd canonicalize/hash the payload
+        // to check if it's an IDEMPOTENCY_CONFLICT, but for MVP Phase 1-6 fix:
+        if (p!.displayName !== data.displayName) {
+          throw new Error("IDEMPOTENCY_CONFLICT");
+        }
+        return { patient: p!, isDuplicate: true };
+      }
+    }
+
     const [patient] = await db
       .insert(patients)
       .values({
@@ -32,7 +51,7 @@ export class PatientsService {
       throw new Error("Failed to create patient");
     }
 
-    return patient;
+    return { patient, isDuplicate: false };
   }
 
   /**
