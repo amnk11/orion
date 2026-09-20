@@ -88,6 +88,8 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
   );
 }
 
+import { PageHeader } from "~/components/orion/page-header";
+
 export default function DestinationSelectionPage() {
   const router = useRouter();
   const { draft, setDestinationFacilityId } = useReferralDraft();
@@ -117,21 +119,19 @@ export default function DestinationSelectionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div className="space-y-2">
-          <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Select Destination</h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Step 4 of 4. Choose where to send this referral.
-          </p>
-        </div>
-        <Button 
-          onClick={handleNext} 
-          disabled={!draft.destinationFacilityId}
-          className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
-        >
-          Review & Confirm
-        </Button>
-      </div>
+      <PageHeader 
+        title="Select Destination" 
+        description="Step 4 of 4. Choose where to send this referral."
+        action={
+          <Button 
+            onClick={handleNext} 
+            disabled={!draft.destinationFacilityId}
+            className="bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900"
+          >
+            Review & Confirm
+          </Button>
+        }
+      />
 
       <div className="relative max-w-md">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />

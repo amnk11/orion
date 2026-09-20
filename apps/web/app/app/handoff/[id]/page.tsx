@@ -9,6 +9,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Skeleton } from "~/components/ui/skeleton";
 import Link from "next/link";
+import { Timeline } from "~/components/orion/timeline";
+import { PatientSummary } from "~/components/orion/patient-summary";
+import { StateBadge } from "~/components/orion/state-badge";
 
 interface HandoffDetail {
   handoff: {
@@ -25,7 +28,11 @@ interface HandoffDetail {
     id: string;
     eventType: string;
     createdAt: string;
-    details: { message?: string } | null;
+    actorId?: string;
+    actorRole?: string;
+    facilityId?: string;
+    reason?: string;
+    metadata?: Record<string, unknown>;
   }>;
 }
 
@@ -76,19 +83,17 @@ export default function HandoffDetailPage() {
               <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white font-mono">
                 {handoff.publicCode}
               </h1>
-              <Badge variant="outline" className="capitalize text-slate-600">
-                {handoff.state.replace("_", " ")}
-              </Badge>
+              <StateBadge state={handoff.state} />
             </div>
             <p className="text-slate-500 flex items-center gap-2 text-sm">
               <Clock className="size-4" /> Created {formatDistanceToNow(new Date(handoff.createdAt))} ago
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="gap-2 shadow-sm">
               <FileText className="size-4" /> Print Form
             </Button>
-            <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900">
+            <Button className="gap-2 bg-slate-900 text-white hover:bg-slate-800 dark:bg-white dark:text-slate-900 shadow-sm">
               <QrCode className="size-4" /> View QR
             </Button>
           </div>
@@ -98,6 +103,15 @@ export default function HandoffDetailPage() {
       <div className="grid md:grid-cols-3 gap-8">
         {/* Left Column: Details */}
         <div className="md:col-span-2 space-y-6">
+          <PatientSummary 
+            publicCode={handoff.publicCode}
+            name={(handoff.packetJson?.demographics as any)?.name}
+            age={(handoff.packetJson?.demographics as any)?.age}
+            sex={(handoff.packetJson?.demographics as any)?.sex}
+            protocolCode={handoff.protocolCode}
+            urgency={handoff.urgency}
+          />
+          
           <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
             <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -105,26 +119,9 @@ export default function HandoffDetailPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="p-6">
-              <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
-                <div>
-                  <div className="text-sm font-medium text-slate-500 mb-1">Protocol</div>
-                  <div className="font-medium text-slate-900 dark:text-white">
-                    {handoff.protocolCode === "anc_danger" ? "ANC Danger Signs" : "Adult General"}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-500 mb-1">Urgency</div>
-                  <div className="flex items-center gap-2">
-                    {handoff.urgency === "red" && <Badge className="bg-red-500 text-white border-transparent">Red Urgency</Badge>}
-                    {handoff.urgency === "orange" && <Badge className="bg-orange-500 text-white border-transparent">Orange Urgency</Badge>}
-                    {handoff.urgency === "green" && <Badge className="bg-emerald-500 text-white border-transparent">Green</Badge>}
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-3">
                 <div className="text-sm font-medium text-slate-500">Triage Data</div>
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-100 dark:border-slate-800 text-sm font-mono text-slate-600 dark:text-slate-400">
+                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-100 dark:border-slate-800 text-sm font-mono text-slate-600 dark:text-slate-400 overflow-x-auto">
                   <pre>{JSON.stringify(handoff.packetJson, null, 2)}</pre>
                 </div>
               </div>
@@ -138,32 +135,7 @@ export default function HandoffDetailPage() {
             <Clock className="size-5 text-slate-400" /> Timeline
           </h3>
           
-          <div className="relative pl-6 border-l-2 border-slate-200 dark:border-slate-800 space-y-8">
-            {events.map((evt, index) => (
-              <div key={evt.id} className="relative">
-                <div className={`absolute -left-[33px] p-1 rounded-full bg-white dark:bg-slate-950 border-2 ${index === events.length - 1 ? 'border-blue-500' : 'border-slate-300 dark:border-slate-700'}`}>
-                  {index === events.length - 1 ? (
-                    <Activity className="size-3 text-blue-500" />
-                  ) : (
-                    <CheckCircle2 className="size-3 text-slate-400" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-900 dark:text-white capitalize">
-                    {evt.eventType.replace("_", " ")}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {format(new Date(evt.createdAt), "MMM d, h:mm a")}
-                  </div>
-                  {evt.details?.message && (
-                    <div className="mt-2 text-sm text-slate-600 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 p-3 rounded-md border border-slate-100 dark:border-slate-800">
-                      {evt.details.message}
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <Timeline events={events as any} />
         </div>
       </div>
     </div>

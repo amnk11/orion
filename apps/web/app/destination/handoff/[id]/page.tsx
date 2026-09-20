@@ -18,6 +18,10 @@ import {
   DialogDescription,
   DialogFooter,
 } from "~/components/ui/dialog";
+import { Timeline } from "~/components/orion/timeline";
+import { StateBadge } from "~/components/orion/state-badge";
+import { UrgencyBadge } from "~/components/orion/urgency-badge";
+import { PatientSummary } from "~/components/orion/patient-summary";
 
 // Assuming reasons are string enums on backend
 const CANNOT_ACCEPT_REASONS = [
@@ -193,9 +197,7 @@ export default function DestinationHandoffDetail() {
               <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white font-mono">
                 {handoff.publicCode}
               </h1>
-              <Badge variant="outline" className="capitalize text-slate-600 bg-white">
-                {handoff.state.replace("_", " ")}
-              </Badge>
+              <StateBadge state={handoff.state} />
             </div>
             <p className="text-slate-500 flex items-center gap-2 text-sm">
               <Clock className="size-4" /> Received {formatDistanceToNow(new Date(handoff.createdAt))} ago
@@ -247,6 +249,15 @@ export default function DestinationHandoffDetail() {
       <div className="grid md:grid-cols-3 gap-8">
         {/* Left Column: Details */}
         <div className="md:col-span-2 space-y-6">
+          <PatientSummary 
+            publicCode={handoff.publicCode}
+            name={handoff.patientName || handoff.packetJson?.demographics?.name}
+            age={handoff.packetJson?.demographics?.age}
+            sex={handoff.packetJson?.demographics?.sex}
+            protocolCode={handoff.protocolCode}
+            urgency={handoff.urgency}
+          />
+          
           <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
             <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
               <CardTitle className="text-lg flex items-center gap-2">
@@ -256,27 +267,9 @@ export default function DestinationHandoffDetail() {
             <CardContent className="p-6">
               <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
                 <div>
-                  <div className="text-sm font-medium text-slate-500 mb-1">Patient</div>
-                  <div className="font-medium text-slate-900 dark:text-white">
-                    {handoff.packetJson?.demographics?.name || "Synthetic Patient"}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-500 mb-1">Origin</div>
+                  <div className="text-sm font-medium text-slate-500 mb-1">Origin Facility</div>
                   <div className="font-medium text-slate-900 dark:text-white truncate" title={handoff.originFacilityId}>
                     {handoff.originFacilityId}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-500 mb-1">Protocol</div>
-                  <div className="font-medium text-slate-900 dark:text-white">
-                    {handoff.protocolCode === "anc_danger" ? "ANC Danger Signs" : "Adult General"}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-500 mb-1">Urgency</div>
-                  <div className="flex items-center gap-2">
-                    <Badge variant="outline" className="capitalize">{handoff.urgency}</Badge>
                   </div>
                 </div>
               </div>
@@ -297,37 +290,7 @@ export default function DestinationHandoffDetail() {
             <Clock className="size-5 text-slate-400" /> Event Timeline
           </h3>
           
-          <div className="relative pl-6 border-l-2 border-slate-200 dark:border-slate-800 space-y-8">
-            {events.map((evt: any, index: number) => (
-              <div key={evt.id} className="relative">
-                <div className={`absolute -left-[33px] p-1 rounded-full bg-white dark:bg-slate-950 border-2 ${index === events.length - 1 ? 'border-purple-500' : 'border-slate-300 dark:border-slate-700'}`}>
-                  {index === events.length - 1 ? (
-                    <Activity className="size-3 text-purple-500" />
-                  ) : (
-                    <CheckCircle2 className="size-3 text-slate-400" />
-                  )}
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-slate-900 dark:text-white capitalize">
-                    {evt.eventType.replace(/_/g, " ")}
-                  </div>
-                  <div className="text-xs text-slate-500 mt-1">
-                    {format(new Date(evt.createdAt), "MMM d, h:mm a")}
-                  </div>
-                  {evt.reason && (
-                    <div className="mt-2 text-sm font-medium text-orange-700 bg-orange-50 dark:bg-orange-900/20 p-2 rounded border border-orange-100 dark:border-orange-800/50">
-                      Reason: {evt.reason}
-                    </div>
-                  )}
-                  {evt.payload && Object.keys(evt.payload).length > 0 && (
-                    <div className="mt-2 text-xs text-slate-600 bg-slate-50 p-2 rounded border border-slate-100">
-                      <pre>{JSON.stringify(evt.payload, null, 2)}</pre>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
+          <Timeline events={events} />
         </div>
       </div>
 

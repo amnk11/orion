@@ -111,17 +111,13 @@ export default function LandingPage() {
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-xs border-b border-border">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="h-7 w-7 bg-primary text-primary-foreground flex items-center justify-center font-bold text-[10px] rounded border border-primary/20 tracking-tighter shrink-0">
-              OR
-            </div>
+           
             <div>
               <div className="flex items-center gap-2">
                 <span className="font-bold tracking-tight text-sm text-foreground">
                   ORION
                 </span>
-                <span className="text-[10px] uppercase font-mono px-1.5 py-0.5 rounded bg-surface-subtle text-muted-foreground border border-border hidden sm:inline">
-                  Prototype v1.0
-                </span>
+                
               </div>
               <p className="text-[11px] text-muted-foreground hidden md:block leading-none mt-0.5">
                 Care Access &amp; Referral Coordination System
@@ -183,10 +179,7 @@ export default function LandingPage() {
               {/* Left: pure editorial — large type, generous breathing room */}
               <div className="lg:col-span-5 flex flex-col justify-center py-20 lg:py-28 lg:pr-12 space-y-8 lg:border-r lg:border-border">
                 <div className="space-y-5">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-surface-subtle border border-border text-[11px] font-mono uppercase tracking-wider text-muted-foreground">
-                    <span className="h-1.5 w-1.5 rounded-full bg-success motion-safe:animate-pulse" />
-                    Orion Operational Network · Demonstration
-                  </div>
+                
 
                   <h1 className="text-[2.8rem] sm:text-[3.5rem] font-extrabold tracking-tight text-foreground leading-[1.06]">
                     Close the

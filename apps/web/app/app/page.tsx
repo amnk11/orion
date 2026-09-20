@@ -6,8 +6,11 @@ import { formatDistanceToNow } from "date-fns";
 import { FilePlus2, Search, ArrowRight, Activity, Clock, Inbox } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Badge } from "~/components/ui/badge";
 import { Skeleton } from "~/components/ui/skeleton";
+import { PageHeader } from "~/components/orion/page-header";
+import { EmptyState } from "~/components/orion/empty-state";
+import { UrgencyBadge } from "~/components/orion/urgency-badge";
+import { StateBadge } from "~/components/orion/state-badge";
 
 interface Handoff {
   id: string;
@@ -34,23 +37,18 @@ export default function MyReferralsPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-semibold text-slate-900 dark:text-white tracking-tight">
-            My Referrals
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Track and manage outbound patient handoffs.
-          </p>
-        </div>
-        <Link href="/app/new/patient">
-          <Button className="bg-blue-600 hover:bg-blue-700 text-white gap-2 shadow-sm">
-            <FilePlus2 className="size-4" />
-            New Referral
-          </Button>
-        </Link>
-      </div>
+      <PageHeader 
+        title="My Referrals" 
+        description="Track and manage outbound patient handoffs."
+        action={
+          <Link href="/app/new/patient">
+            <Button className="bg-blue-600 hover:bg-blue-700 text-white shadow-sm">
+              <FilePlus2 className="size-4 mr-2" />
+              New Referral
+            </Button>
+          </Link>
+        }
+      />
 
       {/* Filters */}
       <div className="flex items-center gap-3">
@@ -58,7 +56,7 @@ export default function MyReferralsPage() {
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-slate-400" />
           <Input
             placeholder="Search by ID or Patient..."
-            className="pl-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800"
+            className="pl-9 bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 shadow-sm"
           />
         </div>
       </div>
@@ -97,18 +95,18 @@ export default function MyReferralsPage() {
                 </tr>
               ) : !data?.data || data.data.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-12 text-center text-slate-500">
-                    <div className="flex flex-col items-center justify-center space-y-3">
-                      <div className="size-12 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
-                        <Inbox className="size-6 text-slate-400" />
-                      </div>
-                      <p>No referrals found</p>
-                      <Link href="/app/new/patient">
-                        <Button variant="link" className="text-blue-600 h-auto p-0">
-                          Create your first handoff →
-                        </Button>
-                      </Link>
-                    </div>
+                  <td colSpan={6} className="px-6 py-12">
+                    <EmptyState 
+                      title="No referrals found" 
+                      description="You haven't created any handoffs yet."
+                      action={
+                        <Link href="/app/new/patient">
+                          <Button variant="link" className="text-blue-600 h-auto p-0">
+                            Create your first handoff &rarr;
+                          </Button>
+                        </Link>
+                      }
+                    />
                   </td>
                 </tr>
               ) : (
@@ -129,14 +127,10 @@ export default function MyReferralsPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4">
-                      {handoff.urgency === "red" && <Badge className="bg-red-500 hover:bg-red-600 text-white border-transparent">Red</Badge>}
-                      {handoff.urgency === "orange" && <Badge className="bg-orange-500 hover:bg-orange-600 text-white border-transparent">Orange</Badge>}
-                      {handoff.urgency === "green" && <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white border-transparent">Green</Badge>}
+                      <UrgencyBadge level={handoff.urgency} />
                     </td>
                     <td className="px-6 py-4">
-                      <Badge variant="outline" className="capitalize text-slate-600 dark:text-slate-300">
-                        {handoff.state.replace("_", " ")}
-                      </Badge>
+                      <StateBadge state={handoff.state} />
                     </td>
                     <td className="px-6 py-4 text-slate-500 dark:text-slate-400 tabular-nums">
                       <div className="flex items-center gap-2">

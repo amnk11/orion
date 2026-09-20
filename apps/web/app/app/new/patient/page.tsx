@@ -19,6 +19,8 @@ interface Patient {
   sex: string | null;
 }
 
+import { PageHeader } from "~/components/orion/page-header";
+
 export default function PatientSelectionPage() {
   const router = useRouter();
   const { setPatientId, draft } = useReferralDraft();
@@ -79,12 +81,10 @@ export default function PatientSelectionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Select Patient</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Step 1 of 4. Who is this referral for?
-        </p>
-      </div>
+      <PageHeader 
+        title="Select Patient" 
+        description="Step 1 of 4. Who is this referral for?" 
+      />
 
       <div className="grid md:grid-cols-2 gap-6">
         {/* Existing Patients */}

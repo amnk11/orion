@@ -10,6 +10,9 @@ import { Badge } from "~/components/ui/badge";
 import { FileText, Building2, User, Loader2, CheckCircle2 } from "lucide-react";
 import { toast } from "sonner";
 
+import { UrgencyBadge } from "~/components/orion/urgency-badge";
+import { PageHeader } from "~/components/orion/page-header";
+
 export default function ConfirmReferralPage() {
   const router = useRouter();
   const { draft, clearDraft } = useReferralDraft();
@@ -81,19 +84,17 @@ export default function ConfirmReferralPage() {
 
   return (
     <div className="max-w-2xl mx-auto space-y-6">
-      <div className="text-center space-y-2 mb-8">
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white">Review Handoff</h1>
-        <p className="text-slate-500">Confirm the details before dispatching to the destination.</p>
-      </div>
+      <PageHeader 
+        title="Review Handoff" 
+        description="Confirm the details before dispatching to the destination."
+      />
 
       <Card className="border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden">
         <div className="bg-slate-50 dark:bg-slate-900/50 p-6 border-b border-slate-200 dark:border-slate-800 flex justify-between items-start">
           <div>
             <div className="text-sm font-medium text-slate-500 mb-1">Calculated Urgency</div>
-            <div className="flex items-center gap-2">
-              {draft.urgency === "red" && <Badge className="bg-red-500 text-white text-lg px-3 py-1">Red Urgency</Badge>}
-              {draft.urgency === "orange" && <Badge className="bg-orange-500 text-white text-lg px-3 py-1">Orange Urgency</Badge>}
-              {draft.urgency === "green" && <Badge className="bg-emerald-500 text-white text-lg px-3 py-1">Green (Routine)</Badge>}
+            <div className="flex items-center gap-2 mt-1">
+              {draft.urgency && <UrgencyBadge level={draft.urgency} className="text-lg px-3 py-1" />}
             </div>
           </div>
           <div className="text-right">

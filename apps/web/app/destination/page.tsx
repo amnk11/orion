@@ -20,6 +20,10 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
+import { PageHeader } from "~/components/orion/page-header";
+import { EmptyState } from "~/components/orion/empty-state";
+import { UrgencyBadge } from "~/components/orion/urgency-badge";
+import { StateBadge } from "~/components/orion/state-badge";
 
 interface Handoff {
   id: string;
@@ -99,38 +103,19 @@ export default function DestinationInboxPage() {
   });
 
   return (
-    <main className="min-h-screen bg-slate-50 dark:bg-slate-950">
-      {/* Header */}
-      <header className="bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-4 flex items-center justify-between sticky top-0 z-10">
-        <div className="flex items-center gap-3">
-          <div className="bg-purple-100 dark:bg-purple-900/30 p-2 rounded-md">
-            <Activity className="size-5 text-purple-600 dark:text-purple-400" />
-          </div>
-          <div>
-            <h1 className="text-lg font-semibold text-slate-900 dark:text-white leading-tight">
-              Destination Inbox
-            </h1>
-            <p className="text-xs text-slate-500 dark:text-slate-400">
-              {user.facilityId}
-            </p>
-          </div>
-        </div>
-        <div className="flex items-center gap-4">
-          <div className="hidden md:flex flex-col items-end mr-4">
-            <span className="text-sm font-medium text-slate-900 dark:text-white">{user.name}</span>
-            <span className="text-xs text-slate-500 capitalize">{user.role}</span>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleLogout} className="gap-2">
-            <LogOut className="size-4" /> 
-            <span className="hidden sm:inline">Sign Out</span>
+    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+      <PageHeader 
+        title="Destination Inbox" 
+        description="Incoming patient referrals assigned to your facility."
+        action={
+          <Button variant="outline" size="sm" onClick={handleLogout} className="text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 shadow-sm">
+            <LogOut className="size-4 mr-2" />
+            Switch Facility
           </Button>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <div className="p-6 max-w-6xl mx-auto space-y-6">
-        
-        {/* State Handling */}
+        }
+      />
+      
+      {/* State Handling */}
         {isLoadingHandoffs && (
           <div className="py-20 flex flex-col items-center justify-center gap-4 text-slate-500">
             <Spinner className="size-8" />
@@ -148,22 +133,15 @@ export default function DestinationInboxPage() {
         )}
 
         {!isLoadingHandoffs && !error && sortedHandoffs.length === 0 && (
-          <Card className="border-dashed border-2 border-slate-200 dark:border-slate-800 bg-transparent shadow-none">
-            <CardContent className="p-12 flex flex-col items-center justify-center text-center space-y-4">
-              <div className="bg-slate-100 dark:bg-slate-800 p-4 rounded-full">
-                <FileText className="size-8 text-slate-400" />
-              </div>
-              <div className="space-y-1">
-                <h3 className="text-lg font-medium text-slate-900 dark:text-white">No pending handoffs</h3>
-                <p className="text-slate-500 max-w-sm mx-auto">
-                  Your facility is all clear. Incoming patient referrals will appear here automatically.
-                </p>
-              </div>
-              <Button variant="outline" onClick={() => refetch()} className="mt-4">
+          <EmptyState 
+            title="No pending handoffs" 
+            description="Your facility is all clear. Incoming patient referrals will appear here automatically."
+            action={
+              <Button variant="outline" onClick={() => refetch()}>
                 Refresh Inbox
               </Button>
-            </CardContent>
-          </Card>
+            }
+          />
         )}
 
         {/* Handoff List */}
@@ -193,41 +171,30 @@ export default function DestinationInboxPage() {
                           <span className="font-medium text-slate-900 dark:text-white">
                             {handoff.protocolCode === "anc_danger" ? "ANC Danger" : "Adult Gen"}
                           </span>
-                          <Badge 
-                            variant="secondary" 
-                            className={`
-                              ${handoff.urgency === "red" ? "bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-400" : ""}
-                              ${handoff.urgency === "orange" ? "bg-orange-100 text-orange-700 dark:bg-orange-900/30 dark:text-orange-400" : ""}
-                              ${handoff.urgency === "green" ? "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-400" : ""}
-                            `}
-                          >
-                            {handoff.urgency}
-                          </Badge>
+                          <UrgencyBadge level={handoff.urgency} />
                         </div>
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1">
                           <span className="font-mono text-sm text-slate-500">{handoff.publicCode}</span>
-                          <span className="text-sm font-medium">
+                          <span className="text-sm font-medium text-slate-900 dark:text-slate-100">
                             {handoff.patientName || handoff.packetJson?.demographics?.name || "Synthetic Patient"}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <div className="max-w-[200px] truncate text-sm" title={handoff.originFacilityId}>
-                          {handoff.originFacilityId}
-                        </div>
+                        <span className="text-sm text-slate-600 dark:text-slate-300 font-mono">
+                          {handoff.originFacilityId.substring(0, 8)}...
+                        </span>
                       </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-1.5 text-sm text-slate-500">
+                      <TableCell className="text-slate-500 tabular-nums">
+                        <div className="flex items-center gap-2">
                           <Clock className="size-3.5" />
-                          <span>{formatDistanceToNow(new Date(handoff.createdAt))}</span>
+                          {formatDistanceToNow(new Date(handoff.createdAt), { addSuffix: true })}
                         </div>
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="capitalize bg-white dark:bg-slate-950">
-                          {handoff.state.replace("_", " ")}
-                        </Badge>
+                        <StateBadge state={handoff.state} />
                       </TableCell>
                       <TableCell className="text-right">
                         <Button variant="ghost" size="sm" className="text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:hover:bg-purple-950">
@@ -241,7 +208,6 @@ export default function DestinationInboxPage() {
             </div>
           </div>
         )}
-      </div>
-    </main>
+    </div>
   );
 }

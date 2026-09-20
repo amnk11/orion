@@ -6,6 +6,8 @@ import { useReferralDraft } from "../components/referral-draft-context";
 import { Card, CardHeader, CardTitle, CardDescription } from "~/components/ui/card";
 import { Activity, Stethoscope, ArrowRight } from "lucide-react";
 
+import { PageHeader } from "~/components/orion/page-header";
+
 export default function ProtocolSelectionPage() {
   const router = useRouter();
   const { draft, setProtocolCode } = useReferralDraft();
@@ -40,12 +42,10 @@ export default function ProtocolSelectionPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Select Protocol</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Step 2 of 4. Choose the clinical pathway for this referral.
-        </p>
-      </div>
+      <PageHeader 
+        title="Select Protocol" 
+        description="Step 2 of 4. Choose the clinical pathway for this referral." 
+      />
 
       <div className="grid sm:grid-cols-2 gap-4">
         {protocols.map((protocol) => (

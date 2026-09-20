@@ -11,7 +11,8 @@ import { Switch } from "~/components/ui/switch";
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "~/components/ui/card";
 import { AlertCircle, CheckCircle2, ArrowRight } from "lucide-react";
 import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
-import { Badge } from "~/components/ui/badge";
+import { PageHeader } from "~/components/orion/page-header";
+import { UrgencyBadge } from "~/components/orion/urgency-badge";
 
 export default function ProtocolFormPage() {
   const router = useRouter();
@@ -51,12 +52,10 @@ export default function ProtocolFormPage() {
 
   return (
     <div className="space-y-6">
-      <div className="space-y-2">
-        <h1 className="text-2xl font-semibold tracking-tight text-slate-900 dark:text-white">Clinical Details</h1>
-        <p className="text-sm text-slate-500 dark:text-slate-400">
-          Step 3 of 4. {protocol.name}
-        </p>
-      </div>
+      <PageHeader 
+        title="Clinical Details" 
+        description={`Step 3 of 4. ${protocol.name}`} 
+      />
 
       <div className="grid md:grid-cols-3 gap-6 items-start">
         <div className="md:col-span-2 space-y-6">
@@ -125,9 +124,7 @@ export default function ProtocolFormPage() {
             <CardHeader className="pb-4">
               <CardTitle className="text-sm uppercase tracking-wider text-slate-500 dark:text-slate-400">Live Triage</CardTitle>
               <div className="flex items-center gap-2 mt-1">
-                {triageResult?.urgency === "red" && <Badge className="bg-red-500 hover:bg-red-600 text-white text-lg px-3 py-1">Red Urgency</Badge>}
-                {triageResult?.urgency === "orange" && <Badge className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-3 py-1">Orange Urgency</Badge>}
-                {triageResult?.urgency === "green" && <Badge className="bg-emerald-500 hover:bg-emerald-600 text-white text-lg px-3 py-1">Green (Routine)</Badge>}
+                {triageResult?.urgency && <UrgencyBadge level={triageResult.urgency} className="text-lg px-3 py-1" />}
               </div>
             </CardHeader>
             <CardContent>
