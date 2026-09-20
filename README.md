@@ -46,8 +46,8 @@ orion/
 
 | Role | Email | Password |
 |---|---|---|
-| Origin (CHO) | `cho@aam-rampur.orion` | `demo1234` |
-| Destination (Desk) | `desk@chc-purnia.orion` | `demo1234` |
-| Supervisor | `supervisor@chc-purnia.orion` | `demo1234` |
+| Origin (CHO) | `cho.rampur@orion.local` | `demo1234` |
+| Destination (Desk) | `desk.chcnorth@orion.local` | `demo1234` |
+| Supervisor | `supervisor.central@orion.local` | `demo1234` |
 
 > ⚠️ **Prototype** — Synthetic patient data only. Not for real clinical use.

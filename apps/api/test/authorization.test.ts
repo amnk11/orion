@@ -4,10 +4,10 @@ import { app } from "../src/app";
 
 describe("Phase 2 Authorization & Scoping", () => {
   // Demo users from the Maharashtra seed
-  const originAWadgaon = { email: "cho.wadgaon@orion.local", password: "OrionDemoPass123!" };
-  const originBChakan = { email: "mo.chakan@orion.local", password: "OrionDemoPass123!" };
-  const destinationRajgurunagar = { email: "desk.rajgurunagar@orion.local", password: "OrionDemoPass123!" };
-  const supervisorPune = { email: "supervisor.pune@orion.local", password: "OrionDemoPass123!" };
+  const originAWadgaon = { email: "cho.rampur@orion.local", password: "OrionDemoPass123!" };
+  const originBChakan = { email: "mo.beta@orion.local", password: "OrionDemoPass123!" };
+  const destinationNorthBlock = { email: "desk.chcnorth@orion.local", password: "OrionDemoPass123!" };
+  const supervisorPune = { email: "supervisor.central@orion.local", password: "OrionDemoPass123!" };
 
   let cookiesA: string[];
   let cookiesB: string[];
@@ -26,7 +26,7 @@ describe("Phase 2 Authorization & Scoping", () => {
     const resB = await request(app).post("/api/auth/sign-in/email").send(originBChakan);
     cookiesB = resB.headers["set-cookie"];
 
-    const resDest = await request(app).post("/api/auth/sign-in/email").send(destinationRajgurunagar);
+    const resDest = await request(app).post("/api/auth/sign-in/email").send(destinationNorthBlock);
     cookiesDest = resDest.headers["set-cookie"];
 
     const resSup = await request(app).post("/api/auth/sign-in/email").send(supervisorPune);

@@ -43,15 +43,11 @@ export default function SupervisorDashboardPage() {
           <EmptyMedia variant="icon">
             <LayoutDashboard className="size-12 text-primary opacity-20" />
           </EmptyMedia>
-          <EmptyTitle>Oversight Analytics</EmptyTitle>
+          <EmptyTitle>Supervisor Dashboard</EmptyTitle>
           <EmptyDescription>
-            District-wide metrics, aging referrals, and capability audits are currently being provisioned.
+            District-wide oversight metrics are not yet available for your region. Contact the system administrator for more information.
           </EmptyDescription>
-          <EmptyContent>
-            <div className="mt-4 px-3 py-1 bg-muted rounded-full text-xs text-muted-foreground font-mono">
-              Role: {user.role} | {user.email}
-            </div>
-          </EmptyContent>
+          <EmptyContent />
         </Empty>
       </div>
     </div>

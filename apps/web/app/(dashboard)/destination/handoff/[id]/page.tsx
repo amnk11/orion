@@ -21,7 +21,8 @@ import { Timeline } from "~/components/orion/timeline";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { PatientSummary } from "~/components/orion/patient-summary";
-
+import { ClinicalSummary } from "~/components/orion/clinical-summary";
+import { toast } from "sonner";
 // Assuming reasons are string enums on backend
 const CANNOT_ACCEPT_REASONS = [
   "specialist_unavailable",
@@ -102,7 +103,7 @@ export default function DestinationHandoffDetail() {
       queryClient.invalidateQueries({ queryKey: ["handoffs", "inbound"] });
     },
     onError: (err: Error) => {
-      alert(`Accept failed: ${err.message}`);
+      toast.error(`Accept failed: ${err.message}`);
       refetch(); // Fetch latest state
     }
   });
@@ -126,7 +127,7 @@ export default function DestinationHandoffDetail() {
       queryClient.invalidateQueries({ queryKey: ["handoffs", "inbound"] });
     },
     onError: (err: Error) => {
-      alert(`Cannot Accept failed: ${err.message}`);
+      toast.error(`Cannot Accept failed: ${err.message}`);
       refetch();
     }
   });
@@ -152,7 +153,7 @@ export default function DestinationHandoffDetail() {
       router.push("/destination");
     },
     onError: (err: Error) => {
-      alert(`Redirect failed: ${err.message}`);
+      toast.error(`Redirect failed: ${err.message}`);
       refetch();
     }
   });
@@ -241,51 +242,47 @@ export default function DestinationHandoffDetail() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 flex-1">
-        {/* Left Column: Details */}
-        <div className="md:col-span-2 flex flex-col gap-8">
-          <PatientSummary 
-            publicCode={handoff.publicCode}
-            name={handoff.patientName || handoff.packetJson?.demographics?.name}
-            age={handoff.packetJson?.demographics?.age}
-            sex={handoff.packetJson?.demographics?.sex}
-            protocolCode={handoff.protocolCode}
-            urgency={handoff.urgency}
-          />
-          
-          <div className="flex flex-col border border-border rounded-lg bg-card overflow-hidden">
-            <div className="bg-muted/50 border-b border-border p-4">
-              <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
-                <Activity className="size-5 text-muted-foreground" /> Clinical Context
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
-                <div>
-                  <div className="text-sm font-medium text-muted-foreground mb-1">Origin Facility</div>
-                  <div className="font-medium text-foreground truncate" title={handoff.originFacilityId}>
-                    {handoff.originFacilityId}
-                  </div>
+      <div className="flex flex-col gap-8 max-w-4xl w-full mx-auto pb-24">
+        {/* 1. Patient Context */}
+        <PatientSummary 
+          publicCode={handoff.publicCode}
+          name={handoff.patientName || handoff.packetJson?.demographics?.name || "Unknown Patient"}
+          age={handoff.packetJson?.demographics?.age}
+          sex={handoff.packetJson?.demographics?.sex}
+          protocolCode={handoff.protocolCode}
+          urgency={handoff.urgency}
+        />
+        
+        {/* 2. Clinical Summary */}
+        <div className="flex flex-col border border-border rounded-xl bg-card overflow-hidden shadow-sm">
+          <div className="bg-muted/30 border-b border-border p-5">
+            <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
+              <Activity className="size-5 text-muted-foreground" /> Clinical Summary
+            </h2>
+          </div>
+          <div className="p-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4 mb-8">
+              <div>
+                <div className="text-sm font-medium text-muted-foreground mb-1">Origin Facility</div>
+                <div className="font-medium text-foreground truncate" title={handoff.originFacilityId}>
+                  {handoff.originFacilityId}
                 </div>
               </div>
+            </div>
 
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-muted-foreground">Referral Details & Triage</div>
-                <div className="bg-muted/50 rounded-lg p-4 border border-border text-sm font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap break-all">
-                  <pre>{JSON.stringify(handoff.packetJson, null, 2)}</pre>
-                </div>
-              </div>
-            </div>
+            <ClinicalSummary packet={handoff.packetJson} protocolCode={handoff.protocolCode} />
           </div>
         </div>
 
-        {/* Right Column: Timeline */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-            <Clock className="size-5 text-muted-foreground" /> Event Timeline
-          </h3>
-          
-          <Timeline events={events} />
+        {/* 3 & 4. Operational Timeline */}
+        <div className="grid md:grid-cols-2 gap-8">
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+              <Clock className="size-5 text-muted-foreground" /> Operational Timeline
+            </h3>
+            
+            <Timeline events={events} />
+          </div>
         </div>
       </div>
 

@@ -127,7 +127,7 @@ export default function DashboardLayout({
   );
 
   return (
-    <div className="flex h-screen bg-background overflow-hidden">
+    <div className="flex h-dvh bg-background overflow-hidden">
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-4">
         <span className="font-semibold text-sidebar-foreground tracking-tight flex items-center gap-2">

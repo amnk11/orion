@@ -23,10 +23,10 @@ describe("Phase 4: Handoff Transitions (Domain & API)", () => {
       return res.headers["set-cookie"];
     };
 
-    originCookies = await login("cho.wadgaon@orion.local");
-    destinationCookies = await login("desk.rajgurunagar@orion.local");
-    unrelatedCookies = await login("mo.chakan@orion.local"); // An unrelated facility user
-    supervisorCookies = await login("supervisor.pune@orion.local");
+    originCookies = await login("cho.rampur@orion.local");
+    destinationCookies = await login("desk.chcnorth@orion.local");
+    unrelatedCookies = await login("mo.beta@orion.local"); // An unrelated facility user
+    supervisorCookies = await login("supervisor.central@orion.local");
 
     // 2. Extract Facility IDs
     const getFac = async (cookies: string[]) => {

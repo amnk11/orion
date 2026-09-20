@@ -136,43 +136,44 @@ export default function DestinationInboxPage() {
           <div className="bg-card border border-border rounded-lg shadow-sm overflow-hidden">
             <div className="overflow-x-auto">
               <Table>
-                <TableHeader className="bg-muted/50 border-b border-border">
-                  <TableRow>
-                    <TableHead>Protocol & Urgency</TableHead>
-                    <TableHead>Patient / Code</TableHead>
-                    <TableHead>Origin Facility</TableHead>
-                    <TableHead>Waiting Time</TableHead>
-                    <TableHead>State</TableHead>
-                    <TableHead className="text-right">Action</TableHead>
+                <TableHeader className="sticky top-0 bg-surface-inset z-10 shadow-sm border-b border-border">
+                  <TableRow className="hover:bg-transparent">
+                    <TableHead className="font-semibold text-muted-foreground w-12">Level</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground">ID & Patient</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground">Origin</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground">Protocol</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground">Waiting</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground">Status</TableHead>
+                    <TableHead className="font-semibold text-muted-foreground text-right">Action</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedHandoffs.map((handoff) => (
                     <TableRow 
                       key={handoff.id} 
-                      className="cursor-pointer hover:bg-muted/50 transition-colors"
-                      onClick={() => router.push(`/destination/handoff/${handoff.id}`)}
+                      className="hover:bg-muted/50 transition-colors"
                     >
                       <TableCell>
-                        <div className="flex flex-col items-start gap-1 min-w-[140px]">
-                          <span className="font-medium text-foreground">
-                            {handoff.protocolCode === "anc_danger" ? "ANC Danger" : "Adult Gen"}
-                          </span>
-                          <UrgencyBadge level={handoff.urgency} />
-                        </div>
+                        <UrgencyBadge level={handoff.urgency} />
                       </TableCell>
                       <TableCell>
                         <div className="flex flex-col gap-1 min-w-[120px]">
                           <span className="font-mono text-sm text-muted-foreground">{handoff.publicCode}</span>
                           <span className="text-sm font-medium text-foreground">
-                            {handoff.patientName || handoff.packetJson?.demographics?.name || "Synthetic Patient"}
+                            {handoff.patientName || handoff.packetJson?.demographics?.name || "Unknown Patient"}
                           </span>
                         </div>
                       </TableCell>
                       <TableCell>
-                        <span className="text-sm text-muted-foreground font-mono">
+                        <span className="text-sm font-medium text-foreground font-mono">
                           {handoff.originFacilityId.substring(0, 8)}...
                         </span>
+                      </TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2 text-muted-foreground min-w-[140px]">
+                          <Activity className="size-4 text-muted-foreground/60" />
+                          {handoff.protocolCode === "anc_danger" ? "ANC Danger" : "Adult General"}
+                        </div>
                       </TableCell>
                       <TableCell className="text-muted-foreground tabular-nums min-w-[120px]">
                         <div className="flex items-center gap-2">
@@ -184,9 +185,11 @@ export default function DestinationInboxPage() {
                         <StateBadge state={handoff.state} />
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
-                          Open <ChevronRight className="ml-1 size-4" />
-                        </Button>
+                        <Link href={`/destination/handoff/${handoff.id}`} aria-label={`View details for ${handoff.publicCode}`}>
+                          <Button variant="ghost" size="sm" className="text-primary hover:text-primary hover:bg-primary/10">
+                            Open <ChevronRight className="ml-1 size-4" />
+                          </Button>
+                        </Link>
                       </TableCell>
                     </TableRow>
                   ))}

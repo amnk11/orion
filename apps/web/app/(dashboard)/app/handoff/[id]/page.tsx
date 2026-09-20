@@ -7,6 +7,7 @@ import { ArrowLeft, Clock, Activity, FileText, CheckCircle2, QrCode } from "luci
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import Link from "next/link";
+import { ClinicalSummary } from "~/components/orion/clinical-summary";
 import { Timeline } from "~/components/orion/timeline";
 import { PatientSummary } from "~/components/orion/patient-summary";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
@@ -98,42 +99,40 @@ export default function HandoffDetailPage() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8 flex-1">
-        {/* Left Column: Details */}
-        <div className="md:col-span-2 flex flex-col gap-8">
-          <PatientSummary 
-            publicCode={handoff.publicCode}
-            name={(handoff.packetJson?.demographics as any)?.name}
-            age={(handoff.packetJson?.demographics as any)?.age}
-            sex={(handoff.packetJson?.demographics as any)?.sex}
-            protocolCode={handoff.protocolCode}
-            urgency={handoff.urgency}
-          />
-          
-          <div className="flex flex-col border border-border rounded-lg bg-card overflow-hidden">
-            <div className="bg-muted/50 border-b border-border p-4">
-              <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
-                <Activity className="size-5 text-muted-foreground" /> Clinical Context
-              </h2>
-            </div>
-            <div className="p-6">
-              <div className="space-y-3">
-                <div className="text-sm font-medium text-muted-foreground">Triage Data</div>
-                <div className="bg-muted/50 rounded-lg p-4 border border-border text-sm font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap break-all">
-                  {JSON.stringify(handoff.packetJson, null, 2)}
-                </div>
-              </div>
-            </div>
+      <div className="flex flex-col gap-8 max-w-4xl w-full mx-auto pb-24">
+        {/* 1. Patient Context */}
+        <PatientSummary 
+          publicCode={handoff.publicCode}
+          name={(handoff.packetJson?.demographics as any)?.name || "Unknown Patient"}
+          age={(handoff.packetJson?.demographics as any)?.age}
+          sex={(handoff.packetJson?.demographics as any)?.sex}
+          protocolCode={handoff.protocolCode}
+          urgency={handoff.urgency}
+        />
+        
+        {/* 2. Clinical Summary */}
+        <div className="flex flex-col border border-border rounded-xl bg-card overflow-hidden shadow-sm">
+          <div className="bg-muted/30 border-b border-border p-5">
+            <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
+              <Activity className="size-5 text-muted-foreground" /> Clinical Summary
+            </h2>
+          </div>
+          <div className="p-6">
+            <ClinicalSummary packet={handoff.packetJson} protocolCode={handoff.protocolCode} />
           </div>
         </div>
 
-        {/* Right Column: Timeline */}
-        <div className="space-y-6">
-          <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
-            <Clock className="size-5 text-muted-foreground" /> Timeline
-          </h3>
+        {/* 3 & 4. Destination & Timeline */}
+        <div className="grid md:grid-cols-2 gap-8">
+          {/* Destination Placeholder - we would normally show destination details here */}
           
-          <Timeline events={events as any} />
+          <div className="space-y-6">
+            <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+              <Clock className="size-5 text-muted-foreground" /> Operational Timeline
+            </h3>
+            
+            <Timeline events={events as any} />
+          </div>
         </div>
       </div>
     </div>

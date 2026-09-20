@@ -18,6 +18,8 @@ export const metadata: Metadata = {
 
 import { ReactQueryProvider } from "~/components/providers/query-provider";
 
+import { Toaster } from "sonner";
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -29,6 +31,7 @@ export default function RootLayout({
         <ReactQueryProvider>
           {children}
         </ReactQueryProvider>
+        <Toaster />
       </body>
     </html>
   );

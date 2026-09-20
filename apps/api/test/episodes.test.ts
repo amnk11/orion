@@ -12,7 +12,7 @@ describe("Phase 3: Care Episodes & Assessments", () => {
     // 1. Login as origin
     const resOrigin = await request(app)
       .post("/api/auth/sign-in/email")
-      .send({ email: "cho.wadgaon@orion.local", password: "OrionDemoPass123!" });
+      .send({ email: "cho.rampur@orion.local", password: "OrionDemoPass123!" });
     
     if (!resOrigin.headers["set-cookie"]) {
       throw new Error("Failed to login, no set-cookie header: " + JSON.stringify(resOrigin.body));
@@ -21,7 +21,7 @@ describe("Phase 3: Care Episodes & Assessments", () => {
 
     // Get destination facility
     const facilitiesRes = await request(app).get("/api/v1/facilities").set("Cookie", originCookies);
-    destinationFacilityId = facilitiesRes.body.data.find((f: any) => f.name.includes("Rajgurunagar")).id;
+    destinationFacilityId = facilitiesRes.body.data.find((f: any) => f.name.includes("North Block")).id;
 
     // 2. Create a synthetic patient
     const resPatient = await request(app)

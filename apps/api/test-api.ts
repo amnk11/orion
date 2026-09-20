@@ -3,7 +3,7 @@ import { app } from "./src/app";
 
 async function run() {
   const destCreds = {
-    email: "desk.rajgurunagar@orion.local",
+    email: "desk.chcnorth@orion.local",
     password: "OrionDemoPass123!",
   };
 

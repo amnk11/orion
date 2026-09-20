@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
@@ -33,19 +34,12 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
   });
 
   return (
-    <div 
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" || e.key === " ") {
-          e.preventDefault();
-          onSelect();
-        }
-      }}
+    <button 
+      type="button"
       onClick={onSelect}
-      className={`cursor-pointer transition-all text-left hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 flex flex-col p-4 rounded-lg border bg-card ${selected ? 'border-ring ring-1 ring-ring bg-accent dark:bg-accent/20' : 'border-border'}`}
+      className={`cursor-pointer transition-all text-left hover:shadow-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 flex flex-col p-4 rounded-xl border bg-card ${selected ? 'border-primary ring-1 ring-primary bg-primary/5' : 'border-border'}`}
     >
-      <div className="flex justify-between items-start mb-4">
+      <div className="flex justify-between items-start mb-4 w-full">
         <div className="flex flex-col gap-1">
           <h3 className="text-base font-semibold text-foreground flex items-center gap-2">
             <Building2 className="size-4 text-muted-foreground" />
@@ -58,7 +52,7 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
         {selected && <CheckCircle2 className="size-5 text-primary shrink-0" />}
       </div>
       
-      <div className="flex flex-col gap-2 mt-auto">
+      <div className="flex flex-col gap-2 mt-auto w-full">
         <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Known Capabilities</div>
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
@@ -87,13 +81,14 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
           <div className="text-sm text-muted-foreground italic">No capability data available</div>
         )}
       </div>
-    </div>
+    </button>
   );
 }
 
 export default function DestinationSelectionPage() {
   const router = useRouter();
   const { draft, setDestinationFacilityId } = useReferralDraft();
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     if (!draft.isComplete) {
@@ -109,6 +104,10 @@ export default function DestinationSelectionPage() {
       return res.json();
     },
   });
+
+  const filteredFacilities = facilities?.data?.filter((f) => 
+    f.name.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   const handleNext = () => {
     if (draft.destinationFacilityId) {
@@ -127,7 +126,12 @@ export default function DestinationSelectionPage() {
 
       <div className="relative max-w-md mb-6">
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
-        <Input placeholder="Search facilities..." className="pl-9" />
+        <Input 
+          placeholder="Search facilities..." 
+          className="pl-9"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+        />
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 flex-1">
@@ -135,8 +139,12 @@ export default function DestinationSelectionPage() {
           <div className="col-span-2 py-12 flex justify-center text-muted-foreground">
             <Loader2 className="size-6 animate-spin" />
           </div>
+        ) : filteredFacilities.length === 0 ? (
+          <div className="col-span-2 py-12 text-center text-sm text-muted-foreground border border-border rounded-md bg-muted/30">
+            No facilities found matching your search.
+          </div>
         ) : (
-          facilities?.data?.map(fac => (
+          filteredFacilities.map(fac => (
             <FacilityCard 
               key={fac.id} 
               facility={fac} 
@@ -147,15 +155,16 @@ export default function DestinationSelectionPage() {
         )}
       </div>
 
-      {/* Sticky Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-10 md:static md:bg-transparent md:border-none md:p-0 md:mt-12 md:pt-6 md:border-t">
-        <div className="flex items-center justify-between max-w-3xl mx-auto w-full">
+      {/* Fixed Action Bar on Mobile */}
+      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border p-4 md:static md:bg-transparent md:border-0 md:p-0 md:pt-8 mt-auto z-50">
+        <div className="max-w-3xl mx-auto flex items-center justify-between w-full pb-safe">
           <Button variant="ghost" onClick={() => router.push("/app/new/clinical")}>
             Back
           </Button>
           <Button 
             onClick={handleNext} 
             disabled={!draft.destinationFacilityId}
+            size="lg"
           >
             Review & Confirm
           </Button>

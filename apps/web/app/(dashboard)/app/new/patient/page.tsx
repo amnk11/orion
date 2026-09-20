@@ -9,7 +9,6 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import { ArrowRight, Search, Loader2 } from "lucide-react";
-import { toast } from "sonner";
 
 interface Patient {
   id: string;
@@ -24,6 +23,8 @@ export default function PatientSelectionPage() {
   const { setPatientId, draft } = useReferralDraft();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState({ displayName: "", age: "", sex: "" });
+  const [formError, setFormError] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
   const { data: patients, isLoading } = useQuery<{ ok: boolean; data: Patient[] }>({
     queryKey: ["patients"],
@@ -33,6 +34,10 @@ export default function PatientSelectionPage() {
       return res.json();
     },
   });
+
+  const filteredPatients = patients?.data?.filter((p) => 
+    p.displayName.toLowerCase().includes(searchQuery.toLowerCase())
+  ) || [];
 
   const createPatient = useMutation({
     mutationFn: async (data: typeof formData) => {
@@ -53,12 +58,14 @@ export default function PatientSelectionPage() {
       return res.json();
     },
     onSuccess: (res) => {
+      const p = res.data;
+      const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
+      setPatientId(p.id, p.displayName, details);
       queryClient.invalidateQueries({ queryKey: ["patients"] });
-      setPatientId(res.data.id);
       router.push("/app/new/protocol");
     },
     onError: (err: Error) => {
-      toast.error(err.message);
+      setFormError(err.message);
     }
   });
 
@@ -69,10 +76,11 @@ export default function PatientSelectionPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.displayName) {
-      toast.error("Patient name is required");
+    if (!formData.displayName.trim()) {
+      setFormError("Patient name is required to begin a referral.");
       return;
     }
+    setFormError(null);
     createPatient.mutate(formData);
   };
 
@@ -83,10 +91,8 @@ export default function PatientSelectionPage() {
         <p className="text-sm text-muted-foreground mt-1">Select an existing patient or register a new one to begin the referral.</p>
       </div>
 
-      <div className="grid md:grid-cols-2 gap-12 flex-1 relative">
-        {/* Divider */}
-        <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-px bg-border -translate-x-1/2" />
-
+      <div className="grid md:grid-cols-2 gap-12 lg:gap-16 flex-1">
+        
         {/* Existing Patients */}
         <div className="flex flex-col">
           <h2 className="text-lg font-medium text-foreground mb-1">Existing Patients</h2>
@@ -96,7 +102,13 @@ export default function PatientSelectionPage() {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Label htmlFor="search-patients" className="sr-only">Search patients</Label>
-              <Input id="search-patients" placeholder="Search patients..." className="pl-9" />
+              <Input 
+                id="search-patients" 
+                placeholder="Search patients..." 
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)} 
+              />
             </div>
             
             <div className="space-y-2 max-h-[400px] overflow-y-auto pr-2">
@@ -104,29 +116,34 @@ export default function PatientSelectionPage() {
                 <div className="flex items-center justify-center py-8 text-muted-foreground">
                   <Loader2 className="size-5 animate-spin mr-2" /> Loading...
                 </div>
-              ) : patients?.data?.length === 0 ? (
-                <div className="text-center py-8 text-sm text-muted-foreground border border-dashed border-border rounded-md">
-                  No patients found.
+              ) : filteredPatients.length === 0 ? (
+                <div className="text-center py-8 text-sm text-muted-foreground border border-border rounded-md bg-muted/30">
+                  {searchQuery ? "No patients match your search." : "No patients found."}
                 </div>
               ) : (
-                patients?.data?.map((p) => (
-                  <button
+                filteredPatients.map((p) => (
+                  <Button
                     key={p.id}
-                    onClick={() => handleSelectPatient(p.id)}
-                    className={`w-full text-left p-3 rounded-md border transition-colors flex items-center justify-between group outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${
-                      draft.patientId === p.id 
-                        ? "border-ring bg-accent dark:bg-accent/20" 
-                        : "border-border hover:border-border/80 hover:bg-muted"
+                    variant="outline"
+                    className={`w-full justify-between h-auto p-3 ${
+                      draft.patientId === p.id ? "border-ring bg-accent" : ""
                     }`}
+                    onClick={() => {
+                      const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
+                      setPatientId(p.id, p.displayName, details);
+                      router.push("/app/new/protocol");
+                    }}
                   >
-                    <div>
-                      <div className="font-medium text-foreground">{p.displayName}</div>
-                      <div className="text-xs text-muted-foreground mt-0.5 tabular-nums">
-                        {p.age ? `${p.age} yrs` : "Age unknown"} &bull; {p.sex ? <span className="capitalize">{p.sex}</span> : "Unspecified"}
-                      </div>
+                    <div className="flex items-center gap-2">
+                      <span className="font-medium text-foreground">{p.displayName}</span>
+                      <span className="text-xs text-muted-foreground font-mono">{p.id}</span>
                     </div>
-                    <ArrowRight className="size-4 text-muted-foreground opacity-0 group-hover:opacity-100 transition-opacity" />
-                  </button>
+                    <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                      {p.age && <span>{p.age}y</span>}
+                      {p.sex && <span className="capitalize">{p.sex}</span>}
+                      <ArrowRight className="size-4" />
+                    </div>
+                  </Button>
                 ))
               )}
             </div>
@@ -140,15 +157,26 @@ export default function PatientSelectionPage() {
           </div>
           <p className="text-sm text-muted-foreground mb-6">Create a profile to initiate a referral</p>
           
-          <div className="space-y-5 flex-1">
+          <div className="space-y-5 flex-1 bg-muted/20 p-5 rounded-lg border border-border/50">
             <div className="space-y-1.5">
-              <Label htmlFor="displayName">Full Name <span className="text-danger">*</span></Label>
+              <Label htmlFor="displayName">Full Name <span className="text-danger" aria-hidden="true">*</span></Label>
               <Input
                 id="displayName"
                 placeholder="e.g. Maya Devi"
                 value={formData.displayName}
-                onChange={(e) => setFormData({ ...formData, displayName: e.target.value })}
+                onChange={(e) => {
+                  setFormData({ ...formData, displayName: e.target.value });
+                  if (formError) setFormError(null);
+                }}
+                aria-invalid={!!formError}
+                aria-describedby={formError ? "name-error" : undefined}
+                required
               />
+              {formError && (
+                <p id="name-error" className="text-xs text-danger font-medium mt-1.5" role="alert">
+                  {formError}
+                </p>
+              )}
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-1.5">
@@ -182,7 +210,7 @@ export default function PatientSelectionPage() {
           </div>
           
           <div className="mt-8 pt-6 border-t border-border">
-            <Button type="submit" className="w-full" disabled={createPatient.isPending}>
+            <Button type="submit" size="lg" className="w-full font-semibold" disabled={createPatient.isPending}>
               {createPatient.isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
               Register & Continue
             </Button>

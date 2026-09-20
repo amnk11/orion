@@ -47,10 +47,10 @@ export default function ProtocolSelectionPage() {
             <button 
               key={protocol.code} 
               type="button"
-              className={`text-left p-6 rounded-lg border transition-all hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 flex flex-col gap-4 ${isSelected ? 'border-ring bg-accent dark:bg-accent/20 ring-1 ring-ring' : 'border-border'}`}
+              className={`text-left p-6 rounded-xl border transition-all hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 flex flex-col gap-4 shadow-sm ${isSelected ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border bg-card'}`}
               onClick={() => setProtocolCode(protocol.code)}
             >
-              <div className={`p-3 rounded-md w-fit ${isSelected ? 'bg-background' : 'bg-muted'}`}>
+              <div className={`p-3 rounded-md w-fit ${isSelected ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground'}`}>
                 {protocol.icon}
               </div>
               <div>
@@ -64,19 +64,18 @@ export default function ProtocolSelectionPage() {
         })}
       </div>
       
-      {/* Sticky Footer */}
-      <div className="fixed bottom-0 left-0 right-0 p-4 bg-background border-t border-border z-10 md:static md:bg-transparent md:border-none md:p-0 md:mt-12 md:pt-6 md:border-t">
-        <div className="flex items-center justify-between max-w-3xl mx-auto w-full">
-          <Button variant="ghost" onClick={() => router.push("/app/new/patient")}>
-            Back
-          </Button>
-          <Button 
-            onClick={() => router.push("/app/new/clinical")} 
-            disabled={!draft.protocolCode}
-          >
-            Continue
-          </Button>
-        </div>
+      {/* Actions */}
+      <div className="mt-auto pt-8 flex items-center justify-between">
+        <Button variant="ghost" onClick={() => router.push("/app/new/patient")}>
+          Back
+        </Button>
+        <Button 
+          onClick={() => router.push("/app/new/clinical")} 
+          disabled={!draft.protocolCode}
+          size="lg"
+        >
+          Continue
+        </Button>
       </div>
     </div>
   );

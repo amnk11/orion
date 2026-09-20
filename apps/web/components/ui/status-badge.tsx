@@ -1,5 +1,6 @@
 import { Badge } from "~/components/ui/badge";
 import { CheckCircle2, Clock, AlertTriangle, Info, XCircle } from "lucide-react";
+import { ClinicalDictionary } from "~/lib/clinical-dictionary";
 
 interface StatusBadgeProps {
   state: string;
@@ -34,7 +35,7 @@ export function StatusBadge({ state, className }: StatusBadgeProps) {
   return (
     <Badge variant={variant} className={className}>
       <Icon className="size-3.5" />
-      <span className="capitalize">{state.replace(/_/g, " ")}</span>
+      <span>{ClinicalDictionary.formatStatus(state)}</span>
     </Badge>
   );
 }

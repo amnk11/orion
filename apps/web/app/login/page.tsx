@@ -3,12 +3,12 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "~/lib/auth/auth-client";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
-import { Alert, AlertDescription, AlertTitle } from "~/components/ui/alert";
+import { Alert, AlertDescription } from "~/components/ui/alert";
 import { Spinner } from "~/components/ui/spinner";
+import { Activity } from "lucide-react";
 import type { UserRole } from "@orion/shared";
 
 interface DemoAccount {
@@ -28,14 +28,14 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     label: "Destination (Desk)",
     role: "destination",
-    email: "desk.chcpurnia@orion.local",
-    facility: "CHC Purnia",
+    email: "desk.chcnorth@orion.local",
+    facility: "CHC North Block",
   },
   {
-    label: "Supervisor (DHO)",
+    label: "Supervisor",
     role: "supervisor",
-    email: "supervisor.purnia@orion.local",
-    facility: "District Hospital Purnia",
+    email: "supervisor.central@orion.local",
+    facility: "District Hospital Central",
   },
 ];
 
@@ -78,16 +78,15 @@ export default function LoginPage() {
       });
 
       if (res.error) {
-        setError(res.error.message || "Invalid credentials. Please check your email and password.");
+        setError(res.error.message || "Invalid credentials. Please verify and try again.");
         setLoading(false);
         return;
       }
 
-      // Check user role from returned user record
       const user = res.data?.user as { role?: string } | undefined;
       handleRoleRedirect(user?.role);
     } catch (err: unknown) {
-      const message = err instanceof Error ? err.message : "Failed to connect to authentication server.";
+      const message = err instanceof Error ? err.message : "Authentication server is unreachable.";
       setError(message);
       setLoading(false);
     }
@@ -100,38 +99,70 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-slate-50 p-4 dark:bg-slate-950">
-      <div className="w-full max-w-md space-y-6">
-        <div className="text-center space-y-2">
-          <div className="inline-flex items-center justify-center size-12 rounded-xl bg-blue-600 text-white font-bold text-xl shadow-md shadow-blue-500/20">
-            OR
+    <div className="flex min-h-dvh flex-col lg:flex-row bg-background">
+      {/* Left Column - Branding (Hidden on mobile) */}
+      <div className="hidden lg:flex lg:w-1/2 flex-col justify-between bg-surface-inset border-r border-border p-12">
+        <div className="flex items-center gap-3">
+          <div className="flex size-10 items-center justify-center rounded-lg bg-primary text-primary-foreground">
+            <Activity className="size-5" />
           </div>
-          <h1 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-            Orion Referral Network
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400">
-            Secure Staff Authentication & Handoff Management
+          <span className="text-xl font-bold tracking-tight text-foreground">Orion</span>
+        </div>
+        
+        <div className="space-y-6 max-w-lg">
+          <h2 className="text-4xl font-semibold tracking-tight text-foreground">
+            Coordinated Clinical Operations
+          </h2>
+          <p className="text-lg text-muted-foreground leading-relaxed">
+            Orion connects primary care facilities with district hospitals to ensure timely, safe, and transparent patient referrals across the healthcare network.
           </p>
         </div>
+        
+        <div className="text-sm font-medium text-muted-foreground">
+          &copy; {new Date().getFullYear()} Orion Health Systems. All rights reserved.
+        </div>
+      </div>
 
-        <Card className="border-slate-200/80 shadow-lg dark:border-slate-800">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-xl">Sign in to your facility</CardTitle>
-            <CardDescription>
-              Enter your registered staff email and password below
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
+      {/* Right Column - Form */}
+      <div className="flex-1 flex flex-col justify-center items-center p-6 sm:p-12">
+        <div className="w-full max-w-[380px] space-y-10">
+          
+          {/* Mobile Brand Header */}
+          <div className="flex lg:hidden flex-col items-center text-center space-y-4 mb-8">
+            <div className="flex size-12 items-center justify-center rounded-lg bg-surface-inset text-primary border border-border">
+              <Activity className="size-6" />
+            </div>
+            <div className="space-y-1">
+              <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+                Orion
+              </h1>
+              <p className="text-sm text-muted-foreground">
+                Clinical Operations & Referral Network
+              </p>
+            </div>
+          </div>
+
+          <div className="space-y-2 hidden lg:block">
+            <h1 className="text-2xl font-semibold tracking-tight text-foreground">
+              Sign In
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              Enter your staff credentials to access the secure network.
+            </p>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="space-y-4">
               {error && (
-                <Alert variant="destructive">
-                  <AlertTitle>Authentication Error</AlertTitle>
-                  <AlertDescription>{error}</AlertDescription>
+                <Alert variant="destructive" className="py-3">
+                  <AlertDescription className="text-sm">{error}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email">Staff Email</Label>
+                <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Staff Email
+                </Label>
                 <Input
                   id="email"
                   type="email"
@@ -140,11 +171,15 @@ export default function LoginPage() {
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}
                   required
+                  className="h-12 bg-background"
+                  aria-invalid={!!error}
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password">Password</Label>
+                <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                  Password
+                </Label>
                 <Input
                   id="password"
                   type="password"
@@ -152,47 +187,50 @@ export default function LoginPage() {
                   onChange={(e) => setPassword(e.target.value)}
                   disabled={loading}
                   required
+                  className="h-12 bg-background"
+                  aria-invalid={!!error}
                 />
               </div>
-            </CardContent>
+            </div>
 
-            <CardFooter className="flex flex-col gap-4">
-              <Button type="submit" className="w-full bg-blue-600 hover:bg-blue-700 text-white" disabled={loading}>
-                {loading ? (
-                  <span className="flex items-center gap-2">
-                    <Spinner className="size-4" /> Signing in...
+            <Button type="submit" size="lg" className="w-full font-semibold" disabled={loading}>
+              {loading ? (
+                <span className="flex items-center gap-2">
+                  <Spinner className="size-4" /> Authenticating...
+                </span>
+              ) : (
+                "Sign In"
+              )}
+            </Button>
+
+            {/* Development Utility */}
+            {process.env.NODE_ENV === "development" && (
+              <div className="pt-8 space-y-3">
+                <div className="flex items-center gap-4">
+                  <div className="h-px flex-1 bg-border" />
+                  <span className="text-xs font-medium text-muted-foreground uppercase tracking-widest">
+                    Dev Utility
                   </span>
-                ) : (
-                  "Sign In"
-                )}
-              </Button>
-
-              {/* Demo Mode Quick Login Buttons */}
-              <div className="w-full pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2">
-                <p className="text-xs font-medium text-slate-400 uppercase tracking-wider text-center">
-                  Quick Demo Access (SIH Development)
-                </p>
-                <div className="grid grid-cols-3 gap-2">
+                  <div className="h-px flex-1 bg-border" />
+                </div>
+                
+                <div className="grid grid-cols-1 gap-2">
                   {DEMO_ACCOUNTS.map((acc) => (
                     <button
                       key={acc.email}
                       type="button"
                       onClick={() => handleQuickDemoLogin(acc)}
-                      className="px-2 py-1.5 text-xs font-medium text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 rounded-md border border-slate-200 dark:border-slate-700 transition-colors text-center truncate"
-                      title={`${acc.label}: ${acc.facility}`}
+                      className="flex min-h-[44px] items-center justify-between rounded-md border border-border bg-muted/50 px-4 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground hover:border-ring"
                     >
-                      {acc.label}
+                      <span>{acc.label}</span>
+                      <span className="font-mono text-xs opacity-70">{acc.facility}</span>
                     </button>
                   ))}
                 </div>
               </div>
-            </CardFooter>
+            )}
           </form>
-        </Card>
-
-        <p className="text-xs text-center text-slate-400">
-          Orion Closed-Loop Referral System • Confidential Health Worker Portal
-        </p>
+        </div>
       </div>
     </div>
   );
