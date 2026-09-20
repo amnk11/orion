@@ -158,6 +158,62 @@ export default function DestinationHandoffDetail() {
     }
   });
 
+  const arrivedMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/v1/handoffs/${id}/arrived`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientEventId: crypto.randomUUID() }),
+      });
+      if (!res.ok) throw new Error("Failed"); return res.json();
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["handoff", id] }); }
+  });
+
+  const noShowMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/v1/handoffs/${id}/no-show`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientEventId: crypto.randomUUID() }),
+      });
+      if (!res.ok) throw new Error("Failed"); return res.json();
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["handoff", id] }); }
+  });
+
+  const startCareMutation = useMutation({
+    mutationFn: async () => {
+      const res = await fetch(`/api/v1/handoffs/${id}/start-care`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ clientEventId: crypto.randomUUID() }),
+      });
+      if (!res.ok) throw new Error("Failed"); return res.json();
+    },
+    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["handoff", id] }); }
+  });
+
+  const [outcomeOpen, setOutcomeOpen] = React.useState(false);
+  const [outcomeData, setOutcomeData] = React.useState({ disposition: "", summary: "", adviceSummary: "", followUpDueAt: "" });
+  
+  const outcomeMutation = useMutation({
+    mutationFn: async () => {
+      const payload: any = { ...outcomeData, testsAdvised: [], clientEventId: crypto.randomUUID() };
+      if (payload.followUpDueAt) {
+        payload.followUpDueAt = new Date(payload.followUpDueAt).toISOString();
+      } else {
+        delete payload.followUpDueAt;
+      }
+      const res = await fetch(`/api/v1/handoffs/${id}/outcome`, {
+        method: "POST", headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      if (!res.ok) throw new Error("Failed"); return res.json();
+    },
+    onSuccess: () => {
+      setOutcomeOpen(false);
+      queryClient.invalidateQueries({ queryKey: ["handoff", id] });
+    }
+  });
+
   // Acknowledge on Open
   React.useEffect(() => {
     if (handoff && handoff.state === "sent" && !ackAttempted.current) {
@@ -206,7 +262,7 @@ export default function DestinationHandoffDetail() {
           
           {/* Action Area */}
           <div className="flex gap-2">
-            {handoff.state === "dispatched" && (
+            {["sent", "acknowledged"].includes(handoff.state) && (
               <>
                 <Button 
                   variant="outline" 
@@ -233,10 +289,27 @@ export default function DestinationHandoffDetail() {
               </Button>
             )}
             
-            {["accepted", "arrived", "in_care", "outcome_recorded"].includes(handoff.state) && (
-              <Badge className="bg-success/15 text-success self-center mx-2 px-3 py-1">
-                Accepted
-              </Badge>
+            {handoff.state === "accepted" && (
+              <>
+                <Button variant="outline" onClick={() => noShowMutation.mutate()} disabled={noShowMutation.isPending}>
+                  Mark No-Show
+                </Button>
+                <Button onClick={() => arrivedMutation.mutate()} disabled={arrivedMutation.isPending}>
+                  Mark Arrived
+                </Button>
+              </>
+            )}
+
+            {handoff.state === "arrived" && (
+              <Button onClick={() => startCareMutation.mutate()} disabled={startCareMutation.isPending}>
+                Start Care
+              </Button>
+            )}
+
+            {handoff.state === "in_care" && (
+              <Button onClick={() => { setOutcomeData({ disposition: "", summary: "", adviceSummary: "", followUpDueAt: "" }); setOutcomeOpen(true); }}>
+                Record Outcome
+              </Button>
             )}
           </div>
         </div>
@@ -375,6 +448,53 @@ export default function DestinationHandoffDetail() {
               disabled={!redirectTarget || !reason || handoff.redirectCount >= 3 || redirectMutation.isPending}
             >
               {redirectMutation.isPending ? "Redirecting..." : "Confirm Redirect"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Outcome Dialog */}
+      <Dialog open={outcomeOpen} onOpenChange={setOutcomeOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Record Outcome</DialogTitle>
+            <DialogDescription>
+              Record the outcome of the patient's care.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4 space-y-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Disposition *</label>
+              <select className="w-full p-2 rounded-md border border-input bg-background"
+                value={outcomeData.disposition} onChange={e => setOutcomeData({...outcomeData, disposition: e.target.value})}>
+                <option value="">Select...</option>
+                <option value="treated_returned">Treated & Returned</option>
+                <option value="admitted">Admitted</option>
+                <option value="referred_on">Referred On</option>
+                <option value="deceased">Deceased</option>
+                <option value="other">Other</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Summary *</label>
+              <textarea className="w-full p-2 rounded-md border border-input bg-background"
+                value={outcomeData.summary} onChange={e => setOutcomeData({...outcomeData, summary: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Advice Summary</label>
+              <textarea className="w-full p-2 rounded-md border border-input bg-background"
+                value={outcomeData.adviceSummary} onChange={e => setOutcomeData({...outcomeData, adviceSummary: e.target.value})} />
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-medium text-foreground">Follow-up Due At</label>
+              <input type="date" className="w-full p-2 rounded-md border border-input bg-background"
+                value={outcomeData.followUpDueAt} onChange={e => setOutcomeData({...outcomeData, followUpDueAt: e.target.value})} />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setOutcomeOpen(false)}>Cancel</Button>
+            <Button onClick={() => outcomeMutation.mutate()} disabled={!outcomeData.disposition || !outcomeData.summary || outcomeMutation.isPending}>
+              {outcomeMutation.isPending ? "Saving..." : "Record Outcome"}
             </Button>
           </DialogFooter>
         </DialogContent>

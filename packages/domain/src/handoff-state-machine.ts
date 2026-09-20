@@ -45,6 +45,7 @@ const TRANSITIONS: StateTransitions = {
   },
   outcome_recorded: {
     follow_up_pending: "follow_up_created",
+    closed: "episode_closed",
   },
   follow_up_pending: {
     closed: "episode_closed",

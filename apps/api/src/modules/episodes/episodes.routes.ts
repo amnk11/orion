@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { requireAuth } from "../auth/auth.middleware";
 import { episodesService } from "./episodes.service";
-import { db, careEpisodes, handoffs, or, eq } from "@orion/db";
+import { db, careEpisodes, handoffs, followUps, or, eq, and } from "@orion/db";
 
 export const episodesRouter = Router();
 
@@ -74,6 +74,12 @@ episodesRouter.post("/:id/close", async (req: any, res, next) => {
       return res.status(404).json({ ok: false, error: { code: "NOT_FOUND", message: "Episode not found" } });
     }
     
+    // Check for pending follow-ups
+    const pendingFups = await db.select().from(followUps).where(and(eq(followUps.episodeId, req.params.id), eq(followUps.status, "pending")));
+    if (pendingFups.length > 0) {
+      return res.status(400).json({ ok: false, error: { code: "BAD_REQUEST", message: "Cannot close episode with pending follow-ups" } });
+    }
+
     const result = await handoffsTransitions.executeTransition({
       handoffId: handoff.id,
       actorId: req.userId!,
@@ -81,6 +87,10 @@ episodesRouter.post("/:id/close", async (req: any, res, next) => {
       facilityId,
       targetState: "closed",
       clientEventId: req.body?.clientEventId,
+      mutationFn: async (h, tx) => {
+        await tx.update(careEpisodes).set({ status: "closed", closedAt: new Date() }).where(eq(careEpisodes.id, req.params.id));
+        return {};
+      }
     });
     
     res.status(result.isDuplicate ? 200 : 201).json({ ok: true, data: result.handoff });

@@ -11,11 +11,13 @@ import { ClinicalSummary } from "~/components/orion/clinical-summary";
 import { Timeline } from "~/components/orion/timeline";
 import { PatientSummary } from "~/components/orion/patient-summary";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
+import { toast } from "sonner";
 
 interface HandoffDetail {
   handoff: {
     id: string;
     publicCode: string;
+    episodeId: string;
     patientId: string;
     protocolCode: string;
     urgency: string;
@@ -33,6 +35,16 @@ interface HandoffDetail {
     reason?: string;
     metadata?: Record<string, unknown>;
   }>;
+  outcome?: {
+    disposition: string;
+    summary: string;
+    adviceSummary?: string;
+    followUpDueAt?: string;
+  };
+  followUp?: {
+    status: string;
+    dueAt: string;
+  };
 }
 
 export default function HandoffDetailPage() {
@@ -67,7 +79,7 @@ export default function HandoffDetailPage() {
     );
   }
 
-  const { handoff, events } = detail;
+  const { handoff, events, outcome, followUp } = detail;
 
   return (
     <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 h-full flex flex-col">
@@ -95,6 +107,28 @@ export default function HandoffDetailPage() {
             <Button className="gap-2 shadow-sm">
               <QrCode className="size-4" /> View QR
             </Button>
+            {["no_show", "outcome_recorded", "follow_up_pending"].includes(handoff.state) && (
+              <Button 
+                variant="default" 
+                className="gap-2 shadow-sm"
+                onClick={() => {
+                  fetch(`/api/v1/episodes/${handoff.episodeId}/close`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                  }).then(async (res) => {
+                    if (!res.ok) {
+                      const err = await res.json();
+                      toast.error(err.error?.message || "Failed to close episode");
+                    } else {
+                      toast.success("Episode closed successfully");
+                      window.location.reload();
+                    }
+                  });
+                }}
+              >
+                Close Episode
+              </Button>
+            )}
           </div>
         </div>
       </div>
@@ -121,6 +155,39 @@ export default function HandoffDetailPage() {
             <ClinicalSummary packet={handoff.packetJson} protocolCode={handoff.protocolCode} />
           </div>
         </div>
+
+        {outcome && (
+          <div className="flex flex-col border border-border rounded-xl bg-card overflow-hidden shadow-sm">
+            <div className="bg-muted/30 border-b border-border p-5">
+              <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
+                <CheckCircle2 className="size-5 text-success" /> Destination Outcome
+              </h2>
+            </div>
+            <div className="p-6 space-y-4">
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">Disposition</span>
+                <p className="font-medium">{outcome.disposition}</p>
+              </div>
+              <div>
+                <span className="text-sm font-medium text-muted-foreground">Summary</span>
+                <p>{outcome.summary}</p>
+              </div>
+              {outcome.adviceSummary && (
+                <div>
+                  <span className="text-sm font-medium text-muted-foreground">Advice Summary</span>
+                  <p>{outcome.adviceSummary}</p>
+                </div>
+              )}
+              {outcome.followUpDueAt && (
+                <div>
+                  <span className="text-sm font-medium text-muted-foreground">Follow-Up Due</span>
+                  <p>{format(new Date(outcome.followUpDueAt), "PP")}</p>
+                  {followUp && <span className="text-xs text-muted-foreground">Status: {followUp.status}</span>}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* 3 & 4. Destination & Timeline */}
         <div className="grid md:grid-cols-2 gap-8">

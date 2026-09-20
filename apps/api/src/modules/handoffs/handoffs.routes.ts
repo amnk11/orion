@@ -3,6 +3,7 @@ import { requireAuth, requireRole } from "../auth/auth.middleware";
 import { handoffsService } from "./handoffs.service";
 import { assertPartyToHandoff } from "../auth/scope";
 import { z } from "zod";
+import { outcomes, followUps, handoffEvents, eq } from "@orion/db";
 
 export const handoffsRouter = Router();
 
@@ -203,8 +204,46 @@ const handleTransition = (targetState: HandoffState, schema?: z.ZodSchema) => {
 
       if (targetState === "outcome_recorded") {
         mutationFn = async (handoff: any, tx: any) => {
-          // In a real implementation we would insert into outcomes table here.
-          // For phase 4 we just ensure the state transition works.
+          const existing = await tx.select().from(outcomes).where(eq(outcomes.handoffId, handoff.id)).limit(1);
+          if (existing.length > 0) return {};
+
+          await tx.insert(outcomes).values({
+            handoffId: handoff.id,
+            episodeId: handoff.episodeId,
+            disposition: payload.disposition,
+            summary: payload.summary,
+            testsAdvised: payload.testsAdvised,
+            adviceSummary: payload.adviceSummary,
+            followUpDueAt: payload.followUpDueAt ? new Date(payload.followUpDueAt) : null,
+            followUpFacilityId: handoff.originFacilityId,
+            recordedBy: req.userId,
+          });
+
+          if (payload.followUpDueAt) {
+            await tx.insert(followUps).values({
+              episodeId: handoff.episodeId,
+              handoffId: handoff.id,
+              facilityId: handoff.originFacilityId,
+              task: "Follow-up required after destination outcome",
+              dueAt: new Date(payload.followUpDueAt),
+              status: "pending",
+              idempotencyKey: clientEventId ? `${clientEventId}-followup` : undefined,
+            });
+
+            await tx.insert(handoffEvents).values({
+              handoffId: handoff.id,
+              episodeId: handoff.episodeId,
+              eventType: "follow_up_created",
+              prevState: "outcome_recorded",
+              nextState: "follow_up_pending",
+              actorId: req.userId,
+              actorRole: req.role,
+              facilityId,
+              clientEventId: clientEventId ? `${clientEventId}-evt` : undefined,
+            });
+
+            return { state: "follow_up_pending" };
+          }
           return {};
         };
       }

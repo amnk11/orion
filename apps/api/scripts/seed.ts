@@ -15,18 +15,18 @@ const DEMO_PASSWORD = "OrionDemoPass123!";
 export async function seed() {
   console.log("🌱 Starting Orion Phase 1 idempotent database seed...");
 
-  // 1. Organization: Central Health System
+  // 1. Organization: Maharashtra Health System
   let [org] = await db
     .select()
     .from(organizations)
-    .where(eq(organizations.name, "Central Health System"))
+    .where(eq(organizations.name, "Maharashtra Health System"))
     .limit(1);
 
   if (!org) {
     [org] = await db
       .insert(organizations)
       .values({
-        name: "Central Health System",
+        name: "Maharashtra Health System",
         type: "health_system",
       })
       .returning();
@@ -35,65 +35,69 @@ export async function seed() {
     console.log(`  [=] Organization exists: ${org.name} (${org.id})`);
   }
 
-  const [oldOrg] = await db.select().from(organizations).where(eq(organizations.name, "Bihar Health System")).limit(1);
-  if (oldOrg) {
-     console.log(`  [!] Found old Bihar data, deleting...`);
-     const oldFacilities = await db.select().from(facilities).where(eq(facilities.orgId, oldOrg.id));
-     const facilityIds = oldFacilities.map(f => f.id);
-     
-     if (facilityIds.length > 0) {
-       for (const fId of facilityIds) {
-         await db.delete(capabilitySnapshots).where(eq(capabilitySnapshots.facilityId, fId));
-         await db.delete(patients).where(eq(patients.createdByFacilityId, fId));
-         await db.delete(users).where(eq(users.facilityId, fId));
-         await db.delete(facilities).where(eq(facilities.id, fId));
-       }
-     }
-     await db.delete(organizations).where(eq(organizations.id, oldOrg.id));
-     console.log(`  [-] Deleted old Bihar Health System`);
+  // Delete old organizations if they exist
+  const oldOrgs = ["Central Health System", "Bihar Health System"];
+  for (const oldOrgName of oldOrgs) {
+    const [oldOrg] = await db.select().from(organizations).where(eq(organizations.name, oldOrgName)).limit(1);
+    if (oldOrg) {
+      console.log(`  [!] Found old ${oldOrgName} data, deleting...`);
+      const oldFacilities = await db.select().from(facilities).where(eq(facilities.orgId, oldOrg.id));
+      const facilityIds = oldFacilities.map(f => f.id);
+      
+      if (facilityIds.length > 0) {
+        for (const fId of facilityIds) {
+          await db.delete(capabilitySnapshots).where(eq(capabilitySnapshots.facilityId, fId));
+          await db.delete(patients).where(eq(patients.createdByFacilityId, fId));
+          await db.delete(users).where(eq(users.facilityId, fId));
+          await db.delete(facilities).where(eq(facilities.id, fId));
+        }
+      }
+      await db.delete(organizations).where(eq(organizations.id, oldOrg.id));
+      console.log(`  [-] Deleted old ${oldOrgName}`);
+    }
   }
 
-  // 2. Facilities (4 demo facilities in Central State corridor)
+  // 2. Facilities (4 demo facilities in Maharashtra corridor)
   const facilityDefs = [
     {
-      name: "AAM Rampur",
+      name: "AAM Wadgaon",
       tier: "aam",
       isFru: false,
-      block: "North Block",
-      district: "Central",
-      state: "Central State",
-      lat: "18.7300000",
-      lng: "73.8800000",
+      block: "Wadgaon Sheri",
+      district: "Pune",
+      state: "Maharashtra",
+      lat: "18.5529",
+      lng: "73.9317",
     },
     {
-      name: "PHC Beta",
+      name: "PHC Chakan",
       tier: "phc",
       isFru: false,
-      block: "North Block",
-      district: "Central",
-      state: "Central State",
-      lat: "18.7500000",
-      lng: "73.8500000",
+      block: "Khed",
+      district: "Pune",
+      state: "Maharashtra",
+      lat: "18.7500",
+      lng: "73.8500",
     },
     {
-      name: "CHC North Block",
+      name: "CHC Rajgurunagar",
       tier: "chc",
       isFru: true,
-      block: "North Block",
-      district: "Central",
-      state: "Central State",
-      lat: "18.8500000",
-      lng: "73.8800000",
+      block: "Khed",
+      district: "Pune",
+      state: "Maharashtra",
+      lat: "18.8500",
+      lng: "73.8800",
     },
     {
-      name: "District Hospital Central",
+      name: "DH Pune",
       tier: "dh",
       isFru: true,
-      block: "Central City",
-      district: "Central",
-      state: "Central State",
-      lat: "18.5204000",
-      lng: "73.8567000",
+      block: "Pune City",
+      district: "Pune",
+      state: "Maharashtra",
+      lat: "18.5204",
+      lng: "73.8567",
     },
   ];
 
@@ -124,34 +128,34 @@ export async function seed() {
   // 3. Staff Users
   const staffDefs = [
     {
-      name: "Anita Devi",
-      email: "cho.rampur@orion.local",
+      name: "Sunita Kale",
+      email: "cho.wadgaon@orion.local",
       role: "origin" as const,
-      facilityName: "AAM Rampur",
+      facilityName: "AAM Wadgaon",
     },
     {
-      name: "Dr. Rajesh Kumar",
-      email: "mo.beta@orion.local",
+      name: "Dr. Aniket Deshmukh",
+      email: "mo.chakan@orion.local",
       role: "origin" as const,
-      facilityName: "PHC Beta",
+      facilityName: "PHC Chakan",
     },
     {
-      name: "Meena Kumari",
-      email: "desk.chcnorth@orion.local",
+      name: "Pooja Patil",
+      email: "desk.rajgurunagar@orion.local",
       role: "destination" as const,
-      facilityName: "CHC North Block",
+      facilityName: "CHC Rajgurunagar",
     },
     {
-      name: "Dr. S. Singh",
-      email: "desk.dhcentral@orion.local",
+      name: "Dr. K. Joshi",
+      email: "desk.pune@orion.local",
       role: "destination" as const,
-      facilityName: "District Hospital Central",
+      facilityName: "DH Pune",
     },
     {
-      name: "Dr. A. Sharma",
-      email: "supervisor.central@orion.local",
+      name: "Dr. R. Kulkarni",
+      email: "supervisor.pune@orion.local",
       role: "supervisor" as const,
-      facilityName: "District Hospital Central",
+      facilityName: "DH Pune",
     },
   ];
 
@@ -275,7 +279,7 @@ export async function seed() {
 
   // 5. Capability Snapshots
   const serviceCodes = ["obgyn", "functional_ot", "blood_bank", "icu", "lab"] as const;
-  const supervisorId = userMap["supervisor.central@orion.local"];
+  const supervisorId = userMap["supervisor.pune@orion.local"];
 
   const now = new Date();
   const staleDate = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000); // 15 days ago
@@ -284,28 +288,28 @@ export async function seed() {
     string,
     Record<string, { status: "verified_available" | "verified_unavailable" | "unknown"; attestedAt?: Date }>
   > = {
-    "AAM Rampur": {
+    "AAM Wadgaon": {
       obgyn: { status: "unknown" },
       functional_ot: { status: "verified_unavailable" },
       blood_bank: { status: "verified_unavailable" },
       icu: { status: "verified_unavailable" },
       lab: { status: "verified_available" },
     },
-    "PHC Beta": {
+    "PHC Chakan": {
       obgyn: { status: "verified_available" },
       functional_ot: { status: "verified_unavailable" },
       blood_bank: { status: "verified_unavailable" },
       icu: { status: "verified_unavailable" },
       lab: { status: "verified_available" },
     },
-    "CHC North Block": {
+    "CHC Rajgurunagar": {
       obgyn: { status: "verified_available" }, // Stale!
       functional_ot: { status: "verified_available" },
       blood_bank: { status: "verified_unavailable" },
       icu: { status: "verified_unavailable" },
       lab: { status: "verified_available" },
     },
-    "District Hospital Central": {
+    "DH Pune": {
       obgyn: { status: "verified_available" },
       functional_ot: { status: "verified_available" },
       blood_bank: { status: "verified_available" },
@@ -314,8 +318,8 @@ export async function seed() {
     },
   };
 
-  // Mark North Block obgyn as stale by setting an old attestedAt
-  facilityCapabilityMatrix["CHC North Block"]["obgyn"].attestedAt = staleDate;
+  // Mark CHC Rajgurunagar obgyn as stale by setting an old attestedAt
+  facilityCapabilityMatrix["CHC Rajgurunagar"]["obgyn"].attestedAt = staleDate;
 
   for (const [facilityName, services] of Object.entries(facilityCapabilityMatrix)) {
     const facilityId = facilityMap[facilityName];
@@ -360,18 +364,18 @@ export async function seed() {
   // 6. Synthetic Patients
   const patientDefs = [
     {
-      displayName: "Ramesh Kumar (Synthetic Demo)",
+      displayName: "Ramesh Patil (Synthetic Demo)",
       age: 45,
       sex: "male",
       abhaMock: "91-0000-0001-XX",
-      facilityName: "AAM Rampur",
+      facilityName: "AAM Wadgaon",
     },
     {
-      displayName: "Sunita Devi (Synthetic Demo)",
-      age: 28,
+      displayName: "Savitri Jadhav (Synthetic Demo)",
+      age: 26,
       sex: "female",
       abhaMock: "91-0000-0002-XX",
-      facilityName: "PHC Beta",
+      facilityName: "AAM Wadgaon",
     },
   ];
 
@@ -401,11 +405,11 @@ export async function seed() {
   console.log("\n✅ Orion Phase 1 Seed Completed Successfully!");
   console.log("--------------------------------------------------");
   console.log("Demo Staff Credentials (Password for all: OrionDemoPass123!):");
-  console.log("  1. Origin CHO:       cho.rampur@orion.local");
-  console.log("  2. Origin MO:        mo.beta@orion.local");
-  console.log("  3. Destination CHC:  desk.chcnorth@orion.local");
-  console.log("  4. Destination DH:   desk.dhcentral@orion.local");
-  console.log("  5. Supervisor DHO:   supervisor.central@orion.local");
+  console.log("  1. Origin CHO:       cho.wadgaon@orion.local");
+  console.log("  2. Origin MO:        mo.chakan@orion.local");
+  console.log("  3. Destination CHC:  desk.rajgurunagar@orion.local");
+  console.log("  4. Destination DH:   desk.pune@orion.local");
+  console.log("  5. Supervisor DHO:   supervisor.pune@orion.local");
   console.log("--------------------------------------------------");
 }
 

@@ -5,7 +5,7 @@ import crypto from "crypto";
 
 describe("Phase 3 Handoffs API", () => {
   const originCredentials = {
-    email: "cho.rampur@orion.local",
+    email: "cho.wadgaon@orion.local",
     password: "OrionDemoPass123!",
   };
 

@@ -1,13 +1,13 @@
 # Orion — SIH Demo Script (MVP)
 
-> One coherent synthetic Maharashtra journey. No live government data. No live APIs.
+> One coherent synthetic Central State journey. No live government data. No live APIs.
 > Fallback: `pnpm demo:reset` (pre-baked mid-journey seed) + recorded video + screenshots.
 
 ## Scenario
 
-**Savitri Jadhav (synthetic demo patient)**, 26, 34 weeks pregnant, presents at
-**AAM Wadgaon** (Pune district) with severe headache and blurred vision.
-Demo corridor: AAM Wadgaon → PHC Chakan → CHC Rajgurunagar → District Hospital Pune.
+**Anita Devi (synthetic demo patient)**, 26, 34 weeks pregnant, presents at
+**AAM Rampur** (Central district) with severe headache and blurred vision.
+Demo corridor: AAM Rampur → PHC Beta → CHC North Block → District Hospital Central.
 
 Cast: CHO (origin) · CHC referral desk · DH referral desk · Supervisor (DHO).
 
@@ -26,8 +26,8 @@ Cast: CHO (origin) · CHC referral desk · DH referral desk · Supervisor (DHO).
 
 ### Scene 3 — Capability-aware destination selection
 - Screen: destination picker.
-- CHC Rajgurunagar: Obstetrics VERIFIED_AVAILABLE (verified yesterday), OT VERIFIED_UNAVAILABLE.
-- DH Pune: Obstetrics + OT VERIFIED_AVAILABLE (verified today).
+- CHC North Block: Obstetrics VERIFIED_AVAILABLE (verified yesterday), OT VERIFIED_UNAVAILABLE.
+- DH Central: Obstetrics + OT VERIFIED_AVAILABLE (verified today).
 - Action: CHO chooses CHC first (closer). **Human confirms — no auto-routing.**
 - Judge learns: capability + freshness labels; stale data is visibly stale.
 
@@ -46,7 +46,7 @@ Cast: CHO (origin) · CHC referral desk · DH referral desk · Supervisor (DHO).
 ### Scene 6 — Destination Cannot Accept → Redirect
 - Screen: CHC desk `/destination` inbox → detail.
 - Actions: Acknowledge → **Cannot Accept** (reason required: "specialist unavailable")
-  → **Redirect** to DH Pune (same Care Episode, redirect count 1).
+  → **Redirect** to DH Central (same Care Episode, redirect count 1).
 - Judge learns: receiving facility is an active participant; redirect preserves history.
 
 ### Scene 7 — Accept → Arrival → Care → Outcome
@@ -70,7 +70,7 @@ Cast: CHO (origin) · CHC referral desk · DH referral desk · Supervisor (DHO).
 ### Scene 10 — FHIR-aligned export
 - Screen: handoff detail → "FHIR JSON".
 - Shows: FHIR-aligned bundle (ServiceRequest + EpisodeOfCare + Encounter + Task).
-- Closing line: **"We complement Maharashtra's existing telemedicine, hospital, medicine,
+- Closing line: **"We complement Central State's existing telemedicine, hospital, medicine,
   emergency and digital-health systems — Orion makes the movement of the patient
   between them organised, visible and accountable."**
 

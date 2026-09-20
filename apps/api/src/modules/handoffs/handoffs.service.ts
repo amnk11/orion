@@ -1,4 +1,4 @@
-import { db, handoffs, handoffEvents, outboxJobs, careEpisodes, assessments, patients, eq, desc, and, or } from "@orion/db";
+import { db, handoffs, handoffEvents, outboxJobs, careEpisodes, assessments, patients, outcomes, followUps, eq, desc, and, or } from "@orion/db";
 import type { Handoff, HandoffEvent } from "@orion/db";
 import { evaluateProtocol, ANC_DANGER_PROTOCOL, ADULT_GENERAL_PROTOCOL } from "@orion/protocols";
 import { assertTransition } from "@orion/domain";
@@ -291,7 +291,7 @@ export class HandoffsService {
    */
   async getHandoffDetail(
     handoffId: string
-  ): Promise<{ handoff: Handoff; events: HandoffEvent[] } | null> {
+  ): Promise<{ handoff: Handoff; events: HandoffEvent[]; outcome: any; followUp: any } | null> {
     const [handoff] = await db
       .select()
       .from(handoffs)
@@ -306,7 +306,10 @@ export class HandoffsService {
       .where(eq(handoffEvents.handoffId, handoff.id))
       .orderBy(handoffEvents.createdAt);
 
-    return { handoff, events };
+    const [outcome] = await db.select().from(outcomes).where(eq(outcomes.handoffId, handoff.id)).limit(1);
+    const [followUp] = await db.select().from(followUps).where(eq(followUps.handoffId, handoff.id)).limit(1);
+
+    return { handoff, events, outcome: outcome || null, followUp: followUp || null };
   }
 }
 

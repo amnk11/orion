@@ -23,10 +23,10 @@ describe("Phase 4: Handoff Transitions (Domain & API)", () => {
       return res.headers["set-cookie"];
     };
 
-    originCookies = await login("cho.rampur@orion.local");
-    destinationCookies = await login("desk.chcnorth@orion.local");
-    unrelatedCookies = await login("mo.beta@orion.local"); // An unrelated facility user
-    supervisorCookies = await login("supervisor.central@orion.local");
+    originCookies = await login("cho.wadgaon@orion.local");
+    destinationCookies = await login("desk.rajgurunagar@orion.local");
+    unrelatedCookies = await login("mo.chakan@orion.local"); // An unrelated facility user
+    supervisorCookies = await login("supervisor.pune@orion.local");
 
     // 2. Extract Facility IDs
     const getFac = async (cookies: string[]) => {
@@ -209,6 +209,75 @@ describe("Phase 4: Handoff Transitions (Domain & API)", () => {
       const statuses = [res1.status, res2.status];
       expect(statuses).toContain(201); // one succeeds
       expect(statuses).toContain(409); // one fails with conflict because state is no longer 'acknowledged'
+    });
+  });
+
+  describe("Phase 6: Closed-Loop Lifecycle (Arrived, In Care, Outcome, Follow-up)", () => {
+    let handoffId: string;
+    let episodeId: string;
+
+    beforeAll(async () => {
+      // Create a fresh handoff and get it to accepted state
+      const hRes = await createHandoffForTransition();
+      handoffId = hRes.id;
+      episodeId = hRes.episodeId;
+
+      const ackRes = await request(app).post(`/api/v1/handoffs/${handoffId}/acknowledge`).set("Cookie", destinationCookies).send({ clientEventId: "ack_ph6_" + Math.random() });
+      if (ackRes.status !== 201) throw new Error("ack failed: " + JSON.stringify(ackRes.body));
+      const accRes = await request(app).post(`/api/v1/handoffs/${handoffId}/accept`).set("Cookie", destinationCookies).send({ clientEventId: "acc_ph6_" + Math.random() });
+      if (accRes.status !== 201) throw new Error("acc failed: " + JSON.stringify(accRes.body));
+    });
+
+    it("should allow destination to mark arrived", async () => {
+      const res = await request(app).post(`/api/v1/handoffs/${handoffId}/arrived`).set("Cookie", destinationCookies).send({ clientEventId: "arr_ph6_" + Date.now() });
+      expect(res.status).toBe(201);
+      expect(res.body.data.state).toBe("arrived");
+    });
+
+    it("should allow destination to start care", async () => {
+      const res = await request(app).post(`/api/v1/handoffs/${handoffId}/start-care`).set("Cookie", destinationCookies).send({ clientEventId: "care_ph6_" + Date.now() });
+      expect(res.status).toBe(201);
+      expect(res.body.data.state).toBe("in_care");
+    });
+
+    it("should allow destination to record outcome and transition to follow_up_pending", async () => {
+      const res = await request(app).post(`/api/v1/handoffs/${handoffId}/outcome`).set("Cookie", destinationCookies).send({
+        disposition: "treated_returned",
+        summary: "Patient treated successfully",
+        adviceSummary: "Rest for 2 days",
+        followUpDueAt: new Date(Date.now() + 86400000).toISOString(),
+        clientEventId: "out_ph6_" + Date.now()
+      });
+      expect(res.status).toBe(201);
+      expect(res.body.data.state).toBe("follow_up_pending");
+    });
+
+    it("should block closing the episode if follow-up is still pending", async () => {
+      const res = await request(app).post(`/api/v1/episodes/${episodeId}/close`).set("Cookie", originCookies);
+      expect(res.status).toBe(400);
+      expect(res.body.error.message).toMatch(/follow-ups/);
+    });
+
+    it("should allow origin to fetch follow-ups and complete them", async () => {
+      const getRes = await request(app).get("/api/v1/follow-ups").set("Cookie", originCookies);
+      expect(getRes.status).toBe(200);
+      const fups = getRes.body.data;
+      expect(fups.length).toBeGreaterThan(0);
+      const fup = fups.find((f: any) => f.handoffId === handoffId);
+      expect(fup).toBeDefined();
+
+      const completeRes = await request(app).post(`/api/v1/follow-ups/${fup.id}/complete`).set("Cookie", originCookies);
+      expect(completeRes.status).toBe(200);
+      expect(completeRes.body.data.status).toBe("completed");
+    });
+
+    it("should allow origin to close the episode once follow-up is completed", async () => {
+      const res = await request(app).post(`/api/v1/episodes/${episodeId}/close`).set("Cookie", originCookies);
+      expect(res.status).toBe(201);
+      
+      const getEp = await request(app).get(`/api/v1/episodes/${episodeId}`).set("Cookie", originCookies);
+      expect(getEp.body.data.status).toBe("closed");
+      expect(getEp.body.data.handoffs[0].state).toBe("closed");
     });
   });
 });
