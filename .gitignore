@@ -6,6 +6,8 @@ node_modules
 .pnp.js
 
 .agent
+.agents
+.gemini
 
 # Local env files
 .env

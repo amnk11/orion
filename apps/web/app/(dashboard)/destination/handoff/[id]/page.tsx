@@ -6,7 +6,6 @@ import { useParams, useRouter } from "next/navigation";
 import { formatDistanceToNow, format } from "date-fns";
 import { ArrowLeft, Clock, Activity, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
 import { Skeleton } from "~/components/ui/skeleton";
 import Link from "next/link";
@@ -19,8 +18,8 @@ import {
   DialogFooter,
 } from "~/components/ui/dialog";
 import { Timeline } from "~/components/orion/timeline";
-import { StateBadge } from "~/components/orion/state-badge";
-import { UrgencyBadge } from "~/components/orion/urgency-badge";
+import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
+import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { PatientSummary } from "~/components/orion/patient-summary";
 
 // Assuming reasons are string enums on backend
@@ -185,39 +184,37 @@ export default function DestinationHandoffDetail() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
+    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 h-full flex flex-col">
       {/* Header */}
       <div>
-        <Link href="/destination" className="inline-flex items-center text-sm text-slate-500 hover:text-slate-900 dark:hover:text-white mb-6 transition-colors">
+        <Link href="/destination" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
           <ArrowLeft className="size-4 mr-1" /> Back to Inbox
         </Link>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="flex items-center gap-3 mb-2">
-              <h1 className="text-3xl font-semibold tracking-tight text-slate-900 dark:text-white font-mono">
+              <h1 className="text-3xl font-semibold tracking-tight text-foreground font-mono">
                 {handoff.publicCode}
               </h1>
               <StateBadge state={handoff.state} />
             </div>
-            <p className="text-slate-500 flex items-center gap-2 text-sm">
-              <Clock className="size-4" /> Received {formatDistanceToNow(new Date(handoff.createdAt))} ago
+            <p className="text-muted-foreground flex items-center gap-2 text-sm">
+              <Clock className="size-4" /> Created {formatDistanceToNow(new Date(handoff.createdAt))} ago
             </p>
           </div>
           
           {/* Action Area */}
-          <div className="flex gap-2 bg-slate-100 dark:bg-slate-900 p-2 rounded-lg border border-slate-200 dark:border-slate-800">
-            {handoff.state === "acknowledged" && (
+          <div className="flex gap-2">
+            {handoff.state === "dispatched" && (
               <>
                 <Button 
                   variant="outline" 
-                  className="bg-white hover:bg-slate-50 text-slate-700 border-slate-300"
                   onClick={() => { setReason(""); setCannotAcceptOpen(true); }}
                   disabled={acceptMutation.isPending || cannotAcceptMutation.isPending}
                 >
                   Cannot Accept
                 </Button>
                 <Button 
-                  className="bg-purple-600 hover:bg-purple-700 text-white"
                   onClick={() => acceptMutation.mutate()}
                   disabled={acceptMutation.isPending || cannotAcceptMutation.isPending}
                 >
@@ -228,8 +225,6 @@ export default function DestinationHandoffDetail() {
 
             {handoff.state === "cannot_accept" && (
               <Button 
-                variant="default"
-                className="bg-orange-600 hover:bg-orange-700 text-white"
                 onClick={() => { setReason(""); setRedirectTarget(""); setRedirectOpen(true); }}
                 disabled={redirectMutation.isPending}
               >
@@ -238,7 +233,7 @@ export default function DestinationHandoffDetail() {
             )}
             
             {["accepted", "arrived", "in_care", "outcome_recorded"].includes(handoff.state) && (
-              <Badge className="bg-emerald-100 text-emerald-800 self-center mx-2 px-3 py-1">
+              <Badge className="bg-success/15 text-success self-center mx-2 px-3 py-1">
                 Accepted
               </Badge>
             )}
@@ -246,9 +241,9 @@ export default function DestinationHandoffDetail() {
         </div>
       </div>
 
-      <div className="grid md:grid-cols-3 gap-8">
+      <div className="grid md:grid-cols-3 gap-8 flex-1">
         {/* Left Column: Details */}
-        <div className="md:col-span-2 space-y-6">
+        <div className="md:col-span-2 flex flex-col gap-8">
           <PatientSummary 
             publicCode={handoff.publicCode}
             name={handoff.patientName || handoff.packetJson?.demographics?.name}
@@ -258,36 +253,36 @@ export default function DestinationHandoffDetail() {
             urgency={handoff.urgency}
           />
           
-          <Card className="border-slate-200 dark:border-slate-800 shadow-sm">
-            <CardHeader className="bg-slate-50 dark:bg-slate-900/50 border-b border-slate-200 dark:border-slate-800 pb-4">
-              <CardTitle className="text-lg flex items-center gap-2">
-                <Activity className="size-5 text-slate-500" /> Clinical Context
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
+          <div className="flex flex-col border border-border rounded-lg bg-card overflow-hidden">
+            <div className="bg-muted/50 border-b border-border p-4">
+              <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
+                <Activity className="size-5 text-muted-foreground" /> Clinical Context
+              </h2>
+            </div>
+            <div className="p-6">
               <div className="grid grid-cols-2 gap-y-6 gap-x-4 mb-6">
                 <div>
-                  <div className="text-sm font-medium text-slate-500 mb-1">Origin Facility</div>
-                  <div className="font-medium text-slate-900 dark:text-white truncate" title={handoff.originFacilityId}>
+                  <div className="text-sm font-medium text-muted-foreground mb-1">Origin Facility</div>
+                  <div className="font-medium text-foreground truncate" title={handoff.originFacilityId}>
                     {handoff.originFacilityId}
                   </div>
                 </div>
               </div>
 
               <div className="space-y-3">
-                <div className="text-sm font-medium text-slate-500">Referral Details & Triage</div>
-                <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-4 border border-slate-100 dark:border-slate-800 text-sm font-mono text-slate-600 dark:text-slate-400 overflow-x-auto max-w-full">
+                <div className="text-sm font-medium text-muted-foreground">Referral Details & Triage</div>
+                <div className="bg-muted/50 rounded-lg p-4 border border-border text-sm font-mono text-muted-foreground overflow-x-auto whitespace-pre-wrap break-all">
                   <pre>{JSON.stringify(handoff.packetJson, null, 2)}</pre>
                 </div>
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         </div>
 
         {/* Right Column: Timeline */}
         <div className="space-y-6">
-          <h3 className="text-lg font-medium text-slate-900 dark:text-white flex items-center gap-2">
-            <Clock className="size-5 text-slate-400" /> Event Timeline
+          <h3 className="text-lg font-medium text-foreground flex items-center gap-2">
+            <Clock className="size-5 text-muted-foreground" /> Event Timeline
           </h3>
           
           <Timeline events={events} />
@@ -305,9 +300,9 @@ export default function DestinationHandoffDetail() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium">Reason *</label>
+              <label className="text-sm font-medium text-foreground">Reason *</label>
               <select 
-                className="w-full p-2 rounded-md border border-slate-300 bg-white"
+                className="w-full p-2 rounded-md border border-input bg-background text-foreground"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
               >
@@ -321,7 +316,7 @@ export default function DestinationHandoffDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setCannotAcceptOpen(false)}>Cancel</Button>
             <Button 
-              className="bg-red-600 hover:bg-red-700 text-white" 
+              className="bg-danger hover:bg-danger/90 text-primary-foreground" 
               onClick={() => cannotAcceptMutation.mutate()}
               disabled={!reason || cannotAcceptMutation.isPending}
             >
@@ -342,16 +337,16 @@ export default function DestinationHandoffDetail() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             {handoff.redirectCount >= 3 && (
-              <div className="p-3 bg-red-50 text-red-700 rounded flex items-start gap-2">
+              <div className="p-3 bg-danger/10 text-danger rounded flex items-start gap-2">
                 <AlertCircle className="size-4 mt-0.5" />
                 <span className="text-sm">Maximum redirect count (3) reached. You cannot redirect this handoff again.</span>
               </div>
             )}
             
             <div className="space-y-2">
-              <label className="text-sm font-medium">New Destination *</label>
+              <label className="text-sm font-medium text-foreground">New Destination *</label>
               <select 
-                className="w-full p-2 rounded-md border border-slate-300 bg-white"
+                className="w-full p-2 rounded-md border border-input bg-background text-foreground"
                 value={redirectTarget}
                 onChange={(e) => setRedirectTarget(e.target.value)}
                 disabled={handoff.redirectCount >= 3}
@@ -366,9 +361,9 @@ export default function DestinationHandoffDetail() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium">Reason for Redirect *</label>
+              <label className="text-sm font-medium text-foreground">Reason for Redirect *</label>
               <textarea 
-                className="w-full p-2 rounded-md border border-slate-300 bg-white min-h-[80px]"
+                className="w-full p-2 rounded-md border border-input bg-background text-foreground min-h-[80px]"
                 placeholder="e.g., Required specialist unavailable"
                 value={reason}
                 onChange={(e) => setReason(e.target.value)}
@@ -379,7 +374,6 @@ export default function DestinationHandoffDetail() {
           <DialogFooter>
             <Button variant="outline" onClick={() => setRedirectOpen(false)}>Cancel</Button>
             <Button 
-              className="bg-orange-600 hover:bg-orange-700 text-white" 
               onClick={() => redirectMutation.mutate()}
               disabled={!redirectTarget || !reason || handoff.redirectCount >= 3 || redirectMutation.isPending}
             >
