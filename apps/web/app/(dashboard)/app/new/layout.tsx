@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ReferralDraftProvider, useReferralDraft } from "./components/referral-draft-context";
 import { cn } from "~/lib/utils";
+import { Info } from "lucide-react";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 
 const STEPS = [
@@ -54,64 +55,86 @@ function WizardContextHeader() {
   );
 }
 
-function WizardStepper() {
+function WizardStepperVertical() {
   const pathname = usePathname();
   const currentStepIndex = STEPS.findIndex(s => pathname === s.path);
-  const currentStep = STEPS[currentStepIndex];
 
   return (
-    <div className="mb-8">
-      {/* Mobile Stepper: Step X of Y */}
-      <div className="sm:hidden flex items-center gap-2">
-        <span className="text-sm font-semibold text-foreground">
-          Step {currentStepIndex + 1} of {STEPS.length}
-        </span>
-        <span className="text-sm text-muted-foreground">&middot;</span>
-        <span className="text-sm text-muted-foreground">{currentStep?.label}</span>
-      </div>
-
-      {/* Desktop Stepper */}
-      <nav aria-label="Progress" className="hidden sm:block relative">
-        <ol className="flex items-start justify-between relative">
-          <div className="absolute left-0 top-4 -translate-y-1/2 w-full h-px bg-border -z-10" aria-hidden="true" />
-          {STEPS.map((step, idx) => {
-            const isActive = idx === currentStepIndex;
-            const isCompleted = idx < currentStepIndex;
-            
-            return (
-              <li key={step.id} className="flex flex-col items-center gap-2 bg-background px-2 z-10 w-24">
+    <div className="hidden md:block w-[220px] lg:w-[240px] shrink-0 relative pt-10">
+      <nav aria-label="Progress" className="sticky top-[100px]">
+        <ol className="flex flex-col relative">
+        <div className="absolute left-[11px] top-3 bottom-8 w-[1.5px] bg-border/60 -z-10" aria-hidden="true" />
+        {STEPS.map((step, idx) => {
+          const isActive = idx === currentStepIndex;
+          const isCompleted = idx < currentStepIndex;
+          
+          return (
+            <li key={step.id} className="relative pb-9 last:pb-0">
+              <div className="flex items-start gap-4">
                 {isCompleted ? (
                   <Link 
                     href={step.path}
-                    className={cn(
-                      "flex items-center justify-center size-8 rounded-full border-2 text-xs font-semibold transition-colors bg-background z-10",
-                      "border-primary bg-primary text-primary-foreground hover:bg-primary-hover"
-                    )}
+                    className="flex shrink-0 items-center justify-center size-[24px] rounded-full text-[11px] font-bold transition-all bg-primary/10 text-primary hover:bg-primary/20 ring-4 ring-background z-10"
                   >
                     ✓
                   </Link>
                 ) : (
                   <div 
                     className={cn(
-                      "flex items-center justify-center size-8 rounded-full border-2 text-xs font-semibold transition-colors bg-background z-10",
-                      isActive ? "border-primary text-primary" : "border-border text-muted-foreground"
+                      "flex shrink-0 items-center justify-center size-[24px] rounded-full text-[11px] font-bold transition-all ring-4 ring-background z-10",
+                      isActive 
+                        ? "bg-primary text-primary-foreground shadow-sm" 
+                        : "bg-background border-2 border-border/80 text-muted-foreground/70"
                     )}
                     aria-current={isActive ? "step" : undefined}
                   >
                     {idx + 1}
                   </div>
                 )}
-                <span className={cn(
-                  "text-xs font-semibold text-center leading-tight",
-                  isActive || isCompleted ? "text-foreground" : "text-muted-foreground"
-                )}>
-                  {step.label}
-                </span>
-              </li>
-            );
-          })}
-        </ol>
-      </nav>
+                <div className="flex flex-col pt-0.5">
+                  <span className={cn(
+                    "text-[13px] font-semibold tracking-wider uppercase",
+                    isActive ? "text-primary" : isCompleted ? "text-foreground/90" : "text-muted-foreground/70"
+                  )}>
+                    {step.label}
+                  </span>
+                  <span className={cn("text-[12.5px] font-medium mt-0.5 leading-snug", isActive ? "text-muted-foreground" : isCompleted ? "text-muted-foreground/80" : "text-muted-foreground/60")}>
+                    {step.label === "Patient" ? "Patient information" :
+                     step.label === "Protocol" ? "Clinical protocol" :
+                     step.label === "Clinical" ? "Clinical assessment" :
+                     step.label === "Destination" ? "Referral facility" :
+                     "Review & submit"}
+                  </span>
+                </div>
+              </div>
+            </li>
+          );
+        })}
+      </ol>
+      
+      <div className="mt-8 p-4 bg-primary/5 rounded-[8px] border border-primary/20 flex items-start gap-3 text-primary/90">
+        <Info className="size-[18px] shrink-0 mt-0.5 text-primary" />
+        <p className="text-[12.5px] leading-relaxed font-medium">
+          You are creating a new referral. Follow the steps to complete the process.
+        </p>
+      </div>
+    </nav>
+    </div>
+  );
+}
+
+function WizardStepperMobile() {
+  const pathname = usePathname();
+  const currentStepIndex = STEPS.findIndex(s => pathname === s.path);
+  const currentStep = STEPS[currentStepIndex];
+
+  return (
+    <div className="md:hidden flex items-center gap-2 mb-6 bg-muted/30 p-3 rounded-lg border border-border/40">
+      <span className="text-sm font-semibold text-foreground">
+        Step {currentStepIndex + 1} of {STEPS.length}
+      </span>
+      <span className="text-sm text-muted-foreground">&middot;</span>
+      <span className="text-sm text-muted-foreground font-medium">{currentStep?.label}</span>
     </div>
   );
 }
@@ -127,13 +150,15 @@ export default function NewReferralLayout({
         <WizardContextHeader />
         
         {/* Main Content Area */}
-        {/* pb-24 ensures scrollable content doesn't get hidden behind the mobile fixed action bar */}
-        <div className="max-w-3xl mx-auto w-full py-8 px-4 flex flex-col flex-1 pb-32 md:pb-12">
-          <WizardStepper />
-          
-          <div className="flex-1 flex flex-col relative">
+        <div className="max-w-[1100px] mx-auto w-full pt-8 pb-32 px-4 md:px-8 md:pb-12 flex flex-col md:flex-row gap-12 lg:gap-16 flex-1">
+          {/* Main content, gets most width */}
+          <div className="flex-1 flex flex-col relative min-w-0 w-full max-w-[840px]">
+            <WizardStepperMobile />
             {children}
           </div>
+          
+          {/* Right Rail, fixed width, sticky on desktop */}
+          <WizardStepperVertical />
         </div>
       </div>
     </ReferralDraftProvider>

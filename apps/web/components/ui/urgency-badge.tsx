@@ -19,15 +19,15 @@ export function UrgencyBadge({ level, className, showLabel = true }: UrgencyBadg
   if (isRed) {
     variant = "urgency-red";
     Icon = AlertTriangle;
-    label = showLabel ? "Red Urgency" : "Red";
+    label = "Urgency";
   } else if (isOrange) {
     variant = "urgency-orange";
     Icon = ArrowUpCircle;
-    label = showLabel ? "Orange Urgency" : "Orange";
+    label = "Urgency";
   } else if (isGreen) {
     variant = "urgency-green";
     Icon = CheckCircle2;
-    label = showLabel ? "Green (Routine)" : "Green";
+    label = "Routine";
   }
 
   return (

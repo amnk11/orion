@@ -38,7 +38,7 @@ export function createApp(): Express {
   });
 
   // Health endpoint
-  app.get("/health", (_req, res) => {
+  app.get(["/health", "/api/health"], (_req, res) => {
     res.status(200).json({
       ok: true,
       ts: new Date().toISOString(),

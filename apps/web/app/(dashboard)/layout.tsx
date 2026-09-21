@@ -18,7 +18,7 @@ export default function DashboardLayout({
 }) {
   const router = useRouter();
   const pathname = usePathname();
-  const { user, isPending, role, isOrigin, isDestination, isSupervisor } = useSessionUser();
+  const { user, isPending, isOrigin, isDestination, isSupervisor, isAdmin } = useSessionUser();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
@@ -32,10 +32,27 @@ export default function DashboardLayout({
       if (pathname === "/") {
         if (isDestination) router.replace("/destination");
         else if (isSupervisor) router.replace("/supervisor");
-        else router.replace("/app");
+        else if (isOrigin) router.replace("/app");
+        else if (isAdmin) router.replace("/app");
+        else router.replace("/login");
+        return;
+      }
+
+      if (pathname.startsWith("/app") && !isOrigin && !isAdmin) {
+        if (isDestination) router.replace("/destination");
+        else if (isSupervisor) router.replace("/supervisor");
+        else router.replace("/");
+      } else if (pathname.startsWith("/destination") && !isDestination && !isAdmin) {
+        if (isOrigin) router.replace("/app");
+        else if (isSupervisor) router.replace("/supervisor");
+        else router.replace("/");
+      } else if (pathname.startsWith("/supervisor") && !isSupervisor && !isAdmin) {
+        if (isOrigin) router.replace("/app");
+        else if (isDestination) router.replace("/destination");
+        else router.replace("/");
       }
     }
-  }, [user, isPending, router, pathname, isDestination, isSupervisor, isOrigin]);
+  }, [user, isPending, router, pathname, isDestination, isSupervisor, isOrigin, isAdmin]);
 
   // Close mobile menu on route change
   useEffect(() => {
@@ -52,7 +69,7 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     await signOut();
-    router.push("/login");
+    window.location.href = "/login";
   };
 
   const NavItem = ({ href, icon: Icon, children, exact = false }: { href: string; icon: any; children: React.ReactNode; exact?: boolean }) => {
@@ -76,10 +93,12 @@ export default function DashboardLayout({
 
   const SidebarContent = () => (
     <>
-      <div className="h-14 flex items-center px-6 border-b border-sidebar-border">
-        <Image src="/sahay-small.svg" alt="Sahay Logo" height={28} width={93} />
+      <div className="h-16 flex items-center justify-start px-4 border-b border-border shrink-0">
+        <Link href="/app" className="flex items-center gap-2.5 w-full hover:opacity-90 transition-opacity">
+          <Image src="/sahay-small.svg" alt="Sahay Logo" width={28} height={28} className="rounded-sm object-left" />
+          <span className="font-bold text-xl tracking-tight text-primary">Sahay</span>
+        </Link>
       </div>
-      
       <nav className="flex-1 py-4 px-3 space-y-1 overflow-y-auto">
         {/* Origin Only */}
         {isOrigin && (
