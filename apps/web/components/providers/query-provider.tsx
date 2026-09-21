@@ -9,7 +9,7 @@ export function ReactQueryProvider({ children }: { children: React.ReactNode }) 
       new QueryClient({
         defaultOptions: {
           queries: {
-            staleTime: 60 * 1000,
+            staleTime: 5 * 60 * 1000,
             retry: (failureCount, error: any) => {
               if (typeof window !== "undefined" && !navigator.onLine) {
                 return false;
@@ -18,7 +18,7 @@ export function ReactQueryProvider({ children }: { children: React.ReactNode }) 
               if (error?.status === 401 || error?.status === 403) return false;
               return failureCount < 3;
             },
-            refetchOnWindowFocus: () => typeof window !== "undefined" && navigator.onLine,
+            refetchOnWindowFocus: false,
             refetchOnReconnect: true,
           },
         },

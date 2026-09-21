@@ -182,9 +182,9 @@ export default function HandoffDetailPage() {
         {/* 1. Patient Context */}
         <PatientSummary 
           publicCode={handoff.publicCode}
-          name={(handoff.packetJson?.demographics as any)?.name || "Unknown Patient"}
-          age={(handoff.packetJson?.demographics as any)?.age}
-          sex={(handoff.packetJson?.demographics as any)?.sex}
+          name={(handoff as any).patientName || (handoff.packetJson?.demographics as any)?.name || "Unknown Patient"}
+          age={(handoff as any).patientAge || (handoff.packetJson?.demographics as any)?.age}
+          sex={(handoff as any).patientSex || (handoff.packetJson?.demographics as any)?.sex}
           protocolCode={handoff.protocolCode}
           urgency={handoff.urgency}
         />

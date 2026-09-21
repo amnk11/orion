@@ -23,13 +23,13 @@ import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { PatientSummary } from "~/components/orion/patient-summary";
 import { ClinicalSummary } from "~/components/orion/clinical-summary";
 import { toast } from "sonner";
-// Assuming reasons are string enums on backend
 const CANNOT_ACCEPT_REASONS = [
   "specialist_unavailable",
-  "bed_unavailable",
-  "equipment_down",
-  "out_of_scope",
-  "other",
+  "equipment_unavailable",
+  "no_appropriate_bed",
+  "blood_service_unavailable",
+  "wrong_level",
+  "operational",
 ];
 
 export default function DestinationHandoffDetail() {
@@ -137,7 +137,7 @@ export default function DestinationHandoffDetail() {
       const res = await fetch(`/api/v1/handoffs/${id}/redirect`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newDestinationFacilityId: redirectTarget, reason, clientEventId: crypto.randomUUID() }),
+        body: JSON.stringify({ destinationFacilityId: redirectTarget, reason, clientEventId: crypto.randomUUID() }),
       });
       if (!res.ok) {
         const err = await res.json();
@@ -319,9 +319,9 @@ export default function DestinationHandoffDetail() {
         {/* 1. Patient Context */}
         <PatientSummary 
           publicCode={handoff.publicCode}
-          name={handoff.patientName || handoff.packetJson?.demographics?.name || "Unknown Patient"}
-          age={handoff.packetJson?.demographics?.age}
-          sex={handoff.packetJson?.demographics?.sex}
+          name={(handoff as any).patientName || (handoff.packetJson?.demographics as any)?.name || "Unknown Patient"}
+          age={(handoff as any).patientAge || (handoff.packetJson?.demographics as any)?.age}
+          sex={(handoff as any).patientSex || (handoff.packetJson?.demographics as any)?.sex}
           protocolCode={handoff.protocolCode}
           urgency={handoff.urgency}
         />

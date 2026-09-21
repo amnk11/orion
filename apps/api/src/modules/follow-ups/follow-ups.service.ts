@@ -26,7 +26,7 @@ export class FollowUpsService {
     }));
   }
 
-  async completeFollowUp(followUpId: string, facilityId: string, userId: string, clientEventId?: string): Promise<{ followUp: any; isDuplicate: boolean }> {
+  async completeFollowUp(followUpId: string, facilityId: string, userId: string, clientEventId?: string | undefined): Promise<{ followUp: any; isDuplicate: boolean }> {
     const existingRows = await db
       .select()
       .from(followUps)

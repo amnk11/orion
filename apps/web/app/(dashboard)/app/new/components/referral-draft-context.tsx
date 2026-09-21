@@ -7,6 +7,7 @@ import { UrgencyLevel } from "@orion/domain";
 interface ReferralDraftState {
   patientId: string | null;
   patientName: string | null;
+  patientAge: number | null;
   patientDetails: string | null;
   protocolCode: string | null;
   protocolInputs: Record<string, unknown>;
@@ -17,7 +18,7 @@ interface ReferralDraftState {
 
 interface ReferralDraftContextValue {
   draft: ReferralDraftState;
-  setPatientId: (id: string, name?: string, details?: string) => void;
+  setPatientId: (id: string, name?: string, age?: number | null, details?: string) => void;
   setProtocolCode: (code: string) => void;
   setProtocolInputs: (inputs: Record<string, unknown>, urgency: UrgencyLevel, isComplete: boolean) => void;
   setDestinationFacilityId: (id: string) => void;
@@ -27,6 +28,7 @@ interface ReferralDraftContextValue {
 const initialState: ReferralDraftState = {
   patientId: null,
   patientName: null,
+  patientAge: null,
   patientDetails: null,
   protocolCode: null,
   protocolInputs: {},
@@ -40,8 +42,8 @@ const ReferralDraftContext = createContext<ReferralDraftContextValue | null>(nul
 export function ReferralDraftProvider({ children }: { children: React.ReactNode }) {
   const [draft, setDraft] = useState<ReferralDraftState>(initialState);
 
-  const setPatientId = (id: string, name?: string, details?: string) => 
-    setDraft((prev) => ({ ...prev, patientId: id, patientName: name || null, patientDetails: details || null }));
+  const setPatientId = (id: string, name?: string, age?: number | null, details?: string) => 
+    setDraft((prev) => ({ ...prev, patientId: id, patientName: name || null, patientAge: age ?? null, patientDetails: details || null }));
   const setProtocolCode = (code: string) => setDraft((prev) => ({ ...prev, protocolCode: code, protocolInputs: {}, urgency: null, isComplete: false }));
   const setProtocolInputs = (inputs: Record<string, unknown>, urgency: UrgencyLevel, isComplete: boolean) => 
     setDraft((prev) => ({ ...prev, protocolInputs: inputs, urgency, isComplete }));

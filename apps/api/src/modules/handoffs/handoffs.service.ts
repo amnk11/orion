@@ -300,14 +300,21 @@ export class HandoffsService {
    */
   async getHandoffDetail(
     handoffId: string
-  ): Promise<{ handoff: Handoff; events: HandoffEvent[]; outcome: any; followUp: any } | null> {
-    const [handoff] = await db
-      .select()
+  ): Promise<{ handoff: Handoff & { patientName?: string; patientAge?: number; patientSex?: string }; events: HandoffEvent[]; outcome: any; followUp: any } | null> {
+    const [row] = await db
+      .select({
+        handoff: handoffs,
+        patientName: patients.displayName,
+        patientAge: patients.age,
+        patientSex: patients.sex,
+      })
       .from(handoffs)
+      .leftJoin(patients, eq(handoffs.patientId, patients.id))
       .where(eq(handoffs.id, handoffId))
       .limit(1);
 
-    if (!handoff) return null;
+    if (!row) return null;
+    const handoff = { ...row.handoff, patientName: row.patientName ?? undefined, patientAge: row.patientAge ?? undefined, patientSex: row.patientSex ?? undefined };
 
     const events = await db
       .select()

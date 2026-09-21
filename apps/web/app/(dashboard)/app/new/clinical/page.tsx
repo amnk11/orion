@@ -28,8 +28,13 @@ export default function ProtocolFormPage() {
     return undefined;
   }, [draft.protocolCode]);
 
-  const [formData, setFormData] = useState<Record<string, unknown>>(draft.protocolInputs || {});
-
+  const [formData, setFormData] = useState<Record<string, unknown>>(() => {
+    const initial = { ...draft.protocolInputs };
+    if (draft.patientAge !== null && draft.patientAge !== undefined && initial["age"] === undefined) {
+      initial["age"] = draft.patientAge;
+    }
+    return initial;
+  });
   const triageResult = useMemo(() => {
     if (!protocol) return null;
     return evaluateProtocol(protocol, formData);
@@ -178,8 +183,8 @@ export default function ProtocolFormPage() {
               <div>
                 <p className="font-medium">Missing required info:</p>
                 <ul className="list-disc pl-4 mt-1 space-y-0.5">
-                  {triageResult?.completeness?.missing?.map((m: any, i: number) => (
-                    <li key={i}>{m.message}</li>
+                  {Array.from(new Set(triageResult?.completeness?.missing?.map((m: any) => m.message) || [])).map((msg: any, i: number) => (
+                    <li key={i}>{msg}</li>
                   ))}
                 </ul>
               </div>

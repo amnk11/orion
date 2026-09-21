@@ -103,14 +103,15 @@ class SyncEngine {
     } catch (error: any) {
       // Backoff and retry
       for (const m of pendingMutations) {
-        const attempts = m.attempts + 1;
+        const isTerminal = error.message === "AUTH_ERROR";
+        const attempts = isTerminal ? MAX_ATTEMPTS : m.attempts + 1;
         const status = attempts >= MAX_ATTEMPTS ? "failed" : "pending";
         const backoffMs = Math.pow(2, attempts) * 1000;
         
         await db.mutationQueue.update(m.id, {
           status,
           attempts,
-          nextAttemptAt: Date.now() + backoffMs,
+          nextAttemptAt: isTerminal ? Date.now() : Date.now() + backoffMs,
           lastError: error.message
         });
 

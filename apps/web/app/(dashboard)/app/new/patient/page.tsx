@@ -109,7 +109,7 @@ export default function PatientSelectionPage() {
     onSuccess: (res) => {
       const p = res.data;
       const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
-      setPatientId(p.id, p.displayName, details);
+      setPatientId(p.id, p.displayName, p.age, details);
       queryClient.invalidateQueries({ queryKey: ["patients"] });
       router.push("/app/new/protocol");
     },
@@ -218,7 +218,7 @@ export default function PatientSelectionPage() {
                       )}
                       onClick={() => {
                         const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
-                        setPatientId(p.id, p.displayName, details);
+                        setPatientId(p.id, p.displayName, p.age, details);
                         router.push("/app/new/protocol");
                       }}
                     >
