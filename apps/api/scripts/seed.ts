@@ -7,13 +7,16 @@ import {
   protocols,
   capabilitySnapshots,
   users,
+  careEpisodes,
+  assessments,
+  handoffs
 } from "@orion/db";
 import { eq, and } from "drizzle-orm";
 
-const DEMO_PASSWORD = "OrionDemoPass123!";
+const DEMO_PASSWORD = "SahayDemoPass123!";
 
 export async function seed() {
-  console.log("🌱 Starting Orion Phase 1 idempotent database seed...");
+  console.log("🌱 Starting Sahay Phase 10 idempotent database seed...");
 
   // 1. Organization: Maharashtra Health System
   let [org] = await db
@@ -129,31 +132,31 @@ export async function seed() {
   const staffDefs = [
     {
       name: "Sunita Kale",
-      email: "cho.wadgaon@orion.local",
+      email: "cho.wadgaon@sahay.demo",
       role: "origin" as const,
       facilityName: "AAM Wadgaon",
     },
     {
       name: "Dr. Aniket Deshmukh",
-      email: "mo.chakan@orion.local",
+      email: "mo.chakan@sahay.demo",
       role: "origin" as const,
       facilityName: "PHC Chakan",
     },
     {
       name: "Pooja Patil",
-      email: "desk.rajgurunagar@orion.local",
+      email: "desk.rajgurunagar@sahay.demo",
       role: "destination" as const,
       facilityName: "CHC Rajgurunagar",
     },
     {
       name: "Dr. K. Joshi",
-      email: "desk.pune@orion.local",
+      email: "desk.pune@sahay.demo",
       role: "destination" as const,
       facilityName: "DH Pune",
     },
     {
       name: "Dr. R. Kulkarni",
-      email: "supervisor.pune@orion.local",
+      email: "supervisor.pune@sahay.demo",
       role: "supervisor" as const,
       facilityName: "DH Pune",
     },
@@ -279,17 +282,18 @@ export async function seed() {
 
   // 5. Capability Snapshots
   const serviceCodes = ["obgyn", "functional_ot", "blood_bank", "icu", "lab"] as const;
-  const supervisorId = userMap["supervisor.pune@orion.local"];
+  const supervisorId = userMap["supervisor.pune@sahay.demo"];
 
   const now = new Date();
-  const staleDate = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000); // 15 days ago
+  const staleDate = new Date(now.getTime() - 48 * 60 * 60 * 1000); // 48 hours ago (STALE)
+  const veryStaleDate = new Date(now.getTime() - 15 * 24 * 60 * 60 * 1000); // 15 days ago (VERY_STALE)
 
   const facilityCapabilityMatrix: Record<
     string,
     Record<string, { status: "verified_available" | "verified_unavailable" | "unknown"; attestedAt?: Date }>
   > = {
     "AAM Wadgaon": {
-      obgyn: { status: "unknown" },
+      obgyn: { status: "unknown" }, // UNKNOWN + fresh
       functional_ot: { status: "verified_unavailable" },
       blood_bank: { status: "verified_unavailable" },
       icu: { status: "verified_unavailable" },
@@ -300,26 +304,23 @@ export async function seed() {
       functional_ot: { status: "verified_unavailable" },
       blood_bank: { status: "verified_unavailable" },
       icu: { status: "verified_unavailable" },
-      lab: { status: "verified_available" },
+      lab: { status: "verified_available", attestedAt: staleDate }, // STALE (48h)
     },
     "CHC Rajgurunagar": {
-      obgyn: { status: "verified_available" }, // Stale!
-      functional_ot: { status: "verified_available" },
+      obgyn: { status: "verified_available", attestedAt: veryStaleDate }, // VERY_STALE (15 days)
+      functional_ot: { status: "verified_unavailable" }, // Demo: CHC has NO functional OT
       blood_bank: { status: "verified_unavailable" },
       icu: { status: "verified_unavailable" },
       lab: { status: "verified_available" },
     },
     "DH Pune": {
       obgyn: { status: "verified_available" },
-      functional_ot: { status: "verified_available" },
+      functional_ot: { status: "verified_available" }, // Demo: DH HAS functional OT
       blood_bank: { status: "verified_available" },
       icu: { status: "verified_available" },
       lab: { status: "verified_available" },
     },
   };
-
-  // Mark CHC Rajgurunagar obgyn as stale by setting an old attestedAt
-  facilityCapabilityMatrix["CHC Rajgurunagar"]["obgyn"].attestedAt = staleDate;
 
   for (const [facilityName, services] of Object.entries(facilityCapabilityMatrix)) {
     const facilityId = facilityMap[facilityName];
@@ -402,14 +403,133 @@ export async function seed() {
     }
   }
 
-  console.log("\n✅ Orion Phase 1 Seed Completed Successfully!");
+  
+  // 7. Synthetic Referrals (Phase 10 demo data)
+  console.log("  [ ] Creating realistic referral scenarios...");
+
+  const generatePublicCode = (prefix) => prefix + '-' + Math.random().toString(36).substring(2, 6).toUpperCase();
+
+  const referralScenarios = [
+    {
+      patientName: "Meena Pawar",
+      age: 26,
+      sex: "female",
+      abhaMock: "91-MH00-0003-XX",
+      originFacility: "AAM Wadgaon",
+      destFacility: "PHC Chakan",
+      urgency: "green",
+      state: "accepted",
+      protocol: "anc_danger"
+    },
+    {
+      patientName: "Kavita Shinde",
+      age: 24,
+      sex: "female",
+      abhaMock: "91-MH00-0004-XX",
+      originFacility: "AAM Wadgaon",
+      destFacility: "CHC Rajgurunagar",
+      urgency: "orange",
+      state: "sent",
+      protocol: "anc_danger"
+    },
+    {
+      patientName: "Prakash Bhosale",
+      age: 55,
+      sex: "male",
+      abhaMock: "91-MH00-0005-XX",
+      originFacility: "PHC Chakan",
+      destFacility: "CHC Rajgurunagar",
+      urgency: "green",
+      state: "arrived",
+      protocol: "adult_general"
+    },
+    {
+      patientName: "Savita Gaikwad",
+      age: 32,
+      sex: "female",
+      abhaMock: "91-MH00-0006-XX",
+      originFacility: "CHC Rajgurunagar",
+      destFacility: "DH Pune",
+      urgency: "red",
+      state: "closed",
+      protocol: "anc_danger"
+    }
+  ];
+
+  for (const sc of referralScenarios) {
+    const originId = facilityMap[sc.originFacility];
+    const destId = facilityMap[sc.destFacility];
+    
+    // 1. Create Patient
+    let [patient] = await db.select().from(patients).where(eq(patients.abhaMock, sc.abhaMock)).limit(1);
+    if (!patient) {
+      [patient] = await db.insert(patients).values({
+        displayName: sc.patientName,
+        age: sc.age,
+        sex: sc.sex,
+        abhaMock: sc.abhaMock,
+        createdByFacilityId: originId,
+        isSynthetic: true
+      }).returning();
+    }
+
+    // 2. Check if care episode exists for patient
+    let [episode] = await db.select().from(careEpisodes).where(eq(careEpisodes.patientId, patient.id)).limit(1);
+    if (!episode) {
+      [episode] = await db.insert(careEpisodes).values({
+        publicCode: generatePublicCode("CE"),
+        patientId: patient.id,
+        openedByFacilityId: originId,
+        status: sc.state === "closed" ? "closed" : "open"
+      }).returning();
+    }
+
+    // 3. Create Assessment
+    let [assessment] = await db.select().from(assessments).where(eq(assessments.episodeId, episode.id)).limit(1);
+    if (!assessment) {
+      [assessment] = await db.insert(assessments).values({
+        episodeId: episode.id,
+        protocolCode: sc.protocol,
+        answersJson: sc.protocol === "anc_danger" ? { gestationalAgeWeeks: 32, bloodPressureSystolic: 140, dangerSigns: ["severe_headache"] } : { primaryComplaint: "Chest pain", systolicBp: 150 },
+        triageJson: { urgency: sc.urgency },
+        assessedBy: userMap[`cho.${sc.originFacility.split(' ')[1].toLowerCase()}@sahay.demo`] || userMap['supervisor.pune@sahay.demo']
+      }).returning();
+    }
+
+    // 4. Create Handoff
+    let [handoff] = await db.select().from(handoffs).where(eq(handoffs.episodeId, episode.id)).limit(1);
+    if (!handoff) {
+      await db.insert(handoffs).values({
+        publicCode: generatePublicCode("HO"),
+        episodeId: episode.id,
+        assessmentId: assessment.id,
+        patientId: patient.id,
+        originFacilityId: originId,
+        destinationFacilityId: destId,
+        currentDestinationFacilityId: destId,
+        protocolCode: sc.protocol,
+        urgency: sc.urgency,
+        state: sc.state,
+        reasonForReferral: "Further evaluation required",
+        packetJson: {},
+        idempotencyKey: sc.abhaMock + "-handoff-1"
+      });
+      console.log(`  [+] Created Referral for ${sc.patientName}: ${sc.originFacility} -> ${sc.destFacility} (${sc.state})`);
+    }
+  }
+
+  // Update existing patients to realistic names instead of Ramesh Patil (Synthetic Demo)
+  await db.update(patients).set({ displayName: "Ramesh Patil" }).where(eq(patients.displayName, "Ramesh Patil (Synthetic Demo)"));
+  await db.update(patients).set({ displayName: "Savitri Jadhav" }).where(eq(patients.displayName, "Savitri Jadhav (Synthetic Demo)"));
+
+console.log("\n✅ Sahay Phase 10 Seed Completed Successfully!");
   console.log("--------------------------------------------------");
-  console.log("Demo Staff Credentials (Password for all: OrionDemoPass123!):");
-  console.log("  1. Origin CHO:       cho.wadgaon@orion.local");
-  console.log("  2. Origin MO:        mo.chakan@orion.local");
-  console.log("  3. Destination CHC:  desk.rajgurunagar@orion.local");
-  console.log("  4. Destination DH:   desk.pune@orion.local");
-  console.log("  5. Supervisor DHO:   supervisor.pune@orion.local");
+  console.log("Demo Staff Credentials (Password for all: SahayDemoPass123!):");
+  console.log("  1. Origin CHO:       cho.wadgaon@sahay.demo");
+  console.log("  2. Origin MO:        mo.chakan@sahay.demo");
+  console.log("  3. Destination CHC:  desk.rajgurunagar@sahay.demo");
+  console.log("  4. Destination DH:   desk.pune@sahay.demo");
+  console.log("  5. Supervisor DHO:   supervisor.pune@sahay.demo");
   console.log("--------------------------------------------------");
 }
 

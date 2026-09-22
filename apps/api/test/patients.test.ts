@@ -4,13 +4,13 @@ import { app } from "../src/app";
 
 describe("Phase 3 Patients API", () => {
   const originCredentials = {
-    email: "cho.wadgaon@orion.local",
-    password: "OrionDemoPass123!",
+    email: "cho.wadgaon@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   const destinationCredentials = {
-    email: "desk.rajgurunagar@orion.local",
-    password: "OrionDemoPass123!",
+    email: "desk.rajgurunagar@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   describe("Authentication & RBAC", () => {
@@ -48,7 +48,7 @@ describe("Phase 3 Patients API", () => {
       const res = await request(app)
         .post("/api/v1/patients")
         .set("Cookie", cookies!)
-        .send({ displayName: "Test Patient" });
+        .send({ displayName: "Rahul Joshi" });
       
       expect(res.status).toBe(403);
     });

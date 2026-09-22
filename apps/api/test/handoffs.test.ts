@@ -5,8 +5,8 @@ import crypto from "crypto";
 
 describe("Phase 3 Handoffs API", () => {
   const originCredentials = {
-    email: "cho.wadgaon@orion.local",
-    password: "OrionDemoPass123!",
+    email: "cho.wadgaon@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   let cookies: string[];
@@ -30,7 +30,7 @@ describe("Phase 3 Handoffs API", () => {
       const patRes = await request(app)
         .post("/api/v1/patients")
         .set("Cookie", cookies)
-        .send({ displayName: "Test Patient Idempotency", age: 30, sex: "female" });
+        .send({ displayName: "Rahul Joshi Idempotency", age: 30, sex: "female" });
       
       validPatientId = patRes.body.data.id;
     }

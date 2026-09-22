@@ -1,4 +1,4 @@
-# Orion — Care Access & Referral Coordination
+# Sahay — Care Access & Referral Coordination
 
 A lightweight, offline-friendly digital care-transition platform that makes patient referrals between healthcare facilities visible, trackable, and accountable.
 
@@ -30,7 +30,7 @@ pnpm dev
 ## Workspace structure
 
 ```
-orion/
+sahay/
 ├── apps/
 │   ├── api/          Express.js backend (REST API)
 │   └── web/          Next.js 15 frontend (PWA)
@@ -46,8 +46,8 @@ orion/
 
 | Role | Email | Password |
 |---|---|---|
-| Origin (CHO) | `cho.rampur@orion.local` | `demo1234` |
-| Destination (Desk) | `desk.chcnorth@orion.local` | `demo1234` |
-| Supervisor | `supervisor.central@orion.local` | `demo1234` |
+| Origin (CHO) | `cho.wadgaon@sahay.demo` | `SahayDemoPass123!` |
+| Destination (Desk) | `desk.rajgurunagar@sahay.demo` | `SahayDemoPass123!` |
+| Supervisor | `supervisor.pune@sahay.demo` | `SahayDemoPass123!` |
 
-> ⚠️ **Prototype** — Synthetic patient data only. Not for real clinical use.
+> ⚠️ **Prototype** — Realistic synthetic healthcare demonstration data only. Not for real clinical use.

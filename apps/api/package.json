@@ -11,7 +11,8 @@
     "typecheck": "tsc --noEmit",
     "check-types": "tsc --noEmit",
     "auth:generate": "better-auth generate --config ./src/lib/auth.ts --output ../../packages/database/src/schema/better-auth.ts -y",
-    "seed": "dotenv -- tsx scripts/seed.ts"
+    "seed": "dotenv -- tsx scripts/seed.ts",
+    "bootstrap:prod": "tsx scripts/bootstrap-prod.ts"
   },
   "devDependencies": {
     "@orion/eslint-config": "workspace:*",
@@ -33,6 +34,7 @@
     "@better-auth/drizzle-adapter": "^1.7.5",
     "@orion/db": "workspace:*",
     "@orion/domain": "workspace:^",
+    "@orion/fhir": "workspace:*",
     "@orion/logger": "workspace:*",
     "@orion/protocols": "workspace:^",
     "@orion/shared": "workspace:^",

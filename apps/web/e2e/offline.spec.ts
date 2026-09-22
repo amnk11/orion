@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 
 // Use the seeded CHO credentials from the implementation plan / backend tests
-const ORIGIN_EMAIL = 'cho.wadgaon@orion.local';
-const DEST_EMAIL = 'desk.dh.pune@orion.local';
-const PASSWORD = 'OrionDemoPass123!';
+const ORIGIN_EMAIL = 'cho.wadgaon@sahay.demo';
+const DEST_EMAIL = 'desk.rajgurunagar@sahay.demo';
+const PASSWORD = 'SahayDemoPass123!';
 
 test.describe('Phase 7 Offline Sync Scenarios', () => {
 
@@ -37,33 +37,40 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     // Go offline
     await context.setOffline(true);
     
+    // Ensure offline state has propagated before proceeding
+    const banner = page.locator('text=You\'re offline. New referrals will be saved and synced');
+    await expect(banner).toBeVisible();
+    
     // Create Patient
-    await page.fill('input[name="displayName"]', 'E2E Offline Patient');
-    await page.fill('input[name="age"]', '30');
+    await page.click('button:has-text("Register New")');
+    await page.fill('input[id="displayName"]', 'E2E Offline Patient');
+    await page.fill('input[id="age"]', '30');
     // Select sex
     await page.click('button[role="combobox"]');
     await page.click('div[role="option"]:has-text("Female")');
-    await page.click('button:has-text("Continue")');
+    await page.click('button:has-text("Register & Continue")');
     
     // Now on protocol selection (or triage)
-    await expect(page).toHaveURL(/.*\/app\/new\/triage/);
-    await page.click('div:has-text("ANC Danger Signs")'); // Select protocol
+    await expect(page).toHaveURL(/.*\/app\/new\/protocol/);
+    await page.click('button:has-text("ANC Danger Signs")'); // Select protocol
     await page.click('button:has-text("Continue")');
     
     // Triage form
-    await page.fill('input[name="vitals.hr"]', '90');
+    await page.fill('input[id="gestation_weeks"]', '30');
     await page.click('button[role="switch"]'); // Toggle a danger sign switch (first one)
+    await page.fill('input[id="bp"]', '120/80');
     await page.click('button:has-text("Continue")');
     
     // Destination Selection
     await expect(page).toHaveURL(/.*\/app\/new\/destination/);
     
     // We should see cached destinations. Select the first one.
-    await page.click('button:has-text("Select")'); 
+    await page.locator('button.bg-card').first().click();
+    await page.click('button:has-text("Review & Confirm")'); 
     
     // Confirm
     await expect(page).toHaveURL(/.*\/app\/new\/confirm/);
-    await page.click('button:has-text("Confirm & Create Handoff")');
+    await page.click('button:has-text("Dispatch Handoff")');
     
     // Should be redirected to app dashboard
     await expect(page).toHaveURL('/app');
@@ -94,9 +101,4 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     expect(rowCount).toBe(1);
   });
 
-  test('E2E 7 - Destination workflow for synced referral', async ({ page, context }) => {
-    // For destination workflow, we need to logout and login as DEST
-    await page.goto('/login');
-    // Clear cookies/session manually if needed, or better, use a new context
-  });
 });

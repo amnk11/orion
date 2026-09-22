@@ -11,5 +11,8 @@
   "devDependencies": {
     "@orion/typescript-config": "workspace:*",
     "typescript": "^5.9.3"
+  },
+  "dependencies": {
+    "@orion/db": "workspace:*"
   }
 }

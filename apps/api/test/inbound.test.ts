@@ -4,23 +4,23 @@ import { app } from "../src/app";
 
 describe("Phase 5 Destination Inbound API", () => {
   const originCreds = {
-    email: "cho.wadgaon@orion.local",
-    password: "OrionDemoPass123!",
+    email: "cho.wadgaon@sahay.demo",
+    password: "SahayDemoPass123!",
   };
   
   const dest1Creds = {
-    email: "desk.rajgurunagar@orion.local",
-    password: "OrionDemoPass123!",
+    email: "desk.rajgurunagar@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   const dest2Creds = {
-    email: "desk.pune@orion.local",
-    password: "OrionDemoPass123!",
+    email: "desk.pune@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   const supCreds = {
-    email: "supervisor.pune@orion.local",
-    password: "OrionDemoPass123!",
+    email: "supervisor.pune@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   let originCookies: string[];

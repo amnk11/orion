@@ -5,8 +5,8 @@ import { randomUUID } from "crypto";
 
 describe("Phase 7 Sync API", () => {
   const originCredentials = {
-    email: "cho.wadgaon@orion.local",
-    password: "OrionDemoPass123!",
+    email: "cho.wadgaon@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   it("should reject unauthorized requests", async () => {
@@ -71,7 +71,7 @@ describe("Phase 7 Sync API", () => {
           payload: {
             id: patientId,
             idempotencyKey: patientIdempotency,
-            displayName: "Sync Test Patient",
+            displayName: "Anjali Patil",
             age: 25,
             sex: "F",
           }
@@ -109,7 +109,7 @@ describe("Phase 7 Sync API", () => {
 
     // Handoff mutation
     if (res.body.data.results[1].status !== "applied") {
-      console.log("REJECTION ERROR:", res.body.data.results[1].error);
+      // Intentionally left blank for test observation
     }
     expect(res.body.data.results[1].clientMutationId).toBe(handoffMutationId);
     expect(res.body.data.results[1].status).toBe("applied");
@@ -118,7 +118,6 @@ describe("Phase 7 Sync API", () => {
     // Verify it was actually created
     const getRes = await request(app).get(`/api/v1/handoffs/${handoffId}`).set("Cookie", cookies!);
     expect(getRes.status).toBe(200);
-    console.log("GET RESPONSE:", JSON.stringify(getRes.body, null, 2));
     expect(getRes.body.data.handoff.patientId).toBe(patientId);
     expect(getRes.body.data.handoff.destinationFacilityId).toBe(destinationFacilityId);
 
@@ -171,5 +170,46 @@ describe("Phase 7 Sync API", () => {
     expect(partialRes.status).toBe(200);
     expect(partialRes.body.data.results[0].status).toBe("rejected");
     expect(partialRes.body.data.results[0].error).toBeDefined();
+  });
+
+  it("should prevent RBAC/facility scoping bypass via sync", async () => {
+    const signInRes = await request(app)
+      .post("/api/auth/sign-in/email")
+      .send(originCredentials);
+    const cookies = signInRes.headers["set-cookie"];
+
+    const payload = {
+      mutations: [
+        {
+          clientMutationId: randomUUID(),
+          mutationType: "accept_handoff", // Origin user should NOT be able to do this, but sync doesn't even support it
+          payload: {
+            id: randomUUID()
+          }
+        },
+        {
+          clientMutationId: randomUUID(),
+          mutationType: "create_handoff",
+          payload: {
+            id: randomUUID(),
+            idempotencyKey: randomUUID(),
+            patientId: randomUUID(),
+            protocolCode: "anc_danger",
+            destinationFacilityId: randomUUID(),
+            originFacilityId: randomUUID(), // Trying to spoof origin
+          }
+        }
+      ]
+    };
+
+    const res = await request(app)
+      .post("/api/v1/sync/batch")
+      .set("Cookie", cookies!)
+      .send(payload);
+
+    // Zod validation blocks "accept_handoff" because it's not in the sync schema enum.
+    // If it bypassed schema somehow, it would be ignored by the service.
+    // Let's assert that the API returns 400 because of invalid mutationType.
+    expect(res.status).toBe(400);
   });
 });

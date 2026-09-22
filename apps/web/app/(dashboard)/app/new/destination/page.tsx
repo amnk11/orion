@@ -4,11 +4,14 @@ import { useState } from "react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
-import { formatDistanceToNow } from "date-fns";
 import { useReferralDraft } from "../components/referral-draft-context";
-import { Building2, CheckCircle2, Clock, MapPin, Loader2, Search } from "lucide-react";
+import { Building2, CheckCircle2, MapPin, Loader2, Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import { Button } from "~/components/ui/button";
+import {
+  CapabilityStatusRow,
+  type CapabilityView,
+} from "~/components/orion/capability-status";
 
 interface Facility {
   id: string;
@@ -16,12 +19,7 @@ interface Facility {
   type: string;
 }
 
-interface Capability {
-  id: string;
-  serviceCode: string;
-  status: string;
-  attestedAt: string;
-}
+type Capability = CapabilityView;
 
 function FacilityCard({ facility, selected, onSelect }: { facility: Facility, selected: boolean, onSelect: () => void }) {
   const { data: caps, isLoading } = useQuery<{ ok: boolean; data: Capability[] }>({
@@ -38,7 +36,7 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
           }
           return json;
         }
-      } catch (e) {
+      } catch {
         // network error
       }
       
@@ -71,33 +69,26 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
       </div>
       
       <div className="flex flex-col gap-2 mt-auto w-full">
-        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Known Capabilities</div>
+        <div className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">
+          Reported Capabilities
+        </div>
         {isLoading ? (
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="size-3 animate-spin" /> Loading status...
           </div>
         ) : caps?.data && caps.data.length > 0 ? (
           <div className="flex flex-col gap-2">
-            {caps.data.map(cap => (
-              <div key={cap.id} className="flex flex-col gap-1 p-2 rounded-md bg-muted/50 border border-border/50">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium capitalize text-foreground">
-                    {cap.serviceCode.replace("_", " ")}
-                  </span>
-                  <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-sm ${cap.status === "available" ? "bg-success/15 text-success" : "bg-muted text-muted-foreground"}`}>
-                    {cap.status}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
-                  <Clock className="size-3" /> 
-                  Verified {formatDistanceToNow(new Date(cap.attestedAt), { addSuffix: true })}
-                </div>
-              </div>
+            {caps.data.map((cap) => (
+              <CapabilityStatusRow key={cap.id} capability={cap} />
             ))}
           </div>
         ) : (
           <div className="text-sm text-muted-foreground italic">No capability data available</div>
         )}
+        <p className="text-[10px] text-muted-foreground/80 leading-snug">
+          Capability information is a point-in-time snapshot reported by the facility, not a
+          live availability feed.
+        </p>
       </div>
     </button>
   );
@@ -128,7 +119,7 @@ export default function DestinationSelectionPage() {
           }
           return json;
         }
-      } catch (e) {
+      } catch {
         // Network error
       }
       

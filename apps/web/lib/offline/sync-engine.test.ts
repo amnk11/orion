@@ -76,9 +76,9 @@ describe('SyncEngine', () => {
       await syncEngine.triggerSync();
       
       expect(fetchMock).toHaveBeenCalledTimes(1);
-      const callArgs = fetchMock.mock.calls[0];
+      const callArgs = fetchMock.mock.calls[0]!;
       expect(callArgs[0]).toBe('/api/v1/sync/batch');
-      const body = JSON.parse(callArgs[1].body);
+      const body = JSON.parse(callArgs[1].body as string);
       
       expect(body.mutations).toHaveLength(2);
       expect(body.mutations[0].clientMutationId).toBe('c1'); // Older

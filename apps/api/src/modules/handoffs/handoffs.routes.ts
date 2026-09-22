@@ -348,3 +348,46 @@ handoffsRouter.post(
   requireRole("destination"),
   handleTransition("outcome_recorded", outcomeSchema),
 );
+
+import { toFhirBundle } from "@orion/fhir";
+import { db, patients, facilities } from "@orion/db";
+
+/**
+ * GET /api/v1/handoffs/:id/fhir
+ * Export handoff to FHIR format
+ */
+handoffsRouter.get("/:id/fhir", async (req, res, next) => {
+  try {
+    const handoffId = req.params.id;
+    const detail = await handoffsService.getHandoffDetail(handoffId);
+
+    if (!detail) {
+      return res.status(404).json({ ok: false, error: { code: "NOT_FOUND", message: "Handoff not found" } });
+    }
+    
+    const handoff = detail.handoff;
+
+    assertPartyToHandoff(req.user!, handoff.id);
+
+    const [patient] = await db.select().from(patients).where(eq(patients.id, handoff.patientId!)).limit(1);
+    const [origin] = await db.select().from(facilities).where(eq(facilities.id, handoff.originFacilityId!)).limit(1);
+    const [dest] = await db.select().from(facilities).where(eq(facilities.id, handoff.destinationFacilityId!)).limit(1);
+    const events = detail.events;
+
+    if (!patient || !origin || !dest) {
+       return res.status(500).json({ ok: false, error: { code: "INTERNAL_ERROR", message: "Incomplete related records" } });
+    }
+
+    const bundle = toFhirBundle({
+      handoff,
+      patient,
+      originFacility: origin,
+      destinationFacility: dest,
+      events
+    });
+
+    res.json(bundle);
+  } catch (error) {
+    next(error);
+  }
+});

@@ -23,19 +23,19 @@ const DEMO_ACCOUNTS: DemoAccount[] = [
   {
     label: "Origin (CHO)",
     role: "origin",
-    email: "cho.wadgaon@orion.local",
+    email: "cho.wadgaon@sahay.demo",
     facility: "AAM Wadgaon",
   },
   {
     label: "Destination (Desk)",
     role: "destination",
-    email: "desk.rajgurunagar@orion.local",
+    email: "desk.rajgurunagar@sahay.demo",
     facility: "CHC Rajgurunagar",
   },
   {
     label: "Supervisor",
     role: "supervisor",
-    email: "supervisor.pune@orion.local",
+    email: "supervisor.pune@sahay.demo",
     facility: "DH Pune",
   },
 ];
@@ -95,7 +95,7 @@ export default function LoginPage() {
 
   const handleQuickDemoLogin = (account: DemoAccount) => {
     setEmail(account.email);
-    setPassword("OrionDemoPass123!");
+    setPassword("SahayDemoPass123!");
     setError(null);
   };
 
@@ -159,7 +159,7 @@ export default function LoginPage() {
                 <Input
                   id="email"
                   type="email"
-                  placeholder="name@orion.local"
+                  placeholder="name@sahay.demo"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   disabled={loading}

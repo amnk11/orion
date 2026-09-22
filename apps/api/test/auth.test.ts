@@ -4,13 +4,13 @@ import { app } from "../src/app";
 
 describe("Phase 1 Authentication & Authorization", () => {
   const originCredentials = {
-    email: "cho.wadgaon@orion.local",
-    password: "OrionDemoPass123!",
+    email: "cho.wadgaon@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   const destinationCredentials = {
-    email: "desk.rajgurunagar@orion.local",
-    password: "OrionDemoPass123!",
+    email: "desk.rajgurunagar@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   describe("Unauthenticated Access", () => {

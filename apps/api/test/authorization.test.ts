@@ -4,10 +4,10 @@ import { app } from "../src/app";
 
 describe("Phase 2 Authorization & Scoping", () => {
   // Demo users from the Maharashtra seed
-  const originAWadgaon = { email: "cho.wadgaon@orion.local", password: "OrionDemoPass123!" };
-  const originBChakan = { email: "mo.chakan@orion.local", password: "OrionDemoPass123!" };
-  const destinationNorthBlock = { email: "desk.rajgurunagar@orion.local", password: "OrionDemoPass123!" };
-  const supervisorPune = { email: "supervisor.pune@orion.local", password: "OrionDemoPass123!" };
+  const originAWadgaon = { email: "cho.wadgaon@sahay.demo", password: "SahayDemoPass123!" };
+  const originBChakan = { email: "mo.chakan@sahay.demo", password: "SahayDemoPass123!" };
+  const destinationNorthBlock = { email: "desk.rajgurunagar@sahay.demo", password: "SahayDemoPass123!" };
+  const supervisorPune = { email: "supervisor.pune@sahay.demo", password: "SahayDemoPass123!" };
 
   let cookiesA: string[];
   let cookiesB: string[];
@@ -40,7 +40,7 @@ describe("Phase 2 Authorization & Scoping", () => {
     const patRes = await request(app)
       .post("/api/v1/patients")
       .set("Cookie", cookiesA)
-      .send({ displayName: "Auth Test Patient", age: 25, sex: "female" });
+      .send({ displayName: "Auth Rahul Joshi", age: 25, sex: "female" });
     patientIdA = patRes.body.data.id;
 
     // 4. Facility A creates a handoff to Destination

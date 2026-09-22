@@ -6,7 +6,7 @@ import Image from "next/image";
 import { signOut } from "~/lib/auth/auth-client";
 import { useSessionUser } from "~/hooks/use-session-user";
 import Link from "next/link";
-import { FilePlus2, Inbox, LogOut, Loader2, Menu, LayoutDashboard } from "lucide-react";
+import { FilePlus2, Inbox, LogOut, Loader2, Menu, LayoutDashboard, ClipboardCheck } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "~/components/ui/sheet";
 import { OfflineBanner } from "~/components/offline/offline-banner";
@@ -113,7 +113,8 @@ export default function DashboardLayout({
         {isDestination && (
           <>
             <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 mt-2">Destination Desk</div>
-            <NavItem href="/destination" icon={Inbox}>Incoming Referrals</NavItem>
+            <NavItem href="/destination" icon={Inbox} exact>Incoming Referrals</NavItem>
+            <NavItem href="/destination/capabilities" icon={ClipboardCheck}>Capabilities</NavItem>
           </>
         )}
 

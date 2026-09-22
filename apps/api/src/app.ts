@@ -10,10 +10,13 @@ import { auth } from "./lib/auth";
 import { authRouter } from "./modules/auth/auth.routes";
 import { patientsRouter } from "./modules/patients/patients.routes";
 import { facilitiesRouter } from "./modules/facilities/facilities.routes";
+import { capabilitiesRouter } from "./modules/capabilities/capabilities.routes";
 import { handoffsRouter } from "./modules/handoffs/handoffs.routes";
 import { episodesRouter } from "./modules/episodes/episodes.routes";
 import { followUpsRouter } from "./modules/follow-ups/follow-ups.routes";
 import { syncRouter } from "./modules/sync/sync.routes";
+import { dashboardRouter } from "./modules/dashboard/dashboard.routes";
+import { publicRouter } from "./modules/public/public.routes";
 
 export function createApp(): Express {
   const app = express();
@@ -50,11 +53,14 @@ export function createApp(): Express {
 
   // Phase 3 routes
   app.use("/api/v1/patients", patientsRouter);
+  app.use("/api/v1/public", publicRouter);
   app.use("/api/v1/facilities", facilitiesRouter);
+  app.use("/api/v1/capabilities", capabilitiesRouter);
   app.use("/api/v1/handoffs", handoffsRouter);
   app.use("/api/v1/episodes", episodesRouter);
   app.use("/api/v1/follow-ups", followUpsRouter);
   app.use("/api/v1/sync", syncRouter);
+  app.use("/api/v1/dashboard", dashboardRouter);
 
   // 404 handler for unmatched routes
   app.use(notFoundMiddleware);

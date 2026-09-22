@@ -4,8 +4,8 @@ import { app } from "../src/app";
 
 describe("Phase 3 Facilities API", () => {
   const originCredentials = {
-    email: "cho.wadgaon@orion.local",
-    password: "OrionDemoPass123!",
+    email: "cho.wadgaon@sahay.demo",
+    password: "SahayDemoPass123!",
   };
 
   it("should retrieve facilities for authenticated user", async () => {

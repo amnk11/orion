@@ -18,15 +18,15 @@ describe("Phase 4: Handoff Transitions (Domain & API)", () => {
   beforeAll(async () => {
     // 1. Login
     const login = async (email: string) => {
-      const res = await request(app).post("/api/auth/sign-in/email").send({ email, password: "OrionDemoPass123!" });
+      const res = await request(app).post("/api/auth/sign-in/email").send({ email, password: "SahayDemoPass123!" });
       if (res.status !== 200) throw new Error("Failed to login " + email);
       return res.headers["set-cookie"];
     };
 
-    originCookies = await login("cho.wadgaon@orion.local");
-    destinationCookies = await login("desk.rajgurunagar@orion.local");
-    unrelatedCookies = await login("mo.chakan@orion.local"); // An unrelated facility user
-    supervisorCookies = await login("supervisor.pune@orion.local");
+    originCookies = await login("cho.wadgaon@sahay.demo");
+    destinationCookies = await login("desk.rajgurunagar@sahay.demo");
+    unrelatedCookies = await login("mo.chakan@sahay.demo"); // An unrelated facility user
+    supervisorCookies = await login("supervisor.pune@sahay.demo");
 
     // 2. Extract Facility IDs
     const getFac = async (cookies: string[]) => {

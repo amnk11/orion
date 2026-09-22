@@ -12,6 +12,15 @@ import { Timeline } from "~/components/orion/timeline";
 import { PatientSummary } from "~/components/orion/patient-summary";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
 import { toast } from "sonner";
+import { QRCodeSVG } from "qrcode.react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
 
 interface HandoffDetail {
   handoff: {
@@ -146,12 +155,38 @@ export default function HandoffDetailPage() {
             </p>
           </div>
           <div className="flex gap-2">
-            <Button variant="outline" className="gap-2 shadow-sm">
-              <FileText className="size-4" /> Print Form
+            <Button variant="outline" className="gap-2 shadow-sm" onClick={() => {
+              window.open(`/api/v1/handoffs/${handoff.id}/fhir`, "_blank");
+            }}>
+              <FileText className="size-4" /> Export FHIR
             </Button>
-            <Button className="gap-2 shadow-sm">
-              <QrCode className="size-4" /> View QR
-            </Button>
+
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button className="gap-2 shadow-sm">
+                  <QrCode className="size-4" /> View QR
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Referral Status QR</DialogTitle>
+                  <DialogDescription>
+                    Scan this code to view the real-time public status of this referral. No clinical information is exposed.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex justify-center p-6 bg-white rounded-md mt-4">
+                  <QRCodeSVG 
+                    value={`${window.location.origin}/status/${handoff.publicCode}`} 
+                    size={200}
+                    level="H"
+                  />
+                </div>
+                <div className="text-center text-sm font-mono text-muted-foreground mt-2">
+                  {handoff.publicCode}
+                </div>
+              </DialogContent>
+            </Dialog>
+
             {["no_show", "outcome_recorded", "follow_up_pending"].includes(handoff.state) && (
               <Button 
                 variant="default" 

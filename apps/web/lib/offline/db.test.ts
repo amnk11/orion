@@ -84,8 +84,8 @@ describe('OfflineDB (IndexedDB)', () => {
     });
 
     const ordered = await db.mutationQueue.orderBy('createdAt').toArray();
-    expect(ordered[0].id).toBe('m1');
-    expect(ordered[1].id).toBe('m2');
+    expect(ordered[0]!.id).toBe('m1');
+    expect(ordered[1]!.id).toBe('m2');
   });
 
   it('mutationQueue records can transition pending -> syncing -> synced', async () => {

@@ -104,3 +104,20 @@ export function assertSupervisor(user: AuthenticatedUser): boolean {
   }
   return true;
 }
+
+/**
+ * Capability attestation authorization (Phase 8).
+ *
+ * - Destination users may attest capabilities ONLY for their own facility.
+ * - Supervisors may attest only for the facility they are assigned to
+ *   (supervisors are facility-scoped in this deployment).
+ * - Admins may attest for any facility.
+ * - Origin/CHO users may NEVER modify destination capability data.
+ */
+export function canAttestCapability(user: AuthenticatedUser, facilityId: string): boolean {
+  if (user.role === "admin") return true;
+  if (user.role === "destination" || user.role === "supervisor") {
+    return user.facilityId === facilityId;
+  }
+  return false;
+}
