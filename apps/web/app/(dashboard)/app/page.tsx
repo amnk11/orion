@@ -11,6 +11,7 @@ import { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "~
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
+import { db } from "~/lib/offline/db";
 
 interface Handoff {
   id: string;
@@ -42,7 +43,6 @@ export default function MyReferralsPage() {
       }
 
       if (typeof window !== "undefined") {
-        const { db } = await import("~/lib/offline/db");
         // Get local handoffs that are pending, syncing, failed, or conflict
         const localHandoffs = await db.localHandoffs
           .filter(h => h.syncStatus !== "synced")
@@ -112,8 +112,11 @@ export default function MyReferralsPage() {
               ))
             ) : error ? (
               <TableRow>
-                <TableCell colSpan={6} className="h-32 text-center text-danger">
-                  Failed to load referrals. Please try again.
+                <TableCell colSpan={6} className="h-32">
+                  <div className="flex flex-col items-center justify-center p-6 mx-auto max-w-sm rounded-lg bg-destructive/5 text-destructive text-center">
+                    <span className="font-medium">Failed to load referrals</span>
+                    <span className="text-sm opacity-90 mt-1">Please try again.</span>
+                  </div>
                 </TableCell>
               </TableRow>
             ) : !data?.data || data.data.length === 0 ? (
@@ -145,10 +148,10 @@ export default function MyReferralsPage() {
                         <span className="font-mono text-sm text-muted-foreground">{handoff.publicCode}</span>
                         {handoff.offlineSyncStatus && (
                           <span className={`px-1.5 py-0.5 rounded text-[10px] font-medium border ${
-                            handoff.offlineSyncStatus === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-200' :
-                            handoff.offlineSyncStatus === 'syncing' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                            handoff.offlineSyncStatus === 'synced' ? 'bg-green-100 text-green-800 border-green-200' :
-                            'bg-red-100 text-red-800 border-red-200'
+                            handoff.offlineSyncStatus === 'pending' ? 'bg-warning/10 text-warning-foreground border-warning/20' :
+                            handoff.offlineSyncStatus === 'syncing' ? 'bg-info/10 text-info-foreground border-info/20' :
+                            handoff.offlineSyncStatus === 'synced' ? 'bg-success/10 text-success-foreground border-success/20' :
+                            'bg-destructive/10 text-destructive-foreground border-destructive/20'
                           }`}>
                             {handoff.offlineSyncStatus === 'pending' ? 'Saved Offline' : 
                              handoff.offlineSyncStatus === 'syncing' ? 'Syncing...' :

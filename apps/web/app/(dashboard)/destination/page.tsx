@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { formatDistanceToNow, format } from "date-fns";
-import { Clock, Activity, LogOut, FileText, ChevronRight, Inbox } from "lucide-react";
+import { Clock, Activity, LogOut, FileText, ChevronRight, Inbox, AlertTriangle } from "lucide-react";
 import { useSessionUser } from "~/hooks/use-session-user";
 import { signOut } from "~/lib/auth/auth-client";
 import { Button } from "~/components/ui/button";
@@ -112,23 +112,31 @@ export default function DestinationInboxPage() {
         )}
 
         {error && (
-          <div className="rounded-lg border border-danger/20 bg-danger/5 p-6 flex flex-col items-center justify-center text-center space-y-4">
-            <div className="text-danger font-medium">Failed to load inbox</div>
-            <Button variant="outline" onClick={() => refetch()}>Try Again</Button>
+          <div className="py-12 border border-danger/20 bg-danger/5 rounded-xl">
+            <Empty>
+              <EmptyMedia variant="icon"><AlertTriangle className="text-danger" /></EmptyMedia>
+              <EmptyTitle className="text-danger">Failed to load inbox</EmptyTitle>
+              <EmptyDescription className="text-danger/80">There was a problem communicating with the server.</EmptyDescription>
+              <EmptyContent>
+                <Button variant="outline" onClick={() => refetch()} className="border-danger/20 text-danger hover:bg-danger/10">Try Again</Button>
+              </EmptyContent>
+            </Empty>
           </div>
         )}
 
         {!isLoadingHandoffs && !error && sortedHandoffs.length === 0 && (
-          <Empty>
-            <EmptyMedia variant="icon"><Inbox /></EmptyMedia>
-            <EmptyTitle>No pending handoffs</EmptyTitle>
-            <EmptyDescription>Your facility is all clear. Incoming patient referrals will appear here automatically.</EmptyDescription>
-            <EmptyContent>
-              <Button variant="outline" onClick={() => refetch()}>
-                Refresh Inbox
-              </Button>
-            </EmptyContent>
-          </Empty>
+          <div className="py-12 border border-dashed border-border rounded-xl bg-muted/20">
+            <Empty>
+              <EmptyMedia variant="icon"><Inbox className="text-muted-foreground/60" /></EmptyMedia>
+              <EmptyTitle>No pending handoffs</EmptyTitle>
+              <EmptyDescription>Your facility is all clear. Incoming patient referrals will appear here automatically.</EmptyDescription>
+              <EmptyContent>
+                <Button variant="outline" onClick={() => refetch()}>
+                  Refresh Inbox
+                </Button>
+              </EmptyContent>
+            </Empty>
+          </div>
         )}
 
         {/* Handoff List */}

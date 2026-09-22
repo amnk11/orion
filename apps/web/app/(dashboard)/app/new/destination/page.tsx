@@ -12,6 +12,7 @@ import {
   CapabilityStatusRow,
   type CapabilityView,
 } from "~/components/orion/capability-status";
+import { db } from "~/lib/offline/db";
 
 interface Facility {
   id: string;
@@ -31,7 +32,6 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
         if (res.ok) {
           const json = await res.json();
           if (typeof window !== "undefined") {
-            const { db } = await import("~/lib/offline/db");
             await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
           }
           return json;
@@ -41,7 +41,6 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
       }
       
       if (typeof window !== "undefined") {
-        const { db } = await import("~/lib/offline/db");
         const cached = await db.referenceCache.get(cacheKey);
         if (cached) return cached.data;
       }
@@ -114,7 +113,6 @@ export default function DestinationSelectionPage() {
         if (res.ok) {
           const json = await res.json();
           if (typeof window !== "undefined") {
-            const { db } = await import("~/lib/offline/db");
             await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
           }
           return json;
@@ -124,7 +122,6 @@ export default function DestinationSelectionPage() {
       }
       
       if (typeof window !== "undefined") {
-        const { db } = await import("~/lib/offline/db");
         const cached = await db.referenceCache.get(cacheKey);
         if (cached) return cached.data;
       }
@@ -147,8 +144,8 @@ export default function DestinationSelectionPage() {
   return (
     <div className="flex flex-col flex-1 h-full">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Select Destination</h1>
-        <p className="text-sm text-muted-foreground mt-1">Choose where to send this referral.</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Select Destination</h1>
+        <p className="text-base text-muted-foreground mt-2">Choose where to send this referral.</p>
       </div>
 
       <div className="relative max-w-md mb-6">

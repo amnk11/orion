@@ -8,9 +8,12 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "~/components/ui/empty";
 import { ArrowRight, ChevronRight, ChevronLeft, Search, Loader2, ArrowLeft, UserPlus } from "lucide-react";
 import { cn } from "~/lib/utils";
-
+import { db } from "~/lib/offline/db";
+import { connectivity } from "~/lib/offline/connectivity";
+import { syncEngine } from "~/lib/offline/sync-engine";
 interface Patient {
   id: string;
   displayName: string;
@@ -39,7 +42,6 @@ export default function PatientSelectionPage() {
         if (res.ok) {
           const json = await res.json();
           if (typeof window !== "undefined") {
-            const { db } = await import("~/lib/offline/db");
             await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
           }
           return json;
@@ -48,7 +50,6 @@ export default function PatientSelectionPage() {
         // network failure
       }
       if (typeof window !== "undefined") {
-        const { db } = await import("~/lib/offline/db");
         const cached = await db.referenceCache.get(cacheKey);
         if (cached) return cached.data;
       }
@@ -78,15 +79,16 @@ export default function PatientSelectionPage() {
       };
 
       if (typeof window !== "undefined") {
-        const { connectivity } = await import("~/lib/offline/connectivity");
-        if (connectivity.status !== "online") {
-          const { syncEngine } = await import("~/lib/offline/sync-engine");
+        if (connectivity.status === "offline") {
+          console.log("OFFLINE BRANCH EXECUTING");
           const patientId = crypto.randomUUID();
           
+          console.log("QUEUEING PATIENT CREATION (OFFLINE)", patientId);
           await syncEngine.queuePatientCreation({
             ...payload,
             id: patientId,
           });
+          console.log("QUEUED PATIENT CREATION (OFFLINE)", patientId);
 
           return {
             offline: true,
@@ -95,11 +97,32 @@ export default function PatientSelectionPage() {
         }
       }
 
-      const res = await fetch("/api/v1/patients", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let res;
+      try {
+        res = await fetch("/api/v1/patients", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        console.log("FALLBACK TRIGGERED", err);
+        // Fallback to offline if fetch throws (e.g., network error before connectivity status updates)
+        if (typeof window !== "undefined") {
+          const patientId = crypto.randomUUID();
+          console.log("QUEUEING PATIENT CREATION", patientId);
+          await syncEngine.queuePatientCreation({
+            ...payload,
+            id: patientId,
+          });
+          console.log("QUEUED PATIENT CREATION", patientId);
+          return {
+            offline: true,
+            data: { id: patientId, displayName: payload.displayName, age: payload.age, sex: payload.sex }
+          };
+        }
+        throw err;
+      }
+
       if (!res.ok) {
         const errorData = await res.json();
         throw new Error(errorData.error?.message || "Failed to create patient");
@@ -114,7 +137,7 @@ export default function PatientSelectionPage() {
       router.push("/app/new/protocol");
     },
     onError: (err: Error) => {
-      setFormError(err.message);
+      setFormError(err.message + " | " + (err.stack || ''));
     }
   });
 
@@ -130,24 +153,24 @@ export default function PatientSelectionPage() {
 
   return (
     <div className="flex flex-col flex-1 w-full pb-16">
-      <div className="mb-10">
+      <div className="mb-8">
         <Button 
           variant="ghost" 
           size="sm" 
-          className="mb-5 -ml-2.5 text-muted-foreground/80 hover:text-foreground hover:bg-muted/50 transition-colors" 
+          className="mb-4 -ml-2 text-muted-foreground hover:text-foreground transition-colors" 
           onClick={() => router.push("/app")}
         >
           <ArrowLeft className="size-4 mr-2" />
           Back to Dashboard
         </Button>
-        <h1 className="text-[1.75rem] leading-tight font-semibold tracking-tight text-foreground">Patient Information</h1>
-        <p className="text-[15px] text-muted-foreground mt-2 font-medium">Select an existing patient or register a new one.</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Patient Information</h1>
+        <p className="text-base text-muted-foreground mt-2">Select an existing patient or register a new one.</p>
       </div>
 
-      <div className="flex bg-muted/30 p-1 rounded-[6px] mb-8 w-full border border-border/40">
+      <div className="flex bg-muted/50 p-1 rounded-lg mb-8 w-full border border-border/50">
         <button 
           className={cn(
-            "flex-1 py-2 text-[13px] font-semibold rounded-[4px] transition-all duration-200 uppercase tracking-widest", 
+            "flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200", 
             mode === "search" ? "bg-background shadow-sm text-primary ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"
           )} 
           onClick={() => setMode("search")}
@@ -156,7 +179,7 @@ export default function PatientSelectionPage() {
         </button>
         <button 
           className={cn(
-            "flex-1 py-2 text-[13px] font-semibold rounded-[4px] transition-all duration-200 uppercase tracking-widest", 
+            "flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200", 
             mode === "register" ? "bg-background shadow-sm text-primary ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"
           )} 
           onClick={() => setMode("register")}
@@ -169,12 +192,12 @@ export default function PatientSelectionPage() {
         {mode === "search" ? (
           <div className="flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300">
             <div className="relative mb-6">
-              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-[18px] text-muted-foreground/60" />
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 size-4 text-muted-foreground" />
               <Label htmlFor="search-patients" className="sr-only">Search patients</Label>
               <Input 
                 id="search-patients" 
                 placeholder="Search by name, phone, or ID..." 
-                className="pl-10 h-[46px] text-[15px] bg-background border-border/60 shadow-sm focus-visible:ring-primary/20 rounded-md"
+                className="pl-10 h-11 text-base bg-background shadow-sm"
                 value={searchQuery}
                 onChange={(e) => {
                   setSearchQuery(e.target.value);
@@ -186,25 +209,27 @@ export default function PatientSelectionPage() {
             <div className="space-y-3 pr-2 pb-2">
               {isLoading ? (
                 <div className="flex items-center justify-center py-16 text-muted-foreground">
-                  <Loader2 className="size-5 animate-spin mr-2.5" /> <span className="text-[15px]">Loading...</span>
+                  <Loader2 className="size-5 animate-spin mr-2" /> <span className="text-sm font-medium">Loading...</span>
                 </div>
               ) : filteredPatients.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-16 px-4 text-center border border-dashed border-border/60 rounded-[12px] bg-muted/10">
-                  <UserPlus className="size-8 text-muted-foreground/30 mb-4" />
-                  <p className="text-[15px] font-medium text-foreground">
-                    {searchQuery ? "No matching patients" : "No patients found"}
-                  </p>
-                  <p className="text-[13.5px] text-muted-foreground mt-1.5 max-w-[240px]">
-                    Try adjusting your search or register a new patient.
-                  </p>
-                  <Button 
-                    variant="outline" 
-                    size="sm" 
-                    className="mt-6 h-9 px-4 rounded-[6px] border-border/60"
-                    onClick={() => setMode("register")}
-                  >
-                    Register New Patient
-                  </Button>
+                <div className="py-12 border border-dashed border-border rounded-xl bg-muted/20">
+                  <Empty>
+                    <EmptyMedia variant="icon"><UserPlus className="text-muted-foreground/60" /></EmptyMedia>
+                    <EmptyTitle>{searchQuery ? "No matching patients" : "No patients found"}</EmptyTitle>
+                    <EmptyDescription>
+                      Try adjusting your search or register a new patient to begin.
+                    </EmptyDescription>
+                    <EmptyContent>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        className="mt-2"
+                        onClick={() => setMode("register")}
+                      >
+                        Register New Patient
+                      </Button>
+                    </EmptyContent>
+                  </Empty>
                 </div>
               ) : (
                 <>
@@ -213,8 +238,8 @@ export default function PatientSelectionPage() {
                       key={p.id}
                       variant="outline"
                       className={cn(
-                        "w-full justify-between items-center h-auto p-4 transition-all bg-background hover:bg-muted/20 hover:border-border/80 rounded-[8px] shadow-none",
-                        draft.patientId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary/20 hover:border-primary" : "border-border/60"
+                        "w-full justify-between items-center h-auto p-4 transition-all bg-background rounded-lg shadow-none",
+                        draft.patientId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:bg-muted/50"
                       )}
                       onClick={() => {
                         const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
@@ -223,30 +248,29 @@ export default function PatientSelectionPage() {
                       }}
                     >
                       <div className="flex flex-col items-start gap-1">
-                        <span className="font-semibold text-[15px] text-foreground tracking-tight">{p.displayName}</span>
-                        <span className="text-[13px] text-muted-foreground/70 font-mono tracking-tight">{p.id.split('-')[0]}</span>
+                        <span className="font-semibold text-base text-foreground tracking-tight">{p.displayName}</span>
+                        <span className="text-sm text-muted-foreground font-mono tracking-tight">{p.id.split('-')[0]}</span>
                       </div>
-                      <div className="flex items-center gap-4 text-[14px] text-muted-foreground/90">
+                      <div className="flex items-center gap-4 text-sm text-muted-foreground">
                         <div className="flex items-center gap-1.5 font-medium">
                           {p.age && <span>{p.age}y</span>}
                           {p.age && p.sex && <span className="opacity-40">•</span>}
                           {p.sex && <span className="capitalize">{p.sex}</span>}
                         </div>
-                        <ChevronRight className={cn("size-[18px] transition-colors", draft.patientId === p.id ? "text-primary" : "text-muted-foreground/40 group-hover:text-foreground/50")} />
+                        <ChevronRight className={cn("size-4 transition-colors", draft.patientId === p.id ? "text-primary" : "text-muted-foreground/40")} />
                       </div>
                     </Button>
                   ))}
                   
                   {totalPages > 1 && (
                     <div className="flex items-center justify-between pt-4 pb-8">
-                      <p className="text-[13px] text-muted-foreground">
+                      <p className="text-sm text-muted-foreground">
                         Showing <span className="font-medium text-foreground">{(currentPage - 1) * ITEMS_PER_PAGE + 1}</span> to <span className="font-medium text-foreground">{Math.min(currentPage * ITEMS_PER_PAGE, filteredPatients.length)}</span> of <span className="font-medium text-foreground">{filteredPatients.length}</span> patients
                       </p>
                       <div className="flex items-center gap-2">
                         <Button
                           variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0"
+                          size="icon-sm"
                           onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
                           disabled={currentPage === 1}
                         >
@@ -255,8 +279,7 @@ export default function PatientSelectionPage() {
                         </Button>
                         <Button
                           variant="outline"
-                          size="sm"
-                          className="h-8 w-8 p-0"
+                          size="icon-sm"
                           onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
                           disabled={currentPage === totalPages}
                         >
@@ -272,13 +295,13 @@ export default function PatientSelectionPage() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300">
-            <div className="space-y-6 bg-card/50 p-6 md:p-8 rounded-[12px] border border-border/60 shadow-sm">
+            <div className="space-y-6 bg-card p-6 md:p-8 rounded-xl border border-border shadow-sm">
               <div className="space-y-2">
-                <Label htmlFor="displayName" className="text-[13px] font-semibold text-foreground uppercase tracking-wide">Full Name <span className="text-danger" aria-hidden="true">*</span></Label>
+                <Label htmlFor="displayName" className="text-sm font-medium text-foreground">Full Name <span className="text-danger" aria-hidden="true">*</span></Label>
                 <Input
                   id="displayName"
                   placeholder="e.g. Maya Devi"
-                  className="h-11 text-[15px] bg-background"
+                  className="bg-background"
                   value={formData.displayName}
                   onChange={(e) => {
                     setFormData({ ...formData, displayName: e.target.value });
@@ -289,32 +312,32 @@ export default function PatientSelectionPage() {
                   required
                 />
                 {formError && (
-                  <p id="name-error" className="text-[13px] text-danger font-medium mt-1.5" role="alert">
-                    {formError}
-                  </p>
+                  <div id="name-error" className="text-sm text-danger font-medium p-4 bg-danger/10" role="alert">
+                    ERROR: {formError}
+                  </div>
                 )}
               </div>
               
-              <div className="grid grid-cols-2 gap-5">
+              <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <Label htmlFor="age" className="text-[13px] font-semibold text-foreground uppercase tracking-wide">Age</Label>
+                  <Label htmlFor="age" className="text-sm font-medium text-foreground">Age</Label>
                   <Input
                     id="age"
                     type="number"
                     min="0"
                     placeholder="e.g. 28"
-                    className="h-11 text-[15px] bg-background"
+                    className="bg-background"
                     value={formData.age}
                     onChange={(e) => setFormData({ ...formData, age: e.target.value })}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label htmlFor="sex" className="text-[13px] font-semibold text-foreground uppercase tracking-wide">Sex</Label>
+                  <Label htmlFor="sex" className="text-sm font-medium text-foreground">Sex</Label>
                   <Select
                     value={formData.sex}
                     onValueChange={(val) => setFormData({ ...formData, sex: val })}
                   >
-                    <SelectTrigger id="sex" className="h-11 text-[15px] bg-background">
+                    <SelectTrigger id="sex" className="bg-background">
                       <SelectValue placeholder="Select..." />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,7 +351,7 @@ export default function PatientSelectionPage() {
             </div>
             
             <div className="mt-8 flex justify-end">
-              <Button type="submit" size="lg" className="w-full md:w-auto px-8 font-semibold h-11 text-[15px] rounded-[6px]" disabled={createPatient.isPending}>
+              <Button type="submit" size="lg" className="w-full md:w-auto px-8" disabled={createPatient.isPending}>
                 {createPatient.isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
                 Register & Continue
               </Button>

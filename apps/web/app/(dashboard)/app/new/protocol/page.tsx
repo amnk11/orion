@@ -36,8 +36,8 @@ export default function ProtocolSelectionPage() {
   return (
     <div className="flex flex-col flex-1 h-full">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Select Protocol</h1>
-        <p className="text-sm text-muted-foreground mt-1">Choose the clinical pathway for this referral.</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Select Protocol</h1>
+        <p className="text-base text-muted-foreground mt-2">Choose the clinical pathway for this referral.</p>
       </div>
 
       <div className="grid sm:grid-cols-2 gap-4 flex-1">

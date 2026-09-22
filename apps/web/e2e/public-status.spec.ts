@@ -39,7 +39,7 @@ test.describe('Phase 10: E2E Public Status Security', () => {
     await expect(page.locator('text=Aarti Deshmukh').first()).toBeVisible();
     
     // Get the handoff detail page to extract public code
-    await page.click('tr:has-text("Aarti Deshmukh") >> a');
+    await page.locator('tr').filter({ hasText: 'Aarti Deshmukh' }).getByRole('link').first().click();
     await expect(page).toHaveURL(/\/app\/handoff\//);
     
     // The public code is available in the h1 tag

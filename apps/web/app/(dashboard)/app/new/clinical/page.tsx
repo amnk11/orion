@@ -122,8 +122,8 @@ export default function ProtocolFormPage() {
     <div className="flex flex-col flex-1 h-full relative">
       <div className="mb-8 flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight text-foreground">Clinical Details</h1>
-          <p className="text-sm text-muted-foreground mt-1">{protocol.name}</p>
+          <h1 className="text-3xl font-semibold tracking-tight text-foreground">Clinical Details</h1>
+          <p className="text-base text-muted-foreground mt-2">{protocol.name}</p>
         </div>
         
         {/* Live Triage Urgency */}

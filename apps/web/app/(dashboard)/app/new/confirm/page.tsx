@@ -10,7 +10,9 @@ import { toast } from "sonner";
 
 import { ClinicalSummary } from "~/components/orion/clinical-summary";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
-
+import { db } from "~/lib/offline/db";
+import { connectivity } from "~/lib/offline/connectivity";
+import { syncEngine } from "~/lib/offline/sync-engine";
 export default function ConfirmReferralPage() {
   const router = useRouter();
   const { draft, clearDraft } = useReferralDraft();
@@ -34,7 +36,6 @@ export default function ConfirmReferralPage() {
         if (res.ok) {
           const json = await res.json();
           if (typeof window !== "undefined") {
-            const { db } = await import("~/lib/offline/db");
             await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
           }
           return json;
@@ -43,7 +44,6 @@ export default function ConfirmReferralPage() {
         // network error
       }
       if (typeof window !== "undefined") {
-        const { db } = await import("~/lib/offline/db");
         const cached = await db.referenceCache.get(cacheKey);
         if (cached) return cached.data;
       }
@@ -63,7 +63,6 @@ export default function ConfirmReferralPage() {
         if (res.ok) {
           const json = await res.json();
           if (typeof window !== "undefined") {
-            const { db } = await import("~/lib/offline/db");
             await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
           }
           return json;
@@ -73,7 +72,6 @@ export default function ConfirmReferralPage() {
       }
       
       if (typeof window !== "undefined") {
-        const { db } = await import("~/lib/offline/db");
         const cached = await db.referenceCache.get(cacheKey);
         if (cached) return cached.data;
         // fallback to list cache
@@ -101,9 +99,7 @@ export default function ConfirmReferralPage() {
       };
 
       if (typeof window !== "undefined") {
-        const { connectivity } = await import("~/lib/offline/connectivity");
-        if (connectivity.status !== "online") {
-          const { syncEngine } = await import("~/lib/offline/sync-engine");
+        if (connectivity.status === "offline") {
           
           const handoffId = crypto.randomUUID();
           const episodeId = crypto.randomUUID();
@@ -125,11 +121,35 @@ export default function ConfirmReferralPage() {
         }
       }
 
-      const res = await fetch("/api/v1/handoffs", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
-      });
+      let res;
+      try {
+        res = await fetch("/api/v1/handoffs", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload),
+        });
+      } catch (err) {
+        if (typeof window !== "undefined") {
+          const handoffId = crypto.randomUUID();
+          const episodeId = crypto.randomUUID();
+          const assessmentId = crypto.randomUUID();
+          
+          const offlinePayload = {
+            ...payload,
+            id: handoffId,
+            episodeId,
+            assessmentId,
+          };
+
+          const clientMutationId = await syncEngine.queueHandoffCreation(offlinePayload);
+          
+          return { 
+            offline: true, 
+            data: { id: handoffId, clientMutationId } 
+          };
+        }
+        throw err;
+      }
 
       if (!res.ok) {
         const errorData = await res.json();
@@ -139,7 +159,6 @@ export default function ConfirmReferralPage() {
     },
     onSuccess: (res) => {
       queryClient.invalidateQueries({ queryKey: ["handoffs"] });
-      clearDraft();
       
       if (res.offline) {
         toast("Saved offline", {
@@ -148,6 +167,9 @@ export default function ConfirmReferralPage() {
       }
       
       router.push(`/app/handoff/${res.data.id}`);
+      
+      // Delay clearing draft to prevent cascading useEffect redirects back to start
+      setTimeout(() => clearDraft(), 500);
     },
     onError: (err: Error) => {
       setFormError(err.message);
@@ -159,8 +181,8 @@ export default function ConfirmReferralPage() {
   return (
     <div className="flex flex-col flex-1 h-full">
       <div className="mb-8">
-        <h1 className="text-2xl font-semibold tracking-tight text-foreground">Review Handoff</h1>
-        <p className="text-sm text-muted-foreground mt-1">Confirm the details before dispatching to the destination.</p>
+        <h1 className="text-3xl font-semibold tracking-tight text-foreground">Review & Submit</h1>
+        <p className="text-base text-muted-foreground mt-2">Verify all information before creating the handoff.</p>
       </div>
 
       <div className="flex-1 max-w-3xl">
