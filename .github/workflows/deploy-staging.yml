@@ -15,7 +15,7 @@ jobs:
     
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       # Deployment process would integrate with Vercel/Render/AWS here.
       # Documented as manual/provider-dependent until external config is injected.
