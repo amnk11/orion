@@ -7,9 +7,6 @@ import {
   protocols,
   capabilitySnapshots,
   users,
-  careEpisodes,
-  assessments,
-  handoffs
 } from "@orion/db";
 import { eq, and } from "drizzle-orm";
 
