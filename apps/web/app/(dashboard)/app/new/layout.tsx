@@ -24,7 +24,7 @@ function WizardContextHeader() {
     <div className="bg-surface-inset border-b border-border sticky top-0 z-40">
       <div className="max-w-3xl mx-auto w-full px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex flex-col">
-          <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Patient</span>
+          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient</span>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="font-semibold text-foreground">{draft.patientName || "Unknown"}</span>
             <span className="text-xs text-muted-foreground font-mono bg-background border border-border px-1.5 py-0.5 rounded-sm">
@@ -35,7 +35,7 @@ function WizardContextHeader() {
         
         {draft.protocolCode && (
           <div className="hidden sm:flex flex-col items-end sm:items-start border-l border-border pl-4">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Protocol</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Protocol</span>
             <span className="text-sm font-medium text-foreground mt-0.5 capitalize">
               {draft.protocolCode.replace("_", " ")}
             </span>
@@ -44,7 +44,7 @@ function WizardContextHeader() {
         
         {draft.urgency && (
           <div className="flex flex-col items-end sm:border-l border-border sm:pl-4">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Urgency</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Urgency</span>
             <div className="mt-0.5">
               <UrgencyBadge level={draft.urgency} />
             </div>
@@ -93,12 +93,12 @@ function WizardStepperVertical() {
                 )}
                 <div className="flex flex-col pt-0.5">
                   <span className={cn(
-                    "text-[13px] font-semibold tracking-wider uppercase",
+                    "text-sm font-semibold tracking-wider uppercase",
                     isActive ? "text-primary" : isCompleted ? "text-foreground/90" : "text-muted-foreground/70"
                   )}>
                     {step.label}
                   </span>
-                  <span className={cn("text-[12.5px] font-medium mt-0.5 leading-snug", isActive ? "text-muted-foreground" : isCompleted ? "text-muted-foreground/80" : "text-muted-foreground/60")}>
+                  <span className={cn("text-sm mt-0.5 leading-snug", isActive ? "text-muted-foreground" : isCompleted ? "text-muted-foreground/80" : "text-muted-foreground/60")}>
                     {step.label === "Patient" ? "Patient information" :
                      step.label === "Protocol" ? "Clinical protocol" :
                      step.label === "Clinical" ? "Clinical assessment" :
@@ -114,8 +114,8 @@ function WizardStepperVertical() {
       
       <div className="mt-8 p-4 bg-primary/5 rounded-[8px] border border-primary/20 flex items-start gap-3 text-primary/90">
         <Info className="size-[18px] shrink-0 mt-0.5 text-primary" />
-        <p className="text-[12.5px] leading-relaxed font-medium">
-          You are creating a new referral. Follow the steps to complete the process.
+        <p className="text-sm leading-relaxed font-medium">
+          Complete each step in order. This referral is not dispatched until you submit it.
         </p>
       </div>
     </nav>

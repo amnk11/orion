@@ -43,7 +43,7 @@ test.describe('Phase 10: E2E Authentication and RBAC', () => {
 
     // Should redirect to Supervisor dashboard
     await expect(page).toHaveURL(/\/supervisor/);
-    await expect(page.locator('text=Supervisor Dashboard').first()).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Operational intervention' })).toBeVisible();
   });
 
   test('should reject invalid credentials', async ({ page }) => {

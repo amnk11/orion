@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from "react";
 import { useRouter } from "next/navigation";
-import { evaluateProtocol, ANC_DANGER_PROTOCOL, ADULT_GENERAL_PROTOCOL, ProtocolDefinition } from "@orion/protocols";
+import { evaluateProtocol, ANC_DANGER_PROTOCOL, ADULT_GENERAL_PROTOCOL, ProtocolDefinition, ProtocolField } from "@orion/protocols";
 import { useReferralDraft } from "../components/referral-draft-context";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
@@ -62,12 +62,12 @@ export default function ProtocolFormPage() {
     return dict ? (dict.unit ? `${dict.label} (${dict.unit})` : dict.label) : fallback;
   };
 
-  const vitals = protocol.fields.filter((f: any) => getFieldCategory(f.id) === "vitals");
-  const critical = protocol.fields.filter((f: any) => getFieldCategory(f.id) === "critical");
-  const symptoms = protocol.fields.filter((f: any) => getFieldCategory(f.id) === "symptoms");
-  const additional = protocol.fields.filter((f: any) => !["vitals", "critical", "symptoms"].includes(getFieldCategory(f.id)));
+  const vitals = protocol.fields.filter((field: ProtocolField) => getFieldCategory(field.id) === "vitals");
+  const critical = protocol.fields.filter((field: ProtocolField) => getFieldCategory(field.id) === "critical");
+  const symptoms = protocol.fields.filter((field: ProtocolField) => getFieldCategory(field.id) === "symptoms");
+  const additional = protocol.fields.filter((field: ProtocolField) => !["vitals", "critical", "symptoms"].includes(getFieldCategory(field.id)));
 
-  const renderField = (field: any) => {
+  const renderField = (field: ProtocolField) => {
     const label = getFieldLabel(field.id, field.label);
     if (field.type === "boolean") {
       return (
@@ -78,7 +78,7 @@ export default function ProtocolFormPage() {
           <Switch
             id={field.id}
             checked={Boolean(formData[field.id])}
-            onCheckedChange={(val) => handleInputChange(field.id, val)}
+            onCheckedChange={(val: boolean) => handleInputChange(field.id, val)}
           />
         </div>
       );
@@ -129,7 +129,7 @@ export default function ProtocolFormPage() {
         {/* Live Triage Urgency */}
         {triageResult?.urgency && (
           <div className="flex flex-col items-end gap-1">
-            <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Calculated Urgency</span>
+            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Calculated Urgency</span>
             <UrgencyBadge level={triageResult.urgency} />
           </div>
         )}
@@ -183,7 +183,7 @@ export default function ProtocolFormPage() {
               <div>
                 <p className="font-medium">Missing required info:</p>
                 <ul className="list-disc pl-4 mt-1 space-y-0.5">
-                  {Array.from(new Set(triageResult?.completeness?.missing?.map((m: any) => m.message) || [])).map((msg: any, i: number) => (
+                  {Array.from(new Set(triageResult?.completeness?.missing?.map((missing) => missing.message) || [])).map((msg, i) => (
                     <li key={i}>{msg}</li>
                   ))}
                 </ul>
@@ -208,3 +208,4 @@ export default function ProtocolFormPage() {
     </div>
   );
 }
+

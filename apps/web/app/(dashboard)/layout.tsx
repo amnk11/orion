@@ -6,7 +6,7 @@ import Image from "next/image";
 import { signOut } from "~/lib/auth/auth-client";
 import { useSessionUser } from "~/hooks/use-session-user";
 import Link from "next/link";
-import { FilePlus2, Inbox, LogOut, Loader2, Menu, LayoutDashboard, ClipboardCheck } from "lucide-react";
+import { FilePlus2, Inbox, LogOut, Loader2, Menu, LayoutDashboard, ClipboardCheck, ListChecks } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "~/components/ui/sheet";
 import { OfflineBanner } from "~/components/offline/offline-banner";
@@ -69,6 +69,12 @@ export default function DashboardLayout({
 
   const handleLogout = async () => {
     await signOut();
+    try {
+      const { db } = await import("~/lib/offline/db");
+      await db.delete();
+    } catch (e) {
+      console.error(e);
+    }
     window.location.href = "/login";
   };
 
@@ -106,6 +112,7 @@ export default function DashboardLayout({
             <div className="px-3 py-2 text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-1 mt-2">Origin Desk</div>
             <NavItem href="/app" icon={Inbox} exact>My Referrals</NavItem>
             <NavItem href="/app/new/patient" icon={FilePlus2}>New Referral</NavItem>
+            <NavItem href="/app/follow-ups" icon={ListChecks}>Follow-ups</NavItem>
           </>
         )}
 
@@ -152,7 +159,7 @@ export default function DashboardLayout({
         <Image src="/sahay-small.svg" alt="Sahay Logo" height={24} width={80} />
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
-            <button className="p-2 -mr-2 text-sidebar-foreground" aria-label="Toggle Menu">
+            <button className="size-11 inline-flex items-center justify-center -mr-2 text-sidebar-foreground" aria-label="Toggle navigation menu">
               <Menu className="size-5" />
             </button>
           </SheetTrigger>

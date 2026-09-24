@@ -21,6 +21,11 @@ interface Patient {
   sex: string | null;
 }
 
+interface PatientCreationResult {
+  offline?: boolean;
+  data: Patient;
+}
+
 export default function PatientSelectionPage() {
   const router = useRouter();
   const { setPatientId, draft } = useReferralDraft();
@@ -57,10 +62,10 @@ export default function PatientSelectionPage() {
     },
   });
 
-  const filteredPatients = patients?.data?.filter((p) => 
-    p.displayName.toLowerCase().includes(searchQuery.toLowerCase()) || 
+  const filteredPatients: Patient[] = (patients?.data ?? []).filter((p: Patient) =>
+    p.displayName.toLowerCase().includes(searchQuery.toLowerCase()) ||
     p.id.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  );
 
   const totalPages = Math.max(1, Math.ceil(filteredPatients.length / ITEMS_PER_PAGE));
   const paginatedPatients = filteredPatients.slice(
@@ -69,7 +74,7 @@ export default function PatientSelectionPage() {
   );
 
   const createPatient = useMutation({
-    mutationFn: async (data: typeof formData) => {
+    mutationFn: async (data: typeof formData): Promise<PatientCreationResult> => {
       const idempotencyKey = crypto.randomUUID();
       const payload = {
         displayName: data.displayName,
@@ -80,19 +85,15 @@ export default function PatientSelectionPage() {
 
       if (typeof window !== "undefined") {
         if (connectivity.status === "offline") {
-          console.log("OFFLINE BRANCH EXECUTING");
           const patientId = crypto.randomUUID();
-          
-          console.log("QUEUEING PATIENT CREATION (OFFLINE)", patientId);
           await syncEngine.queuePatientCreation({
             ...payload,
             id: patientId,
           });
-          console.log("QUEUED PATIENT CREATION (OFFLINE)", patientId);
 
           return {
             offline: true,
-            data: { id: patientId, displayName: payload.displayName, age: payload.age, sex: payload.sex }
+            data: { id: patientId, displayName: payload.displayName, age: payload.age ?? null, sex: payload.sex ?? null }
           };
         }
       }
@@ -105,39 +106,55 @@ export default function PatientSelectionPage() {
           body: JSON.stringify(payload),
         });
       } catch (err) {
-        console.log("FALLBACK TRIGGERED", err);
         // Fallback to offline if fetch throws (e.g., network error before connectivity status updates)
         if (typeof window !== "undefined") {
           const patientId = crypto.randomUUID();
-          console.log("QUEUEING PATIENT CREATION", patientId);
           await syncEngine.queuePatientCreation({
             ...payload,
             id: patientId,
           });
-          console.log("QUEUED PATIENT CREATION", patientId);
           return {
             offline: true,
-            data: { id: patientId, displayName: payload.displayName, age: payload.age, sex: payload.sex }
+            data: { id: patientId, displayName: payload.displayName, age: payload.age ?? null, sex: payload.sex ?? null }
           };
         }
         throw err;
       }
 
       if (!res.ok) {
-        const errorData = await res.json();
+        if (res.status >= 500) {
+          if (typeof window !== "undefined") {
+            const patientId = crypto.randomUUID();
+            await syncEngine.queuePatientCreation({
+              ...payload,
+              id: patientId,
+            });
+            return {
+              offline: true,
+              data: { id: patientId, displayName: payload.displayName, age: payload.age ?? null, sex: payload.sex ?? null }
+            };
+          }
+        }
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error?.message || "Failed to create patient");
       }
-      return res.json();
+      return (await res.json()) as PatientCreationResult;
     },
-    onSuccess: (res) => {
+    onSuccess: (res: PatientCreationResult) => {
       const p = res.data;
       const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
       setPatientId(p.id, p.displayName, p.age, details);
       queryClient.invalidateQueries({ queryKey: ["patients"] });
-      router.push("/app/new/protocol");
+      
+      if (res.offline) {
+        // We still push to protocol because offline patient data is cached locally
+        router.push("/app/new/protocol");
+      } else {
+        router.push("/app/new/protocol");
+      }
     },
     onError: (err: Error) => {
-      setFormError(err.message + " | " + (err.stack || ''));
+      setFormError(`${err.message} Your entered details are still on this screen. Check the connection and try again.`);
     }
   });
 
@@ -294,7 +311,7 @@ export default function PatientSelectionPage() {
             </div>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300">
+          <form noValidate onSubmit={handleSubmit} className="flex flex-col animate-in fade-in slide-in-from-bottom-1 duration-300">
             <div className="space-y-6 bg-card p-6 md:p-8 rounded-xl border border-border shadow-sm">
               <div className="space-y-2">
                 <Label htmlFor="displayName" className="text-sm font-medium text-foreground">Full Name <span className="text-danger" aria-hidden="true">*</span></Label>
@@ -335,7 +352,7 @@ export default function PatientSelectionPage() {
                   <Label htmlFor="sex" className="text-sm font-medium text-foreground">Sex</Label>
                   <Select
                     value={formData.sex}
-                    onValueChange={(val) => setFormData({ ...formData, sex: val })}
+                    onValueChange={(val: string) => setFormData({ ...formData, sex: val })}
                   >
                     <SelectTrigger id="sex" className="bg-background">
                       <SelectValue placeholder="Select..." />
@@ -362,3 +379,4 @@ export default function PatientSelectionPage() {
     </div>
   );
 }
+

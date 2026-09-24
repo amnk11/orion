@@ -19,11 +19,11 @@ export function UrgencyBadge({ level, className, showLabel = true }: UrgencyBadg
   if (isRed) {
     variant = "urgency-red";
     Icon = AlertTriangle;
-    label = "Urgency";
+    label = "Immediate";
   } else if (isOrange) {
     variant = "urgency-orange";
     Icon = ArrowUpCircle;
-    label = "Urgency";
+    label = "Urgent";
   } else if (isGreen) {
     variant = "urgency-green";
     Icon = CheckCircle2;
@@ -31,8 +31,8 @@ export function UrgencyBadge({ level, className, showLabel = true }: UrgencyBadg
   }
 
   return (
-    <Badge variant={variant} className={className}>
-      <Icon className="size-3.5" />
+    <Badge variant={variant} className={className} aria-label={`Urgency: ${label}`}>
+      <Icon className="size-3.5" aria-hidden="true" />
       <span>{label}</span>
     </Badge>
   );

@@ -1,5 +1,6 @@
 "use client";
 
+import * as React from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useParams, useRouter } from "next/navigation";
 import { formatDistanceToNow, format } from "date-fns";
@@ -8,15 +9,18 @@ import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import Link from "next/link";
 import { ClinicalSummary } from "~/components/orion/clinical-summary";
+import { StateGuidancePanel } from "~/components/orion/state-guidance";
 import { Timeline } from "~/components/orion/timeline";
 import { PatientSummary } from "~/components/orion/patient-summary";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
+import { SyncStatus, toSyncStatus } from "~/components/ui/sync-status";
 import { toast } from "sonner";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Dialog,
   DialogContent,
   DialogDescription,
+  DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
@@ -59,6 +63,9 @@ interface HandoffDetail {
 export default function HandoffDetailPage() {
   const { id } = useParams() as { id: string };
   const router = useRouter();
+  const [closeOpen, setCloseOpen] = React.useState(false);
+  const [isClosing, setIsClosing] = React.useState(false);
+  const [closeError, setCloseError] = React.useState<string | null>(null);
 
   const { data, isLoading } = useQuery<{ ok: boolean; data: HandoffDetail & { offlineSyncStatus?: string } }>({
     queryKey: ["handoffs", id],
@@ -102,9 +109,55 @@ export default function HandoffDetailPage() {
     },
   });
 
+  // Facility names are needed so the timeline answers "who/where" instead of
+  // exposing machine identifiers.
+  const { data: facilitiesData } = useQuery({
+    queryKey: ["facilities", "names"],
+    queryFn: async () => {
+      const res = await fetch("/api/v1/facilities");
+      if (!res.ok) throw new Error("Unable to load facility names");
+      return res.json() as Promise<{ ok: boolean; data: Array<{ id: string; name: string }> }>;
+    },
+  });
+  const facilityNames = Object.fromEntries(
+    (facilitiesData?.data ?? []).map((facility: { id: string; name: string }) => [facility.id, facility.name])
+  );
+
+  const handleCloseEpisode = async (episodeId: string) => {
+    setIsClosing(true);
+    setCloseError(null);
+    try {
+      const res = await fetch(`/api/v1/episodes/${episodeId}/close`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+      });
+      if (!res.ok) {
+        let apiMessage = "";
+        try {
+          const err = await res.json();
+          apiMessage = err?.error?.message || "";
+        } catch {
+          apiMessage = "";
+        }
+        throw new Error(apiMessage || "The episode could not be closed.");
+      }
+      setCloseOpen(false);
+      toast.success("Episode closed. The referral is now closed and no further action is expected.");
+      window.location.reload();
+    } catch (err) {
+      const message = err instanceof Error ? err.message : "The episode could not be closed.";
+      setCloseError(
+        `${message} The referral is unchanged and still open — nothing was lost. Check the connection and retry, or complete any pending follow-ups first.`
+      );
+      toast.error("Episode not closed. The referral is unchanged and still open.");
+    } finally {
+      setIsClosing(false);
+    }
+  };
+
   if (isLoading) {
     return (
-      <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
+      <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8">
         <Skeleton className="h-8 w-32 mb-4" />
         <Skeleton className="h-[200px] w-full rounded-xl" />
       </div>
@@ -114,7 +167,7 @@ export default function HandoffDetailPage() {
   const detail = data?.data;
   if (!detail) {
     return (
-      <div className="p-8 text-center max-w-6xl mx-auto">
+      <div className="p-8 text-center max-w-4xl mx-auto">
         <h2 className="text-xl font-semibold text-foreground">Handoff Not Found</h2>
         <Button variant="link" onClick={() => router.push("/app")} className="mt-4">Return to My Referrals</Button>
       </div>
@@ -122,9 +175,10 @@ export default function HandoffDetailPage() {
   }
 
   const { handoff, events, outcome, followUp } = detail;
+  const localSync = toSyncStatus(detail.offlineSyncStatus);
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 h-full flex flex-col">
+    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8 h-full flex flex-col">
       {/* Header */}
       <div>
         <Link href="/app" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
@@ -136,18 +190,7 @@ export default function HandoffDetailPage() {
               <h1 className="text-3xl font-semibold tracking-tight text-foreground font-mono">
                 {handoff.publicCode}
               </h1>
-              {detail.offlineSyncStatus && (
-                <span className={`px-2.5 py-0.5 rounded-full text-xs font-medium border ${
-                  detail.offlineSyncStatus === 'pending' ? 'bg-amber-100 text-amber-800 border-amber-200' :
-                  detail.offlineSyncStatus === 'syncing' ? 'bg-blue-100 text-blue-800 border-blue-200' :
-                  detail.offlineSyncStatus === 'synced' ? 'bg-green-100 text-green-800 border-green-200' :
-                  'bg-red-100 text-red-800 border-red-200'
-                }`}>
-                  {detail.offlineSyncStatus === 'pending' ? 'Saved Offline' : 
-                   detail.offlineSyncStatus === 'syncing' ? 'Syncing...' :
-                   detail.offlineSyncStatus === 'synced' ? 'Synced' : 'Sync Failed'}
-                </span>
-              )}
+              {localSync && <SyncStatus status={localSync} />}
               {handoff.state !== "offline_queue" && <StateBadge state={handoff.state} />}
             </div>
             <p className="text-muted-foreground flex items-center gap-2 text-sm">
@@ -188,30 +231,51 @@ export default function HandoffDetailPage() {
             </Dialog>
 
             {["no_show", "outcome_recorded", "follow_up_pending"].includes(handoff.state) && (
-              <Button 
-                variant="default" 
-                className="gap-2 shadow-sm"
-                onClick={() => {
-                  fetch(`/api/v1/episodes/${handoff.episodeId}/close`, {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                  }).then(async (res) => {
-                    if (!res.ok) {
-                      const err = await res.json();
-                      toast.error(err.error?.message || "Failed to close episode");
-                    } else {
-                      toast.success("Episode closed successfully");
-                      window.location.reload();
-                    }
-                  });
-                }}
-              >
-                Close Episode
-              </Button>
+              <>
+                <Button
+                  variant="default"
+                  className="gap-2 shadow-sm"
+                  onClick={() => {
+                    setCloseError(null);
+                    setCloseOpen(true);
+                  }}
+                >
+                  Close episode
+                </Button>
+                <Dialog open={closeOpen} onOpenChange={(open: boolean) => { if (!isClosing) setCloseOpen(open); }}>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle>Close this episode?</DialogTitle>
+                      <DialogDescription>
+                        Closing ends the referral episode for this patient. The record stays available for audit
+                        but cannot be reopened — a new referral is required if the patient needs care again.
+                      </DialogDescription>
+                    </DialogHeader>
+                    <div className="py-2 text-sm text-muted-foreground space-y-2">
+                      <p>Closing is only possible when no follow-up is still pending.</p>
+                      {closeError && (
+                        <p role="alert" className="rounded-md border border-danger/30 bg-danger/5 p-3 font-medium text-danger">
+                          {closeError}
+                        </p>
+                      )}
+                    </div>
+                    <DialogFooter>
+                      <Button variant="outline" onClick={() => setCloseOpen(false)} disabled={isClosing}>
+                        Keep episode open
+                      </Button>
+                      <Button onClick={() => handleCloseEpisode(handoff.episodeId)} disabled={isClosing}>
+                        {isClosing ? "Closing…" : "Close episode"}
+                      </Button>
+                    </DialogFooter>
+                  </DialogContent>
+                </Dialog>
+              </>
             )}
           </div>
         </div>
       </div>
+
+      <StateGuidancePanel state={handoff.state} role="origin" />
 
       <div className="flex flex-col gap-8 max-w-4xl w-full mx-auto pb-24">
         {/* 1. Patient Context */}
@@ -278,10 +342,11 @@ export default function HandoffDetailPage() {
               <Clock className="size-5 text-muted-foreground" /> Operational Timeline
             </h3>
             
-            <Timeline events={events as any} />
+              <Timeline events={events} facilityNames={facilityNames} />
           </div>
         </div>
       </div>
     </div>
   );
 }
+

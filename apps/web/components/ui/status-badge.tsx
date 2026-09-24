@@ -33,8 +33,8 @@ export function StatusBadge({ state, className }: StatusBadgeProps) {
   }
 
   return (
-    <Badge variant={variant} className={className}>
-      <Icon className="size-3.5" />
+    <Badge variant={variant} className={className} aria-label={`Workflow state: ${ClinicalDictionary.formatStatus(state)}`}>
+      <Icon className="size-3.5" aria-hidden="true" />
       <span>{ClinicalDictionary.formatStatus(state)}</span>
     </Badge>
   );

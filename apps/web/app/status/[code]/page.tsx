@@ -40,15 +40,15 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ c
 
   if (!data) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-        <div className="max-w-md w-full bg-white p-8 rounded-xl shadow-sm border text-center space-y-4">
+      <main className="min-h-screen flex items-center justify-center bg-surface-subtle p-4">
+        <div className="max-w-md w-full bg-surface p-8 rounded-lg border border-border text-center space-y-4">
           <ShieldAlert className="size-12 text-muted-foreground mx-auto opacity-50" />
           <h1 className="text-xl font-semibold">Referral Status Unavailable</h1>
           <p className="text-muted-foreground text-sm">
             This referral code is invalid, expired, or unavailable. No patient information can be displayed.
           </p>
         </div>
-      </div>
+      </main>
     );
   }
 
@@ -67,14 +67,14 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ c
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
-      <div className="max-w-md w-full bg-white rounded-xl shadow-sm border overflow-hidden">
+    <main className="min-h-screen bg-surface-subtle flex flex-col items-center justify-center p-4">
+      <section className="max-w-md w-full bg-surface rounded-lg border border-border overflow-hidden" aria-labelledby="public-status-heading">
         
         {/* Header */}
         <div className="bg-primary/5 p-6 border-b text-center space-y-2">
           <Activity className="size-8 text-primary mx-auto" />
-          <h1 className="text-xl font-bold tracking-tight">Referral Status</h1>
-          <div className="font-mono text-sm text-muted-foreground bg-white px-2 py-1 rounded inline-block border">
+          <h1 id="public-status-heading" className="text-xl font-semibold tracking-tight">Referral Status</h1>
+          <div className="font-mono text-sm text-muted-foreground bg-surface px-2 py-1 rounded-sm inline-block border border-border">
             {data.publicCode}
           </div>
         </div>
@@ -83,7 +83,7 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ c
         <div className="p-6 space-y-6">
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-              <Activity className="size-4" /> Current State
+                <Activity className="size-4" aria-hidden="true" /> Current State
             </p>
             <div>
               <StatusBadge state={data.state} />
@@ -93,7 +93,7 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ c
           {data.destinationName && (
             <div className="space-y-1">
               <p className="text-sm font-medium text-muted-foreground flex items-center gap-2">
-                <MapPin className="size-4" /> Destination
+                <MapPin className="size-4" aria-hidden="true" /> Destination
               </p>
               <p className="font-medium">{data.destinationName}</p>
             </div>
@@ -101,23 +101,23 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ c
 
           <div className="space-y-1">
             <p className="text-sm font-medium text-muted-foreground">Action Required</p>
-            <div className="p-3 bg-blue-50 text-blue-900 rounded-md text-sm font-medium border border-blue-100">
+            <div className="p-3 bg-surface-inset text-foreground rounded-md text-sm font-medium border border-border" role="status">
               {nextStep}
             </div>
           </div>
         </div>
 
         {/* Footer */}
-        <div className="bg-gray-50 p-4 border-t text-xs text-muted-foreground flex items-center justify-center gap-1">
-          <Clock className="size-3" />
+        <div className="bg-surface-subtle p-4 border-t border-border text-xs text-muted-foreground flex items-center justify-center gap-1">
+          <Clock className="size-3" aria-hidden="true" />
           Updated {formatDistanceToNow(new Date(data.updatedAt))} ago
         </div>
 
-      </div>
+      </section>
 
       <p className="mt-8 text-xs text-muted-foreground max-w-md text-center">
         This page provides operational status only. For privacy reasons, clinical details and patient identifiers are not displayed.
       </p>
-    </div>
+    </main>
   );
 }

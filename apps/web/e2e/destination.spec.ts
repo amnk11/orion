@@ -15,20 +15,26 @@ test.describe('Phase 10: E2E Destination Workflow', () => {
     await page.click('button[type="submit"]');
 
     await expect(page).toHaveURL(/\/destination/);
-    await expect(page.locator('text=Incoming Referrals')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Destination Inbox' })).toBeVisible();
 
     // The list should show "Sent" referrals. Wait for network/list to load.
     // If list is empty, we can't test. We assume `online-referral.spec.ts` ran and created one, 
     // or seed data has one. 
-    await expect(page.locator('tr').nth(1)).toBeVisible(); // At least one row besides header
+    await expect(page.getByRole('link', { name: 'Review & act' }).first()).toBeVisible();
 
-    // Click on the Open button of the first handoff
-    await page.locator('a:has-text("Open")').first().click();
+    // Open a decision-required referral. Opening must not acknowledge it.
+    await page.getByRole('link', { name: 'Review & act' }).first().click();
     
     // We should be on handoff detail
     await expect(page).toHaveURL(/\/destination\/handoff\//);
     
-    // If we can accept, accept it
+    // Receipt is explicit before the destination can decide.
+    if (await page.getByRole('button', { name: 'Acknowledge receipt' }).isVisible()) {
+      await page.getByRole('button', { name: 'Acknowledge receipt' }).click();
+      await expect(page.getByText('Acknowledged', { exact: true }).first()).toBeVisible();
+    }
+
+    // If we can accept, accept it.
     if (await page.locator('button:has-text("Accept Patient")').isVisible()) {
       await page.click('button:has-text("Accept Patient")');
       await expect(page.locator('text=Accepted').first()).toBeVisible();

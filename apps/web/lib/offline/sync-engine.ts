@@ -90,6 +90,12 @@ class SyncEngine {
             publicCode: result.publicCode,
             syncedAt: new Date().toISOString()
           });
+          // Notify user
+          import("sonner").then(({ toast }) => {
+            toast.success("Sync Complete", {
+              description: "Your offline changes have been saved to the server."
+            });
+          });
         } else if (status === "conflict") {
           await db.mutationQueue.update(mutationId, { status: "conflict", lastError: "Server reported conflict." });
           await db.localHandoffs.where("clientMutationId").equals(mutationId).modify({ syncStatus: "conflict" });
@@ -122,6 +128,12 @@ class SyncEngine {
         }
       }
     }
+  }
+
+  public async forceRetryAll() {
+    await db.mutationQueue.where("status").equals("failed").modify({ status: "pending", attempts: 0, nextAttemptAt: Date.now() });
+    await db.localHandoffs.where("syncStatus").equals("failed").modify({ syncStatus: "pending" });
+    this.triggerSync();
   }
 
   public async queueHandoffCreation(handoff: any) {

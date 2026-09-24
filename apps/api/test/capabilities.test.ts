@@ -98,9 +98,15 @@ describe("Phase 8 Capability Snapshots", () => {
     });
 
     it("marks very old attestations as VERY_STALE and fresh ones as FRESH", async () => {
+      // Ensure 'lab' is freshly attested right now so the test doesn't flake if seed is old
+      await request(app)
+        .post(`/api/v1/facilities/${chcFacilityId}/capabilities`)
+        .set("Cookie", chcCookies)
+        .send({ serviceCode: "lab", status: "AVAILABLE", note: "Refresh for test" });
+
       const caps = await getCaps(chcFacilityId, chcCookies);
       const obgyn = caps.find((c) => c.serviceCode === "obgyn"); // seeded 15 days ago
-      const lab = caps.find((c) => c.serviceCode === "lab"); // seeded fresh
+      const lab = caps.find((c) => c.serviceCode === "lab"); 
       expect(obgyn?.freshness).toBe("VERY_STALE");
       expect(obgyn?.status).toBe("AVAILABLE"); // status independent of freshness
       expect(lab?.freshness).toBe("FRESH");

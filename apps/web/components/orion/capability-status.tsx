@@ -45,7 +45,7 @@ export function verifiedLabel(cap: Pick<CapabilityView, "freshness" | "attestedA
     case "STALE":
       return `Last verified ${ago}`;
     case "VERY_STALE":
-      return `Not verified recently · last verified ${ago}`;
+      return `CRITICAL: Data severely outdated · last verified ${ago}`;
   }
 }
 
@@ -80,6 +80,7 @@ export function CapabilityStatusRow({ capability, className }: CapabilityStatusR
 
   return (
     <div
+      aria-label={`Capability: ${capability.serviceLabel}. ${STATUS_LABEL[capability.status]}. ${verifiedLabel(capability)}.`}
       className={cn(
         "flex flex-col gap-1 p-2 rounded-md border",
         isVeryStale
@@ -98,11 +99,11 @@ export function CapabilityStatusRow({ capability, className }: CapabilityStatusR
           {(isStale || isVeryStale) && (
             <AlertTriangle
               className={cn("size-3", isVeryStale ? "text-warning" : "text-warning/80")}
-              aria-label={isVeryStale ? "Information is very old" : "Information may be outdated"}
+              aria-hidden="true"
             />
           )}
           {capability.status === "UNKNOWN" && (
-            <HelpCircle className="size-3 text-muted-foreground" aria-label="Status unknown" />
+            <HelpCircle className="size-3 text-muted-foreground" aria-hidden="true" />
           )}
           <Badge variant={STATUS_BADGE_VARIANT[capability.status]} className="text-[10px] px-1.5 py-0">
             {STATUS_LABEL[capability.status]}
@@ -111,17 +112,30 @@ export function CapabilityStatusRow({ capability, className }: CapabilityStatusR
       </div>
       <div
         className={cn(
-          "flex items-center gap-1 text-[10px]",
+          "flex items-center flex-wrap gap-1.5 text-[11px]",
           isVeryStale
-            ? "text-warning font-medium"
+            ? "text-destructive font-semibold"
             : isStale
-              ? "text-warning/90"
+              ? "text-warning font-medium"
               : "text-muted-foreground"
         )}
       >
-        <Clock className="size-3 shrink-0" />
+        <Clock className="size-3.5 shrink-0" />
         <span>{verifiedLabel(capability)}</span>
+        
+        {isVeryStale && (
+          <Badge variant="destructive" className="text-[9px] uppercase px-1 py-0 ml-auto h-4 rounded-sm tracking-wide">
+            Critically Stale
+          </Badge>
+        )}
+        {isStale && !isVeryStale && (
+          <Badge variant="outline" className="text-[9px] uppercase px-1 py-0 ml-auto h-4 rounded-sm tracking-wide text-warning border-warning/50 bg-warning/10">
+            Stale Data
+          </Badge>
+        )}
       </div>
     </div>
   );
 }
+
+

@@ -18,6 +18,7 @@ import {
   DialogFooter,
 } from "~/components/ui/dialog";
 import { Timeline } from "~/components/orion/timeline";
+import { StateGuidancePanel } from "~/components/orion/state-guidance";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { PatientSummary } from "~/components/orion/patient-summary";
@@ -41,9 +42,19 @@ export default function DestinationHandoffDetail() {
   const [redirectOpen, setRedirectOpen] = React.useState(false);
   const [reason, setReason] = React.useState("");
   const [redirectTarget, setRedirectTarget] = React.useState("");
+  const [formError, setFormError] = React.useState<string | null>(null);
+  const [actionFeedback, setActionFeedback] = React.useState<{ kind: "success" | "error"; message: string } | null>(null);
 
-  const ackAttempted = React.useRef(false);
-  const ackClientEventId = React.useRef(crypto.randomUUID());
+  /**
+   * Every clinical transition reports its outcome in the main interface, not only
+   * in a transient toast: what changed, whether the record is safe, and what to do
+   * next if it failed.
+   */
+  const reportResult = (kind: "success" | "error", message: string) => {
+    setActionFeedback({ kind, message });
+    if (kind === "success") toast.success(message);
+    else toast.error(message);
+  };
 
   // Queries
   const { data: detailData, isLoading, refetch } = useQuery({
@@ -62,11 +73,12 @@ export default function DestinationHandoffDetail() {
       if (!res.ok) throw new Error("Failed to fetch facilities");
       return res.json();
     },
-    enabled: redirectOpen,
+    enabled: true,
   });
 
   const handoff = detailData?.data?.handoff;
   const events = detailData?.data?.events || [];
+  const facilityNames = Object.fromEntries((facilitiesData?.data || []).map((facility: { id: string; name: string }) => [facility.id, facility.name]));
 
   // Mutations
   const ackMutation = useMutation({
@@ -74,7 +86,7 @@ export default function DestinationHandoffDetail() {
       const res = await fetch(`/api/v1/handoffs/${id}/acknowledge`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ clientEventId: ackClientEventId.current }),
+        body: JSON.stringify({ clientEventId: crypto.randomUUID() }),
       });
       if (!res.ok) throw new Error("Failed to acknowledge");
       return res.json();
@@ -82,7 +94,9 @@ export default function DestinationHandoffDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["handoff", id] });
       queryClient.invalidateQueries({ queryKey: ["handoffs", "inbound"] });
+      reportResult("success", "Receipt acknowledged. Next: accept this patient or record why you cannot accept.");
     },
+    onError: () => reportResult("error", "Receipt was not acknowledged. The referral is unchanged and still needs acknowledgement — retry when connected."),
   });
 
   const acceptMutation = useMutation({
@@ -101,9 +115,10 @@ export default function DestinationHandoffDetail() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["handoff", id] });
       queryClient.invalidateQueries({ queryKey: ["handoffs", "inbound"] });
+      reportResult("success", "Patient accepted. Your facility now owns this referral — mark arrival when the patient reaches you.");
     },
     onError: (err: Error) => {
-      toast.error(`Accept failed: ${err.message}`);
+      reportResult("error", `Not accepted: ${err.message}. The referral is unchanged and still awaiting your decision.`);
       refetch(); // Fetch latest state
     }
   });
@@ -125,9 +140,10 @@ export default function DestinationHandoffDetail() {
       setCannotAcceptOpen(false);
       queryClient.invalidateQueries({ queryKey: ["handoff", id] });
       queryClient.invalidateQueries({ queryKey: ["handoffs", "inbound"] });
+      reportResult("success", "Recorded as unable to accept. Next: redirect this patient to a facility that can take them.");
     },
     onError: (err: Error) => {
-      toast.error(`Cannot Accept failed: ${err.message}`);
+      reportResult("error", `Not recorded: ${err.message}. No decision was saved and the referral is still awaiting your decision.`);
       refetch();
     }
   });
@@ -149,11 +165,12 @@ export default function DestinationHandoffDetail() {
       setRedirectOpen(false);
       queryClient.invalidateQueries({ queryKey: ["handoff", id] });
       queryClient.invalidateQueries({ queryKey: ["handoffs", "inbound"] });
+      reportResult("success", "Referral redirected. The new destination must acknowledge receipt.");
       // Go back to inbox since we don't own this handoff anymore
       router.push("/destination");
     },
     onError: (err: Error) => {
-      toast.error(`Redirect failed: ${err.message}`);
+      reportResult("error", `Not redirected: ${err.message}. The patient still has no accepting facility — retry or choose another destination.`);
       refetch();
     }
   });
@@ -164,9 +181,17 @@ export default function DestinationHandoffDetail() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientEventId: crypto.randomUUID() }),
       });
-      if (!res.ok) throw new Error("Failed"); return res.json();
+      if (!res.ok) throw new Error("The server rejected the arrival update");
+      return res.json();
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["handoff", id] }); }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["handoff", id] });
+      reportResult("success", "Arrival recorded. Next: start care for this patient.");
+    },
+    onError: (err: Error) => {
+      reportResult("error", `Arrival not recorded: ${err.message}. The referral is unchanged — the patient is still shown as accepted but not arrived.`);
+      refetch();
+    },
   });
 
   const noShowMutation = useMutation({
@@ -175,9 +200,17 @@ export default function DestinationHandoffDetail() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientEventId: crypto.randomUUID() }),
       });
-      if (!res.ok) throw new Error("Failed"); return res.json();
+      if (!res.ok) throw new Error("The server rejected the no-show update");
+      return res.json();
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["handoff", id] }); }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["handoff", id] });
+      reportResult("success", "Recorded as no-show. The referring facility must now decide whether to re-refer.");
+    },
+    onError: (err: Error) => {
+      reportResult("error", `No-show not recorded: ${err.message}. The referral is unchanged — the patient is still shown as accepted.`);
+      refetch();
+    },
   });
 
   const startCareMutation = useMutation({
@@ -186,9 +219,17 @@ export default function DestinationHandoffDetail() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ clientEventId: crypto.randomUUID() }),
       });
-      if (!res.ok) throw new Error("Failed"); return res.json();
+      if (!res.ok) throw new Error("The server rejected the start-of-care update");
+      return res.json();
     },
-    onSuccess: () => { queryClient.invalidateQueries({ queryKey: ["handoff", id] }); }
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["handoff", id] });
+      reportResult("success", "Care started. Next: record the outcome when care is complete.");
+    },
+    onError: (err: Error) => {
+      reportResult("error", `Care not started: ${err.message}. The referral is unchanged — the patient is still shown as arrived.`);
+      refetch();
+    },
   });
 
   const [outcomeOpen, setOutcomeOpen] = React.useState(false);
@@ -206,21 +247,19 @@ export default function DestinationHandoffDetail() {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!res.ok) throw new Error("Failed"); return res.json();
+      if (!res.ok) throw new Error("The server rejected the outcome");
+      return res.json();
     },
     onSuccess: () => {
       setOutcomeOpen(false);
       queryClient.invalidateQueries({ queryKey: ["handoff", id] });
+      reportResult("success", "Outcome recorded. The referring facility will close the episode and arrange follow-up.");
+    },
+    onError: (err: Error) => {
+      reportResult("error", `Outcome not recorded: ${err.message}. Care is still open — nothing was lost, retry or correct the details.`);
+      refetch();
     }
   });
-
-  // Acknowledge on Open
-  React.useEffect(() => {
-    if (handoff && handoff.state === "sent" && !ackAttempted.current) {
-      ackAttempted.current = true;
-      ackMutation.mutate();
-    }
-  }, [handoff, ackMutation]);
 
   if (isLoading) {
     return (
@@ -241,7 +280,7 @@ export default function DestinationHandoffDetail() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8 h-full flex flex-col">
+    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8 h-full flex flex-col">
       {/* Header */}
       <div>
         <Link href="/destination" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
@@ -261,28 +300,33 @@ export default function DestinationHandoffDetail() {
           </div>
           
           {/* Action Area */}
-          <div className="flex gap-2">
-            {["sent", "acknowledged"].includes(handoff.state) && (
+          <div className="flex flex-wrap gap-2">
+            {handoff.state === "sent" && (
+              <Button onClick={() => ackMutation.mutate()} disabled={ackMutation.isPending}>
+                {ackMutation.isPending ? "Acknowledging…" : "Acknowledge receipt"}
+              </Button>
+            )}
+            {handoff.state === "acknowledged" && (
               <>
                 <Button 
                   variant="outline" 
-                  onClick={() => { setReason(""); setCannotAcceptOpen(true); }}
+                  onClick={() => { setFormError(null); setReason(""); setCannotAcceptOpen(true); }}
                   disabled={acceptMutation.isPending || cannotAcceptMutation.isPending}
                 >
-                  Cannot Accept
+                  Cannot accept
                 </Button>
                 <Button 
                   onClick={() => acceptMutation.mutate()}
                   disabled={acceptMutation.isPending || cannotAcceptMutation.isPending}
                 >
-                  {acceptMutation.isPending ? "Accepting..." : "Accept Patient"}
+                  {acceptMutation.isPending ? "Accepting..." : "Accept patient"}
                 </Button>
               </>
             )}
 
             {handoff.state === "cannot_accept" && (
               <Button 
-                onClick={() => { setReason(""); setRedirectTarget(""); setRedirectOpen(true); }}
+                onClick={() => { setFormError(null); setReason(""); setRedirectTarget(""); setRedirectOpen(true); }}
                 disabled={redirectMutation.isPending}
               >
                 Redirect to another facility
@@ -292,28 +336,44 @@ export default function DestinationHandoffDetail() {
             {handoff.state === "accepted" && (
               <>
                 <Button variant="outline" onClick={() => noShowMutation.mutate()} disabled={noShowMutation.isPending}>
-                  Mark No-Show
+                  Mark no-show
                 </Button>
                 <Button onClick={() => arrivedMutation.mutate()} disabled={arrivedMutation.isPending}>
-                  Mark Arrived
+                  {arrivedMutation.isPending ? "Recording arrival..." : "Mark arrived"}
                 </Button>
               </>
             )}
 
             {handoff.state === "arrived" && (
               <Button onClick={() => startCareMutation.mutate()} disabled={startCareMutation.isPending}>
-                Start Care
+                {startCareMutation.isPending ? "Starting care..." : "Start care"}
               </Button>
             )}
 
             {handoff.state === "in_care" && (
               <Button onClick={() => { setOutcomeData({ disposition: "", summary: "", adviceSummary: "", followUpDueAt: "" }); setOutcomeOpen(true); }}>
-                Record Outcome
+                Record outcome
               </Button>
             )}
           </div>
         </div>
       </div>
+
+      {actionFeedback && (
+        <div
+          role={actionFeedback.kind === "error" ? "alert" : "status"}
+          aria-live="polite"
+          className={
+            actionFeedback.kind === "error"
+              ? "rounded-lg border border-danger/30 bg-danger/5 px-4 py-3 text-sm font-medium text-danger"
+              : "rounded-lg border border-success/30 bg-success/5 px-4 py-3 text-sm font-medium text-success"
+          }
+        >
+          {actionFeedback.message}
+        </div>
+      )}
+
+      <StateGuidancePanel state={handoff.state} role="destination" />
 
       <div className="flex flex-col gap-8 max-w-4xl w-full mx-auto pb-24">
         {/* 1. Patient Context */}
@@ -337,8 +397,8 @@ export default function DestinationHandoffDetail() {
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-y-6 gap-x-4 mb-8">
               <div>
                 <div className="text-sm font-medium text-muted-foreground mb-1">Origin Facility</div>
-                <div className="font-medium text-foreground truncate" title={handoff.originFacilityId}>
-                  {handoff.originFacilityId}
+                <div className="font-medium text-foreground">
+                  {facilityNames[handoff.originFacilityId] || "Origin facility name unavailable"}
                 </div>
               </div>
             </div>
@@ -354,7 +414,7 @@ export default function DestinationHandoffDetail() {
               <Clock className="size-5 text-muted-foreground" /> Operational Timeline
             </h3>
             
-            <Timeline events={events} />
+            <Timeline events={events} facilityNames={facilityNames} />
           </div>
         </div>
       </div>
@@ -369,12 +429,21 @@ export default function DestinationHandoffDetail() {
             </DialogDescription>
           </DialogHeader>
           <div className="py-4 space-y-4">
+            <p id="cannot-accept-help" className="text-sm text-muted-foreground">
+              Recording this tells the referring facility you cannot take the patient. The referral then has to be
+              redirected to another facility, so the reason must be specific enough for them to act on.
+            </p>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Reason *</label>
+              <label htmlFor="cannot-accept-reason" className="text-sm font-medium text-foreground">Reason <span aria-hidden="true">*</span></label>
               <select 
+                id="cannot-accept-reason"
                 className="w-full p-2 rounded-md border border-input bg-background text-foreground"
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={(e) => { setReason(e.target.value); setFormError(null); }}
+                required
+                aria-required="true"
+                aria-describedby="cannot-accept-help"
+                aria-invalid={formError ? true : undefined}
               >
                 <option value="">Select a reason...</option>
                 {CANNOT_ACCEPT_REASONS.map(r => (
@@ -382,15 +451,27 @@ export default function DestinationHandoffDetail() {
                 ))}
               </select>
             </div>
+            {formError && (
+              <p role="alert" className="text-sm font-medium text-danger">{formError}</p>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setCannotAcceptOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setCannotAcceptOpen(false)} disabled={cannotAcceptMutation.isPending}>
+              Keep as pending decision
+            </Button>
             <Button 
               className="bg-danger hover:bg-danger/90 text-primary-foreground" 
-              onClick={() => cannotAcceptMutation.mutate()}
-              disabled={!reason || cannotAcceptMutation.isPending}
+              onClick={() => {
+                if (!reason) {
+                  setFormError("Select a reason before confirming — the referring facility needs it to arrange a new destination.");
+                  return;
+                }
+                setFormError(null);
+                cannotAcceptMutation.mutate();
+              }}
+              disabled={cannotAcceptMutation.isPending}
             >
-              {cannotAcceptMutation.isPending ? "Submitting..." : "Confirm Cannot Accept"}
+              {cannotAcceptMutation.isPending ? "Submitting..." : "Confirm unable to accept"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -414,8 +495,9 @@ export default function DestinationHandoffDetail() {
             )}
             
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">New Destination *</label>
+              <label htmlFor="redirect-destination" className="text-sm font-medium text-foreground">New destination <span aria-hidden="true">*</span></label>
               <select 
+                id="redirect-destination"
                 className="w-full p-2 rounded-md border border-input bg-background text-foreground"
                 value={redirectTarget}
                 onChange={(e) => setRedirectTarget(e.target.value)}
@@ -431,23 +513,39 @@ export default function DestinationHandoffDetail() {
             </div>
 
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Reason for Redirect *</label>
+              <label htmlFor="redirect-reason" className="text-sm font-medium text-foreground">Reason for redirect <span aria-hidden="true">*</span></label>
               <textarea 
+                id="redirect-reason"
                 className="w-full p-2 rounded-md border border-input bg-background text-foreground min-h-[80px]"
                 placeholder="e.g., Required specialist unavailable"
+                required
+                aria-required="true"
+                aria-invalid={formError ? true : undefined}
                 value={reason}
-                onChange={(e) => setReason(e.target.value)}
+                onChange={(e) => { setReason(e.target.value); setFormError(null); }}
                 disabled={handoff.redirectCount >= 3}
               />
             </div>
+            {formError && (
+              <p role="alert" className="text-sm font-medium text-danger">{formError}</p>
+            )}
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRedirectOpen(false)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setRedirectOpen(false)} disabled={redirectMutation.isPending}>
+              Keep as pending decision
+            </Button>
             <Button 
-              onClick={() => redirectMutation.mutate()}
-              disabled={!redirectTarget || !reason || handoff.redirectCount >= 3 || redirectMutation.isPending}
+              onClick={() => {
+                if (!redirectTarget || !reason) {
+                  setFormError("Select a destination facility and record a reason — the origin facility and the patient need both.");
+                  return;
+                }
+                setFormError(null);
+                redirectMutation.mutate();
+              }}
+              disabled={handoff.redirectCount >= 3 || redirectMutation.isPending}
             >
-              {redirectMutation.isPending ? "Redirecting..." : "Confirm Redirect"}
+              {redirectMutation.isPending ? "Redirecting..." : "Confirm redirect"}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -464,8 +562,8 @@ export default function DestinationHandoffDetail() {
           </DialogHeader>
           <div className="py-4 space-y-4">
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Disposition *</label>
-              <select className="w-full p-2 rounded-md border border-input bg-background"
+              <label htmlFor="outcome-disposition" className="text-sm font-medium text-foreground">Disposition <span aria-hidden="true">*</span></label>
+              <select id="outcome-disposition" className="w-full p-2 rounded-md border border-input bg-background"
                 value={outcomeData.disposition} onChange={e => setOutcomeData({...outcomeData, disposition: e.target.value})}>
                 <option value="">Select...</option>
                 <option value="treated_returned">Treated & Returned</option>
@@ -476,18 +574,18 @@ export default function DestinationHandoffDetail() {
               </select>
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Summary *</label>
-              <textarea className="w-full p-2 rounded-md border border-input bg-background"
+              <label htmlFor="outcome-summary" className="text-sm font-medium text-foreground">Summary <span aria-hidden="true">*</span></label>
+              <textarea id="outcome-summary" className="w-full p-2 rounded-md border border-input bg-background"
                 value={outcomeData.summary} onChange={e => setOutcomeData({...outcomeData, summary: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Advice Summary</label>
-              <textarea className="w-full p-2 rounded-md border border-input bg-background"
+              <label htmlFor="outcome-advice" className="text-sm font-medium text-foreground">Advice summary</label>
+              <textarea id="outcome-advice" className="w-full p-2 rounded-md border border-input bg-background"
                 value={outcomeData.adviceSummary} onChange={e => setOutcomeData({...outcomeData, adviceSummary: e.target.value})} />
             </div>
             <div className="space-y-2">
-              <label className="text-sm font-medium text-foreground">Follow-up Due At</label>
-              <input type="date" className="w-full p-2 rounded-md border border-input bg-background"
+              <label htmlFor="outcome-follow-up" className="text-sm font-medium text-foreground">Follow-up due date</label>
+              <input id="outcome-follow-up" type="date" className="w-full p-2 rounded-md border border-input bg-background"
                 value={outcomeData.followUpDueAt} onChange={e => setOutcomeData({...outcomeData, followUpDueAt: e.target.value})} />
             </div>
           </div>
@@ -502,3 +600,4 @@ export default function DestinationHandoffDetail() {
     </div>
   );
 }
+

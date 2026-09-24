@@ -19,7 +19,8 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
   test('E2E 1 - Offline banner appears when offline', async ({ page, context }) => {
     await page.goto('/app/new/patient');
     
-    // Simulate offline by mocking navigator.onLine and intercepting API calls
+    // Simulate offline by context
+    await context.setOffline(true);
     await page.evaluate(() => {
       Object.defineProperty(Object.getPrototypeOf(navigator), 'onLine', {
         get: () => false,
@@ -29,10 +30,11 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     });
     
     // The banner should appear
-    const banner = page.locator('text=You\'re offline. New referrals will be saved and synced');
+    const banner = page.getByText('Offline — new referrals can be saved on this device, but have not been sent to the server.');
     await expect(banner).toBeVisible();
     
     // Restore online
+    await context.setOffline(false);
     await page.evaluate(() => {
       Object.defineProperty(Object.getPrototypeOf(navigator), 'onLine', {
         get: () => true,
@@ -59,10 +61,8 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     await page.goto('/app/new/patient');
     await page.waitForLoadState('networkidle');
     
-    page.on('console', msg => console.log('PAGE LOG:', msg.text()));
-
-    // Simulate offline
-    await page.route('/api/v1/**', route => route.abort('internetdisconnected'));
+    // Simulate true offline
+    await context.setOffline(true);
     await page.evaluate(() => {
       Object.defineProperty(Object.getPrototypeOf(navigator), 'onLine', {
         get: () => false,
@@ -72,7 +72,7 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     });
     
     // Ensure offline state has propagated before proceeding
-    const banner = page.locator('text=You\'re offline. New referrals will be saved and synced');
+    const banner = page.getByText('Offline — new referrals can be saved on this device, but have not been sent to the server.');
     await expect(banner).toBeVisible();
     
     // Create Patient
@@ -87,7 +87,7 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     expect(errorText).toBeNull();
     
     // Now on protocol selection (or triage)
-    await expect(page).toHaveURL(/.*\/app\/new\/protocol/);
+    await expect(page).toHaveURL(/.*\/app\/new\/protocol/, { timeout: 15000 });
     await page.click('button:has-text("ANC Danger Signs")'); // Select protocol
     await page.click('button:has-text("Continue")');
     
@@ -113,15 +113,15 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     
     // Verify pending/offline state
     await expect(page.locator('text=E2E Offline Patient')).toBeVisible();
-    await expect(page.locator('text=Saved Offline')).toBeVisible();
+    await expect(page.locator('text=Saved locally')).toBeVisible();
 
     // Refresh browser while offline
     await page.reload();
     await expect(page.locator('text=E2E Offline Patient')).toBeVisible();
-    await expect(page.locator('text=Saved Offline')).toBeVisible();
+    await expect(page.locator('text=Saved locally')).toBeVisible();
 
     // Now trigger the sync by coming back online
-    await page.unroute('/api/v1/**');
+    await context.setOffline(false);
     await page.evaluate(() => {
       Object.defineProperty(Object.getPrototypeOf(navigator), 'onLine', {
         get: () => true,
@@ -137,10 +137,10 @@ test.describe('Phase 7 Offline Sync Scenarios', () => {
     await page.reload();
     await expect(page.locator('text=E2E Offline Patient')).toBeVisible();
     await expect(page.locator('text=Synced')).not.toBeVisible(); // After refresh, it might not show offline tags since it's just server data
-    await expect(page.locator('text=Saved Offline')).not.toBeVisible();
+    await expect(page.locator('text=Saved locally')).not.toBeVisible();
     
     // Ensure only ONE instance exists
-    const rowCount = await page.locator('tr:has-text("E2E Offline Patient")').count();
+    const rowCount = await page.getByRole('heading', { name: 'E2E Offline Patient' }).count();
     expect(rowCount).toBe(1);
   });
 

@@ -14,6 +14,15 @@ const geistMono = localFont({
 export const metadata: Metadata = {
   title: "Sahay",
   description: "Care Access & Referral Coordination",
+  manifest: "/site.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Sahay",
+  },
+  formatDetection: {
+    telephone: false,
+  },
 };
 
 import { ReactQueryProvider } from "~/components/providers/query-provider";

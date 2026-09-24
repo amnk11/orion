@@ -13,11 +13,23 @@ import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { db } from "~/lib/offline/db";
 import { connectivity } from "~/lib/offline/connectivity";
 import { syncEngine } from "~/lib/offline/sync-engine";
+
+interface HandoffCreationResult {
+  offline?: boolean;
+  data: { id: string; clientMutationId?: string };
+}
+
+interface CachedFacility {
+  id: string;
+  name: string;
+  type: string;
+}
 export default function ConfirmReferralPage() {
   const router = useRouter();
   const { draft, clearDraft } = useReferralDraft();
   const queryClient = useQueryClient();
   const [idempotencyKey] = useState(() => crypto.randomUUID());
+  const [offlineSuccess, setOfflineSuccess] = useState(false);
 
   useEffect(() => {
     if (!draft.destinationFacilityId) {
@@ -77,7 +89,8 @@ export default function ConfirmReferralPage() {
         // fallback to list cache
         const allCached = await db.referenceCache.get("all_facilities");
         if (allCached?.data?.data) {
-          const f = allCached.data.data.find((f: any) => f.id === draft.destinationFacilityId);
+          const cachedFacilities = allCached.data.data as CachedFacility[];
+          const f = cachedFacilities.find((facility: CachedFacility) => facility.id === draft.destinationFacilityId);
           if (f) return { ok: true, data: f };
         }
       }
@@ -89,7 +102,7 @@ export default function ConfirmReferralPage() {
   const [formError, setFormError] = useState<string | null>(null);
 
   const createHandoff = useMutation({
-    mutationFn: async () => {
+    mutationFn: async (): Promise<HandoffCreationResult> => {
       const payload = {
         patientId: draft.patientId,
         protocolCode: draft.protocolCode,
@@ -152,29 +165,69 @@ export default function ConfirmReferralPage() {
       }
 
       if (!res.ok) {
-        const errorData = await res.json();
+        if (res.status >= 500) {
+          if (typeof window !== "undefined") {
+            const handoffId = crypto.randomUUID();
+            const episodeId = crypto.randomUUID();
+            const assessmentId = crypto.randomUUID();
+            
+            const offlinePayload = {
+              ...payload,
+              id: handoffId,
+              episodeId,
+              assessmentId,
+            };
+
+            const clientMutationId = await syncEngine.queueHandoffCreation(offlinePayload);
+            
+            return { 
+              offline: true, 
+              data: { id: handoffId, clientMutationId } 
+            };
+          }
+        }
+        const errorData = await res.json().catch(() => ({}));
         throw new Error(errorData.error?.message || "Failed to create handoff");
       }
-      return res.json();
+      return (await res.json()) as HandoffCreationResult;
     },
-    onSuccess: (res) => {
+    onSuccess: (res: HandoffCreationResult) => {
       queryClient.invalidateQueries({ queryKey: ["handoffs"] });
       
       if (res.offline) {
-        toast("Saved offline", {
-          description: "This referral will be sent when the connection returns."
-        });
+        setOfflineSuccess(true);
+      } else {
+        router.push(`/app/handoff/${res.data.id}`);
+        setTimeout(() => clearDraft(), 500);
       }
-      
-      router.push(`/app/handoff/${res.data.id}`);
-      
-      // Delay clearing draft to prevent cascading useEffect redirects back to start
-      setTimeout(() => clearDraft(), 500);
     },
     onError: (err: Error) => {
       setFormError(err.message);
     }
   });
+
+  if (offlineSuccess) {
+    return (
+      <div className="flex flex-col flex-1 h-full items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-300">
+        <div className="size-16 bg-muted rounded-full flex items-center justify-center mb-6">
+          <CheckCircle2 className="size-8 text-muted-foreground" />
+        </div>
+        <h1 className="text-2xl font-semibold mb-2">Saved Offline</h1>
+        <p className="text-muted-foreground mb-8 max-w-sm">
+          Your referral has been saved locally. It will automatically sync to the server when the connection is restored.
+        </p>
+        <Button 
+          size="lg" 
+          onClick={() => {
+            clearDraft();
+            window.location.href = "/app";
+          }}
+        >
+          Return to Dashboard
+        </Button>
+      </div>
+    );
+  }
 
   if (!draft.destinationFacilityId) return null;
 
@@ -268,3 +321,6 @@ export default function ConfirmReferralPage() {
     </div>
   );
 }
+
+
+

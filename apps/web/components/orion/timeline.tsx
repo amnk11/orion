@@ -6,25 +6,27 @@ import { cn } from "~/lib/utils";
 export interface TimelineEventData {
   id: string;
   eventType: string;
-  actorId: string | null;
-  actorRole: string | null;
-  facilityId: string | null;
-  reason: string | null;
-  metadata: Record<string, any> | null;
+  actorId?: string | null;
+  actorRole?: string | null;
+  facilityId?: string | null;
+  reason?: string | null;
+  metadata?: Record<string, unknown> | null;
   createdAt: string;
 }
 
 interface TimelineProps {
   events: TimelineEventData[];
   className?: string;
+  facilityNames?: Record<string, string>;
 }
 
-export function Timeline({ events, className }: TimelineProps) {
+export function Timeline({ events, className, facilityNames = {} }: TimelineProps) {
   if (!events || events.length === 0) return null;
+  const orderedEvents = [...events].sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
   return (
     <div className={cn("relative space-y-4 before:absolute before:inset-0 before:ml-2 before:h-full before:w-px before:bg-border", className)}>
-      {events.map((event, index) => {
+      {orderedEvents.map((event, index) => {
         const isFirst = index === 0;
         const formattedEvent = ClinicalDictionary.formatEvent(event.eventType);
 
@@ -42,8 +44,8 @@ export function Timeline({ events, className }: TimelineProps) {
                   <span className={cn("text-sm font-semibold", isFirst ? "text-foreground" : "text-muted-foreground")}>
                     {formattedEvent}
                   </span>
-                  <time className="text-xs text-muted-foreground font-mono">
-                    {format(new Date(event.createdAt), "h:mm a")}
+                  <time className="text-sm text-muted-foreground tabular-nums" dateTime={event.createdAt}>
+                    {format(new Date(event.createdAt), "d MMM, h:mm a")}
                   </time>
                 </div>
 
@@ -55,15 +57,15 @@ export function Timeline({ events, className }: TimelineProps) {
                 
                 <div className="flex flex-wrap gap-x-4 gap-y-1 mt-1">
                   {event.actorRole && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                       <User className="size-3.5" />
                       <span className="capitalize">{event.actorRole.replace("_", " ")}</span>
                     </div>
                   )}
                   {event.facilityId && (
-                    <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 text-sm text-muted-foreground">
                       <Building2 className="size-3.5" />
-                      <span className="font-mono text-[10px]">{event.facilityId}</span>
+                      <span>{facilityNames[event.facilityId] || "Facility details unavailable"}</span>
                     </div>
                   )}
                 </div>

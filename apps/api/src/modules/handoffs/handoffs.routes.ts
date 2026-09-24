@@ -367,7 +367,7 @@ handoffsRouter.get("/:id/fhir", async (req, res, next) => {
     
     const handoff = detail.handoff;
 
-    assertPartyToHandoff(req.user!, handoff.id);
+    await assertPartyToHandoff(req.user!, handoff.id);
 
     const [patient] = await db.select().from(patients).where(eq(patients.id, handoff.patientId!)).limit(1);
     const [origin] = await db.select().from(facilities).where(eq(facilities.id, handoff.originFacilityId!)).limit(1);

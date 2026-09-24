@@ -34,7 +34,7 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
           if (typeof window !== "undefined") {
             await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
           }
-          return json;
+          return json as { ok: boolean; data: Capability[] };
         }
       } catch {
         // network error
@@ -42,7 +42,7 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
       
       if (typeof window !== "undefined") {
         const cached = await db.referenceCache.get(cacheKey);
-        if (cached) return cached.data;
+        if (cached) return cached.data as { ok: boolean; data: Capability[] };
       }
       throw new Error("Failed to fetch capabilities");
     },
@@ -77,7 +77,7 @@ function FacilityCard({ facility, selected, onSelect }: { facility: Facility, se
           </div>
         ) : caps?.data && caps.data.length > 0 ? (
           <div className="flex flex-col gap-2">
-            {caps.data.map((cap) => (
+            {caps.data.map((cap: Capability) => (
               <CapabilityStatusRow key={cap.id} capability={cap} />
             ))}
           </div>
@@ -115,7 +115,7 @@ export default function DestinationSelectionPage() {
           if (typeof window !== "undefined") {
             await db.referenceCache.put({ key: cacheKey, data: json, cachedAt: Date.now() });
           }
-          return json;
+          return json as { ok: boolean; data: Facility[] };
         }
       } catch {
         // Network error
@@ -123,15 +123,15 @@ export default function DestinationSelectionPage() {
       
       if (typeof window !== "undefined") {
         const cached = await db.referenceCache.get(cacheKey);
-        if (cached) return cached.data;
+        if (cached) return cached.data as { ok: boolean; data: Facility[] };
       }
       throw new Error("Failed to fetch facilities");
     },
   });
 
-  const filteredFacilities = facilities?.data?.filter((f) => 
-    f.name.toLowerCase().includes(searchQuery.toLowerCase())
-  ) || [];
+  const filteredFacilities: Facility[] = (facilities?.data ?? []).filter((facility: Facility) =>
+    facility.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
 
   const handleNext = () => {
     if (draft.destinationFacilityId) {
@@ -168,12 +168,12 @@ export default function DestinationSelectionPage() {
             No facilities found matching your search.
           </div>
         ) : (
-          filteredFacilities.map(fac => (
+          filteredFacilities.map((facility: Facility) => (
             <FacilityCard 
-              key={fac.id} 
-              facility={fac} 
-              selected={draft.destinationFacilityId === fac.id}
-              onSelect={() => setDestinationFacilityId(fac.id)}
+              key={facility.id}
+              facility={facility}
+              selected={draft.destinationFacilityId === facility.id}
+              onSelect={() => setDestinationFacilityId(facility.id)}
             />
           ))
         )}
@@ -197,3 +197,4 @@ export default function DestinationSelectionPage() {
     </div>
   );
 }
+
