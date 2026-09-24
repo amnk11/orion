@@ -42,19 +42,19 @@ export default function FollowUpsPage() {
   const followUps = data?.data || [];
 
   return (
-    <div className="p-6 md:p-8 max-w-6xl mx-auto space-y-8">
-      <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-semibold tracking-tight text-foreground">
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
           Follow-Ups Worklist
         </h1>
-        <div className="flex gap-2">
-          <Button variant={filter === "pending" ? "default" : "outline"} onClick={() => setFilter("pending")}>
+        <div className="flex gap-2 w-full md:w-auto">
+          <Button className="flex-1 md:flex-none px-2 sm:px-4" variant={filter === "pending" ? "default" : "outline"} onClick={() => setFilter("pending")}>
             Pending
           </Button>
-          <Button variant={filter === "completed" ? "default" : "outline"} onClick={() => setFilter("completed")}>
+          <Button className="flex-1 md:flex-none px-2 sm:px-4" variant={filter === "completed" ? "default" : "outline"} onClick={() => setFilter("completed")}>
             Completed
           </Button>
-          <Button variant={filter === "" ? "default" : "outline"} onClick={() => setFilter("")}>
+          <Button className="flex-1 md:flex-none px-2 sm:px-4" variant={filter === "" ? "default" : "outline"} onClick={() => setFilter("")}>
             All
           </Button>
         </div>
@@ -76,32 +76,33 @@ export default function FollowUpsPage() {
             return (
               <div key={fup.id} className="border rounded-lg p-6 bg-card flex flex-col md:flex-row md:items-center justify-between gap-4">
                 <div className="space-y-2">
-                  <div className="flex items-center gap-2">
+                  <div className="flex flex-wrap items-center gap-2">
                     <span className="font-semibold text-lg">{fup.patientName || "Unknown Patient"}</span>
                     {fup.publicCode && (
-                      <Link href={`/app/handoff/${fup.handoffId}`} className="text-primary text-sm hover:underline">
+                      <Link href={`/app/handoff/${fup.handoffId}`} className="text-primary text-sm hover:underline shrink-0">
                         ({fup.publicCode})
                       </Link>
                     )}
                     {isOverdue && (
-                      <span className="inline-flex items-center text-xs font-medium bg-danger/10 text-danger px-2 py-0.5 rounded ml-2">
+                      <span className="inline-flex items-center text-xs font-medium bg-danger/10 text-danger px-2 py-0.5 rounded shrink-0">
                         <AlertCircle className="size-3 mr-1" /> Overdue
                       </span>
                     )}
                     {fup.status === "completed" && (
-                      <span className="inline-flex items-center text-xs font-medium bg-success/10 text-success px-2 py-0.5 rounded ml-2">
+                      <span className="inline-flex items-center text-xs font-medium bg-success/10 text-success px-2 py-0.5 rounded shrink-0">
                         <CheckCircle2 className="size-3 mr-1" /> Completed
                       </span>
                     )}
                   </div>
                   <p className="text-muted-foreground">{fup.task}</p>
                   <div className="flex items-center text-sm text-muted-foreground gap-1">
-                    <Clock className="size-4" /> Due: {format(new Date(fup.dueAt), "PPP")}
+                    <Clock className="size-4 shrink-0" /> Due: {format(new Date(fup.dueAt), "PPP")}
                   </div>
                 </div>
-                <div>
+                <div className="w-full md:w-auto pt-2 md:pt-0">
                   {fup.status === "pending" && (
                     <Button 
+                      className="w-full md:w-auto"
                       onClick={() => completeMutation.mutate(fup.id)}
                       disabled={completeMutation.isPending}
                     >
