@@ -1,4 +1,4 @@
-name: CI
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,10 +6,47 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
 jobs:
-  validate:
-    name: Lint, Typecheck & Test
+  security_scans:
+    name: Security & Secret Scans
     runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Gitleaks Secret Scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  validate_and_test:
+    name: Lint, Typecheck & Integration Tests
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:15-alpine
+        env:
+          POSTGRES_USER: sahay_test
+          POSTGRES_PASSWORD: sahay_test_password
+          POSTGRES_DB: sahay_test_db
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    env:
+      DATABASE_URL: postgresql://sahay_test:sahay_test_password@localhost:5432/sahay_test_db
+      BETTER_AUTH_SECRET: ci-secret-key-do-not-use-in-prod
+      NEXT_PUBLIC_API_URL: http://localhost:4000
+      PORT: 4000
+      CORS_ORIGIN: http://localhost:3000
 
     steps:
       - name: Checkout repository
@@ -18,7 +55,7 @@ jobs:
       - name: Install pnpm
         uses: pnpm/action-setup@v3
         with:
-          version: 9
+          version: 9.0.0
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -29,14 +66,40 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Security/Dependency Audit
+        run: pnpm audit --prod
+
       - name: Typecheck
         run: pnpm typecheck
 
       - name: Lint
         run: pnpm lint
 
-      - name: Test
+      - name: Database Migration Check
+        run: pnpm turbo db:migrate
+
+      - name: Unit & Integration Tests
         run: pnpm test
 
       - name: Build
         run: pnpm build
+
+      - name: Start API & Frontend (for E2E)
+        run: |
+          pnpm --filter @orion/api start &
+          pnpm --filter @orion/web start &
+          sleep 10
+        
+      - name: Install Playwright Browsers
+        run: pnpm --filter @orion/web exec playwright install --with-deps
+
+      - name: Playwright E2E Tests
+        run: pnpm --filter @orion/web test:e2e
+        
+      - name: Upload Playwright Artifacts
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: apps/web/playwright-report/
+          retention-days: 7

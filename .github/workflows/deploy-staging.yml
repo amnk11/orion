@@ -1,0 +1,24 @@
+name: Deploy Staging
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  deploy_staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    environment: staging
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Deployment process would integrate with Vercel/Render/AWS here.
+      # Documented as manual/provider-dependent until external config is injected.
+      
+      - name: Staging Deployment Note
+        run: echo "Staging deployment relies on external provider triggers (e.g. Vercel GitHub App) or explicit CLI commands."
