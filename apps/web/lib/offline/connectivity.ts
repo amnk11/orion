@@ -30,7 +30,6 @@ class ConnectivityMonitor {
       return;
     }
     
-    this.setStatus("checking");
     try {
       const res = await fetch("/api/health", { cache: "no-store", method: "HEAD" });
       if (res.ok) {
