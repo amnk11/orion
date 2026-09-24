@@ -156,7 +156,7 @@ export default function DashboardLayout({
     <div className="flex h-dvh bg-background overflow-hidden">
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-4">
-        <Image src="/sahay-small.svg" alt="Sahay Logo" height={24} width={80} />
+        <Image src="/sahay-small.svg" alt="Sahay Logo" height={32} width={100} className="h-8 w-auto object-contain" />
         <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
           <SheetTrigger asChild>
             <button className="size-11 inline-flex items-center justify-center -mr-2 text-sidebar-foreground" aria-label="Toggle navigation menu">
