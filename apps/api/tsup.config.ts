@@ -10,4 +10,5 @@ export default defineConfig({
   loader: { ".json": "copy" },
   minify: true,
   sourcemap: false,
+  noExternal: [/@orion\/.*/],
 });
