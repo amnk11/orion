@@ -30,6 +30,7 @@ export default function ConfirmReferralPage() {
   const queryClient = useQueryClient();
   const [idempotencyKey] = useState(() => crypto.randomUUID());
   const [offlineSuccess, setOfflineSuccess] = useState(false);
+  const [onlineSuccessId, setOnlineSuccessId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!draft.destinationFacilityId) {
@@ -197,8 +198,7 @@ export default function ConfirmReferralPage() {
       if (res.offline) {
         setOfflineSuccess(true);
       } else {
-        router.push(`/app/handoff/${res.data.id}`);
-        setTimeout(() => clearDraft(), 500);
+        setOnlineSuccessId(res.data.id);
       }
     },
     onError: (err: Error) => {
@@ -208,22 +208,48 @@ export default function ConfirmReferralPage() {
 
   if (offlineSuccess) {
     return (
-      <div className="flex flex-col flex-1 h-full items-center justify-center p-6 text-center animate-in fade-in zoom-in duration-300">
+      <div className="flex flex-col items-center justify-center py-24 px-4 text-center animate-in fade-in zoom-in duration-300 w-full max-w-2xl mx-auto">
         <div className="size-16 bg-muted rounded-full flex items-center justify-center mb-6">
           <CheckCircle2 className="size-8 text-muted-foreground" />
         </div>
         <h1 className="text-2xl font-semibold mb-2">Saved Offline</h1>
-        <p className="text-muted-foreground mb-8 max-w-sm">
+        <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
           Your referral has been saved locally. It will automatically sync to the server when the connection is restored.
         </p>
         <Button 
           size="lg" 
+          className="w-full sm:w-auto min-w-[200px]"
           onClick={() => {
             clearDraft();
             window.location.href = "/app";
           }}
         >
           Return to Dashboard
+        </Button>
+      </div>
+    );
+  }
+
+  if (onlineSuccessId) {
+    return (
+      <div className="flex flex-col items-center justify-center py-24 px-4 text-center animate-in fade-in zoom-in duration-300 w-full max-w-2xl mx-auto">
+        <div className="size-20 bg-success/10 rounded-full flex items-center justify-center mb-6 border border-success/20">
+          <CheckCircle2 className="size-10 text-success" />
+        </div>
+        <h1 className="text-3xl font-semibold mb-3 text-foreground">Referral Dispatched</h1>
+        <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
+          The referral for <span className="font-semibold text-foreground">{patientData?.data?.displayName || "this patient"}</span> has been successfully sent to <span className="font-semibold text-foreground">{facilityData?.data?.name || "the destination"}</span>.
+        </p>
+        
+        <Button 
+          size="lg" 
+          className="w-full sm:w-auto min-w-[200px]"
+          onClick={() => {
+            clearDraft();
+            window.location.href = "/app";
+          }}
+        >
+          Go to Dashboard
         </Button>
       </div>
     );
@@ -288,9 +314,9 @@ export default function ConfirmReferralPage() {
               </div>
             </div>
 
-            <div className="p-6">
+            <div className="p-4 sm:p-6">
               <div className="text-sm font-medium text-muted-foreground mb-4">Clinical Payload</div>
-              <div className="bg-background rounded-lg border border-border/50 p-4">
+              <div className="bg-background rounded-lg border border-border/50 p-3 sm:p-4">
                 <ClinicalSummary packet={draft.protocolInputs} protocolCode={draft.protocolCode!} />
               </div>
             </div>

@@ -9,6 +9,10 @@ node_modules
 .agents
 .gemini
 
+# Service Worker build artifacts
+public/sw.js
+public/sw.js.map
+
 # Local env files
 .env
 .env*.local

@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { CheckCircle2, AlertCircle, Clock } from "lucide-react";
+import { CheckCircle2, AlertCircle, Clock, Check } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import Link from "next/link";
@@ -42,77 +42,145 @@ export default function FollowUpsPage() {
   const followUps = data?.data || [];
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-8">
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-          Follow-Ups Worklist
-        </h1>
-        <div className="flex gap-2 w-full md:w-auto">
-          <Button className="flex-1 md:flex-none px-2 sm:px-4" variant={filter === "pending" ? "default" : "outline"} onClick={() => setFilter("pending")}>
+    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+      
+      {/* Premium Header Area */}
+      <div className="flex flex-col gap-6 mb-2">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+            Follow-Ups
+          </h1>
+          <p className="text-muted-foreground mt-1.5 text-base">
+            Manage pending tasks and review completed actions across all patient handoffs.
+          </p>
+        </div>
+
+        {/* Segmented Filter Control */}
+        <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground self-start w-full sm:w-auto">
+          <button 
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${filter === "pending" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
+            onClick={() => setFilter("pending")}
+          >
             Pending
-          </Button>
-          <Button className="flex-1 md:flex-none px-2 sm:px-4" variant={filter === "completed" ? "default" : "outline"} onClick={() => setFilter("completed")}>
+          </button>
+          <button 
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${filter === "completed" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
+            onClick={() => setFilter("completed")}
+          >
             Completed
-          </Button>
-          <Button className="flex-1 md:flex-none px-2 sm:px-4" variant={filter === "" ? "default" : "outline"} onClick={() => setFilter("")}>
+          </button>
+          <button 
+            className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${filter === "" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
+            onClick={() => setFilter("")}
+          >
             All
-          </Button>
+          </button>
         </div>
       </div>
 
       {isLoading ? (
-        <div className="space-y-4">
-          <Skeleton className="h-20 w-full" />
-          <Skeleton className="h-20 w-full" />
+        <div className="space-y-4 mt-6">
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl" />
+          <Skeleton className="h-28 w-full rounded-xl" />
         </div>
       ) : followUps.length === 0 ? (
-        <div className="text-center py-12 text-muted-foreground border rounded-lg bg-card">
-          No follow-ups found for this filter.
+        <div className="flex flex-col items-center justify-center py-20 text-center border border-dashed border-border rounded-xl bg-card/30 mt-6">
+          <div className="size-12 bg-muted rounded-full flex items-center justify-center mb-4">
+            <CheckCircle2 className="size-6 text-muted-foreground/60" />
+          </div>
+          <h3 className="text-lg font-medium text-foreground mb-1">No follow-ups</h3>
+          <p className="text-sm text-muted-foreground max-w-sm">
+            {filter === "pending" 
+              ? "There are no pending follow-up tasks at this time. You're all caught up!"
+              : "No follow-up records found matching the current filter."}
+          </p>
         </div>
       ) : (
-        <div className="grid gap-4">
+        <div className="flex flex-col gap-4 mt-6">
           {followUps.map((fup: any) => {
             const isOverdue = fup.status === "pending" && new Date(fup.dueAt) < new Date();
+            const isCompleted = fup.status === "completed";
+            
             return (
-              <div key={fup.id} className="border rounded-lg p-6 bg-card flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="space-y-2">
-                  <div className="flex flex-wrap items-center gap-2">
-                    <span className="font-semibold text-lg">{fup.patientName || "Unknown Patient"}</span>
-                    {fup.publicCode && (
-                      <Link href={`/app/handoff/${fup.handoffId}`} className="text-primary text-sm hover:underline shrink-0">
-                        ({fup.publicCode})
-                      </Link>
-                    )}
-                    {isOverdue && (
-                      <span className="inline-flex items-center text-xs font-medium bg-danger/10 text-danger px-2 py-0.5 rounded shrink-0">
-                        <AlertCircle className="size-3 mr-1" /> Overdue
-                      </span>
-                    )}
-                    {fup.status === "completed" && (
-                      <span className="inline-flex items-center text-xs font-medium bg-success/10 text-success px-2 py-0.5 rounded shrink-0">
-                        <CheckCircle2 className="size-3 mr-1" /> Completed
-                      </span>
-                    )}
+              <div 
+                key={fup.id} 
+                className="group flex flex-col md:flex-row md:items-center justify-between gap-5 p-5 bg-card border border-border rounded-xl hover:shadow-sm transition-all relative overflow-hidden"
+              >
+                {/* Subtle Status Indicator Line on Left Edge */}
+                <div 
+                  className={`absolute left-0 top-0 bottom-0 w-1 transition-colors ${
+                    isCompleted ? "bg-success/60" : isOverdue ? "bg-danger/60" : "bg-primary/60"
+                  }`} 
+                />
+
+                <div className="flex flex-col gap-3 pl-3 w-full">
+                  <div className="flex flex-wrap items-start justify-between gap-3 w-full">
+                    <div className="flex flex-col">
+                      <div className="flex items-center gap-2">
+                        <span className="font-semibold text-base text-foreground leading-none">
+                          {fup.patientName || "Unknown Patient"}
+                        </span>
+                        {fup.publicCode && (
+                          <Link 
+                            href={`/app/handoff/${fup.handoffId}`} 
+                            className="text-muted-foreground text-xs font-mono bg-muted/60 px-2 py-0.5 rounded hover:bg-muted hover:text-primary transition-colors"
+                          >
+                            {fup.publicCode}
+                          </Link>
+                        )}
+                      </div>
+                      <div className="text-sm text-muted-foreground mt-2 leading-relaxed max-w-3xl pr-4">
+                        {fup.task}
+                      </div>
+                    </div>
+                    
+                    {/* Status Badge */}
+                    <div className="flex items-center shrink-0">
+                      {isOverdue && (
+                        <span className="inline-flex items-center text-xs font-medium bg-danger/10 text-danger border border-danger/20 px-2.5 py-1 rounded-full">
+                          <AlertCircle className="size-3.5 mr-1.5" /> Overdue
+                        </span>
+                      )}
+                      {isCompleted && (
+                        <span className="inline-flex items-center text-xs font-medium bg-success/10 text-success border border-success/20 px-2.5 py-1 rounded-full">
+                          <CheckCircle2 className="size-3.5 mr-1.5" /> Completed
+                        </span>
+                      )}
+                    </div>
                   </div>
-                  <p className="text-muted-foreground">{fup.task}</p>
-                  <div className="flex items-center text-sm text-muted-foreground gap-1">
-                    <Clock className="size-4 shrink-0" /> Due: {format(new Date(fup.dueAt), "PPP")}
+
+                  <div className="flex items-center text-xs text-muted-foreground gap-1.5 font-medium mt-1">
+                    <Clock className="size-3.5 text-muted-foreground/80" /> 
+                    <span>Due {format(new Date(fup.dueAt), "MMM d, yyyy")}</span>
+                    {isCompleted && fup.completedAt && (
+                      <>
+                        <span className="mx-2 opacity-30">•</span>
+                        <span>Completed {format(new Date(fup.completedAt), "MMM d, yyyy")}</span>
+                      </>
+                    )}
                   </div>
                 </div>
-                <div className="w-full md:w-auto pt-2 md:pt-0">
+                
+                {/* Action Area */}
+                <div className="w-full md:w-auto md:shrink-0 flex items-center md:pl-6 md:border-l border-border/50 pt-2 md:pt-0">
                   {fup.status === "pending" && (
                     <Button 
-                      className="w-full md:w-auto"
+                      className="w-full md:w-auto md:min-w-[140px] font-medium"
                       onClick={() => completeMutation.mutate(fup.id)}
                       disabled={completeMutation.isPending}
                     >
-                      Mark Complete
+                      {completeMutation.isPending ? "Marking..." : "Mark Complete"}
                     </Button>
                   )}
-                  {fup.status === "completed" && (
-                    <div className="text-sm text-muted-foreground">
-                      Completed {format(new Date(fup.completedAt), "PPP")}
-                    </div>
+                  {isCompleted && (
+                    <Button 
+                      variant="outline" 
+                      className="w-full md:w-auto md:min-w-[140px] text-muted-foreground border-dashed bg-transparent" 
+                      disabled
+                    >
+                      <Check className="size-4 mr-2" /> Done
+                    </Button>
                   )}
                 </div>
               </div>

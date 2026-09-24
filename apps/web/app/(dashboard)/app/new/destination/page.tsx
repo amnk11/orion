@@ -133,8 +133,11 @@ export default function DestinationSelectionPage() {
     facility.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  const [isNavigating, setIsNavigating] = useState(false);
+
   const handleNext = () => {
     if (draft.destinationFacilityId) {
+      setIsNavigating(true);
       router.push("/app/new/confirm");
     }
   };
@@ -197,4 +200,6 @@ export default function DestinationSelectionPage() {
     </div>
   );
 }
+
+
 

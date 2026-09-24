@@ -290,12 +290,12 @@ export default function HandoffDetailPage() {
         
         {/* 2. Clinical Summary */}
         <div className="flex flex-col border border-border rounded-xl bg-card overflow-hidden shadow-sm">
-          <div className="bg-muted/30 border-b border-border p-5">
+          <div className="bg-muted/30 border-b border-border p-4 sm:p-5">
             <h2 className="text-lg font-medium text-foreground flex items-center gap-2">
               <Activity className="size-5 text-muted-foreground" /> Clinical Summary
             </h2>
           </div>
-          <div className="p-6">
+          <div className="p-4 sm:p-5">
             <ClinicalSummary packet={handoff.packetJson} protocolCode={handoff.protocolCode} />
           </div>
         </div>

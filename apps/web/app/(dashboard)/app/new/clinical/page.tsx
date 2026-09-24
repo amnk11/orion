@@ -8,7 +8,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Switch } from "~/components/ui/switch";
-import { AlertCircle } from "lucide-react";
+import { AlertCircle, Loader2 } from "lucide-react";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { ClinicalDictionary } from "~/lib/clinical-dictionary";
 
@@ -35,6 +35,9 @@ export default function ProtocolFormPage() {
     }
     return initial;
   });
+  
+  const [isNavigating, setIsNavigating] = useState(false);
+
   const triageResult = useMemo(() => {
     if (!protocol) return null;
     return evaluateProtocol(protocol, formData);
@@ -48,6 +51,7 @@ export default function ProtocolFormPage() {
 
   const handleNext = () => {
     if (triageResult?.can_submit) {
+      setIsNavigating(true);
       setProtocolInputs(formData, triageResult.urgency, true);
       router.push("/app/new/destination");
     }
@@ -192,15 +196,20 @@ export default function ProtocolFormPage() {
           )}
           
           <div className="flex items-center justify-between w-full pb-safe">
-            <Button variant="ghost" onClick={() => router.push("/app/new/protocol")}>
+            <Button variant="ghost" onClick={() => router.push("/app/new/protocol")} disabled={isNavigating}>
               Back
             </Button>
             <Button 
               onClick={handleNext} 
-              disabled={!triageResult?.can_submit}
+              disabled={!triageResult?.can_submit || isNavigating}
               size="lg"
             >
-              Continue
+              {isNavigating ? (
+                <>
+                  <Loader2 className="size-4 animate-spin mr-2" />
+                  Continuing...
+                </>
+              ) : "Continue"}
             </Button>
           </div>
         </div>

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useReferralDraft } from "../components/referral-draft-context";
 import { Activity, Stethoscope } from "lucide-react";
@@ -30,6 +30,8 @@ export default function ProtocolSelectionPage() {
       icon: <Stethoscope className="size-6 text-foreground" />
     }
   ];
+
+  const [isNavigating, setIsNavigating] = useState(false);
 
   if (!draft.patientId) return null;
 
@@ -66,15 +68,18 @@ export default function ProtocolSelectionPage() {
       
       {/* Actions */}
       <div className="mt-auto pt-8 flex items-center justify-between">
-        <Button variant="ghost" onClick={() => router.push("/app/new/patient")}>
+        <Button variant="ghost" onClick={() => router.push("/app/new/patient")} disabled={isNavigating}>
           Back
         </Button>
         <Button 
-          onClick={() => router.push("/app/new/clinical")} 
-          disabled={!draft.protocolCode}
+          onClick={() => {
+            setIsNavigating(true);
+            router.push("/app/new/clinical");
+          }} 
+          disabled={!draft.protocolCode || isNavigating}
           size="lg"
         >
-          Continue
+          {isNavigating ? "Continuing..." : "Continue"}
         </Button>
       </div>
     </div>
