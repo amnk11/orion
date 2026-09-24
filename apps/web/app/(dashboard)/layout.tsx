@@ -68,7 +68,7 @@ export default function DashboardLayout({
   }
 
   const handleLogout = async () => {
-    await signOut();
+    await signOut(); if (typeof window !== "undefined") localStorage.removeItem("orion-session-user");
     try {
       const { db } = await import("~/lib/offline/db");
       await db.delete();

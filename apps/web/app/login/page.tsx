@@ -3,7 +3,7 @@
 import * as React from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { signIn } from "~/lib/auth/auth-client";
+import { signIn, useSession } from "~/lib/auth/auth-client";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
@@ -47,6 +47,8 @@ export default function LoginPage() {
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState<string | null>(null);
 
+  const { data: sessionData, isPending: sessionPending } = useSession();
+
   const handleRoleRedirect = (role?: string) => {
     switch (role) {
       case "destination":
@@ -61,6 +63,13 @@ export default function LoginPage() {
         break;
     }
   };
+
+  React.useEffect(() => {
+    if (!sessionPending && sessionData?.user) {
+      const user = sessionData.user as { role?: string };
+      handleRoleRedirect(user.role);
+    }
+  }, [sessionData, sessionPending, router]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
