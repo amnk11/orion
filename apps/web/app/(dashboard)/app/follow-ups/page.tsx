@@ -47,9 +47,9 @@ export default function FollowUpsPage() {
       {/* Premium Header Area */}
       <div className="flex flex-col gap-6 mb-2">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight text-foreground">
+          <h2 className="text-3xl font-bold tracking-tight text-foreground">
             Follow-Ups
-          </h1>
+          </h2>
           <p className="text-muted-foreground mt-1.5 text-base">
             Manage pending tasks and review completed actions across all patient handoffs.
           </p>

@@ -100,21 +100,25 @@ function CapabilityEditor({ facilityId, serviceCode, existing }: CapabilityEdito
   const isStale = existing?.freshness === "STALE";
   const isVeryStale = !existing || existing.freshness === "VERY_STALE";
 
+  const isNoteRequired = status === "UNAVAILABLE" || status === "UNKNOWN";
+  const isNoteValid = !isNoteRequired || note.trim().length > 0;
+  const canSave = isDirty && isNoteValid;
+
   return (
-    <div className="rounded-xl border border-border bg-card p-4 md:p-5 flex flex-col gap-4">
-      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-3">
+    <div className="rounded-xl border border-border bg-card p-3.5 md:p-5 flex flex-col gap-3 md:gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3">
         <div>
-          <h3 className="text-sm font-semibold text-foreground">{SERVICE_LABELS[serviceCode]}</h3>
-          <div className="flex items-center gap-2 mt-1.5 flex-wrap">
+          <h3 className="text-sm md:text-base font-semibold text-foreground">{SERVICE_LABELS[serviceCode]}</h3>
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground">Current:</span>
-            <Badge variant={STATUS_BADGE_VARIANT[currentStatus]}>
+            <Badge variant={STATUS_BADGE_VARIANT[currentStatus]} className="text-[10px] md:text-xs px-1.5 md:px-2.5">
               {STATUS_LABEL[currentStatus]}
             </Badge>
           </div>
         </div>
         <div
           className={cn(
-            "flex items-center gap-1.5 text-xs",
+            "flex items-center gap-1.5 text-[11px] md:text-xs",
             isVeryStale
               ? "text-warning font-medium"
               : isStale
@@ -136,6 +140,7 @@ function CapabilityEditor({ facilityId, serviceCode, existing }: CapabilityEdito
             key={option.value}
             type="button"
             size="sm"
+            className="flex-1 sm:flex-none h-8 text-xs px-3"
             variant={status === option.value ? "default" : "outline"}
             onClick={() => setStatus(option.value)}
             aria-pressed={status === option.value}
@@ -145,28 +150,33 @@ function CapabilityEditor({ facilityId, serviceCode, existing }: CapabilityEdito
         ))}
       </div>
 
-      <Input
-        placeholder="Optional note (e.g. OT under maintenance until Friday)"
-        value={note}
-        onChange={(e) => setNote(e.target.value)}
-        maxLength={500}
-      />
+      <div className="flex flex-col gap-1.5 w-full mt-1">
+        <label className="text-xs font-medium text-foreground">
+          Note {isNoteRequired ? <span className="text-destructive">* (Required)</span> : <span className="text-muted-foreground font-normal">(Optional)</span>}
+        </label>
+        <Input
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+          maxLength={500}
+          className="h-9 md:h-10 text-xs md:text-sm"
+        />
+      </div>
 
-      <div className="flex items-center justify-between gap-3">
-        <div className="min-h-5 text-xs" aria-live="polite">
+      <div className="flex flex-col-reverse sm:flex-row items-center justify-between gap-3 pt-1">
+        <div className="min-h-5 text-[11px] md:text-xs w-full sm:w-auto text-center sm:text-left" aria-live="polite">
           {feedback?.kind === "success" && (
-            <span className="flex items-center gap-1.5 text-success">
+            <span className="flex items-center justify-center sm:justify-start gap-1.5 text-success">
               <CheckCircle2 className="size-3.5" /> {feedback.message}
             </span>
           )}
           {feedback?.kind === "error" && (
-            <span className="flex items-center gap-1.5 text-destructive">
+            <span className="flex items-center justify-center sm:justify-start gap-1.5 text-destructive">
               <AlertTriangle className="size-3.5" /> {feedback.message}
             </span>
           )}
         </div>
-        <Button onClick={handleSave} disabled={isSaving || !isDirty} size="sm">
-          {isSaving && <Loader2 className="size-3.5 animate-spin" />}
+        <Button onClick={handleSave} disabled={isSaving || !canSave} size="sm" className="w-full sm:w-auto h-8 md:h-9">
+          {isSaving && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
           Save
         </Button>
       </div>
@@ -217,16 +227,24 @@ export default function DestinationCapabilitiesPage() {
   }
 
   return (
-    <div className="p-4 md:p-8 max-w-3xl mx-auto space-y-6 md:space-y-8">
-      <PageHeader
-        title="Facility Capabilities"
-        description="Report what your facility can currently provide. Origin teams see these as time-stamped snapshots when choosing a referral destination."
-      />
+    <div className="p-3 md:p-8 max-w-3xl mx-auto space-y-4 md:space-y-8">
+      <div className="flex flex-col gap-1.5 mb-2">
+        <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">
+          Facility Capabilities
+        </h2>
+        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
+          Report what your facility can currently provide. Origin teams see these as time-stamped snapshots when choosing a referral destination.
+        </p>
+      </div>
 
-      <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs text-muted-foreground leading-relaxed">
-        Saving a status records a new verification timestamp. Origin teams see how long ago each
-        capability was verified — outdated information is visibly marked as stale, so please keep
-        this page up to date.
+      <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 px-3 md:px-4 py-3 md:py-4 text-xs text-muted-foreground leading-relaxed">
+        <p>
+          Saving a status records a new verification timestamp. Origin teams see how long ago each capability was verified — outdated information is visibly marked as stale, so please keep this page up to date.
+        </p>
+        <ul className="list-disc pl-4 space-y-1">
+          <li>When status is <strong className="font-medium text-foreground">Available</strong>, adding a note is optional.</li>
+          <li>When status is <strong className="font-medium text-foreground">Unavailable</strong> or <strong className="font-medium text-foreground">Unknown</strong>, a note is <strong className="font-medium text-foreground">required</strong> to explain why.</li>
+        </ul>
       </div>
 
       {isLoading ? (

@@ -12,9 +12,9 @@ export function PageHeader({ title, description, action, className }: PageHeader
   return (
     <div className={cn("flex flex-col sm:flex-row sm:items-center justify-between gap-4", className)}>
       <div>
-        <h1 className="text-2xl font-semibold text-foreground tracking-tight">
+        <h2 className="text-2xl font-semibold text-foreground tracking-tight">
           {title}
-        </h1>
+        </h2>
         {description && (
           <p className="text-sm text-muted-foreground mt-1">
             {description}

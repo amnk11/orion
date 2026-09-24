@@ -212,7 +212,7 @@ export default function ConfirmReferralPage() {
         <div className="size-16 bg-muted rounded-full flex items-center justify-center mb-6">
           <CheckCircle2 className="size-8 text-muted-foreground" />
         </div>
-        <h1 className="text-2xl font-semibold mb-2">Saved Offline</h1>
+        <h2 className="text-2xl font-semibold mb-2">Saved Offline</h2>
         <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
           Your referral has been saved locally. It will automatically sync to the server when the connection is restored.
         </p>
@@ -236,7 +236,7 @@ export default function ConfirmReferralPage() {
         <div className="size-20 bg-success/10 rounded-full flex items-center justify-center mb-6 border border-success/20">
           <CheckCircle2 className="size-10 text-success" />
         </div>
-        <h1 className="text-3xl font-semibold mb-3 text-foreground">Referral Dispatched</h1>
+        <h2 className="text-3xl font-semibold mb-3 text-foreground">Referral Dispatched</h2>
         <p className="text-muted-foreground mb-8 text-lg leading-relaxed">
           The referral for <span className="font-semibold text-foreground">{patientData?.data?.displayName || "this patient"}</span> has been successfully sent to <span className="font-semibold text-foreground">{facilityData?.data?.name || "the destination"}</span>.
         </p>
