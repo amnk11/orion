@@ -61,8 +61,8 @@ importers:
         specifier: ^8.3.0
         version: 8.3.0
       zod:
-        specifier: ^4.3.5
-        version: 4.3.5
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@orion/eslint-config':
         specifier: workspace:*
@@ -237,8 +237,8 @@ importers:
         specifier: ^8.16.3
         version: 8.16.3
       zod:
-        specifier: ^4.3.5
-        version: 4.3.5
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@orion/eslint-config':
         specifier: workspace:*
@@ -329,8 +329,8 @@ importers:
         specifier: ^3.19.0
         version: 3.19.0
       zod:
-        specifier: ^4.3.5
-        version: 4.3.5
+        specifier: ^4.6.5
+        version: 4.6.5
     devDependencies:
       '@orion/typescript-config':
         specifier: workspace:*
@@ -4759,9 +4759,6 @@ packages:
     resolution: {integrity: sha512-rVksvsnNCdJ/ohGc6xgPwyN8eheCxsiLM8mxuE/t/mOVqJewPuO1miLpTHQiRgTKCLexL4MeAFVagts7HmNZ2Q==}
     engines: {node: '>=10'}
 
-  zod@4.3.5:
-    resolution: {integrity: sha512-k7Nwx6vuWx1IJ9Bjuf4Zt1PEllcwe7cls3VNzm4CQ1/hgtFUK2bRNG3rvnpPUhFjmqJKAKtjV576KnUkHocg/g==}
-
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
 
@@ -8867,8 +8864,6 @@ snapshots:
     optional: true
 
   yocto-queue@0.1.0: {}
-
-  zod@4.3.5: {}
 
   zod@4.4.3: {}
 
