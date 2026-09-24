@@ -35,6 +35,12 @@ const redactPHI = winston.format((info) => {
   };
 
   const newInfo = redact(info);
+  
+  // Copy symbols over so winston internals (like colorize) still work
+  for (const sym of Object.getOwnPropertySymbols(info)) {
+    newInfo[sym] = (info as any)[sym];
+  }
+  
   newInfo.level = info.level; // preserve level/message string formatting
   newInfo.message = typeof info.message === "object" ? redact(info.message) : info.message;
   return newInfo;

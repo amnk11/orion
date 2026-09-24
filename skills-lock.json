@@ -31,6 +31,12 @@
       "skillPath": "design-systems-frontend-architecture/SKILL.md",
       "computedHash": "2e1f63f5799073970e208c99637f290f23d1d3e8567ce52e117725bb32e34052"
     },
+    "frontend-design": {
+      "source": "anthropics/skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-design/SKILL.md",
+      "computedHash": "106acf230014cbb43ca34e6410371321b56ca742f9ee0442e8ec05bf02eb0384"
+    },
     "ui-styling": {
       "source": "nextlevelbuilder/ui-ux-pro-max-skill",
       "sourceType": "github",

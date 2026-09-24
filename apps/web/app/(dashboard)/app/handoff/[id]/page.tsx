@@ -197,8 +197,8 @@ export default function HandoffDetailPage() {
               <Clock className="size-4" /> Created {formatDistanceToNow(new Date(handoff.createdAt))} ago
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="gap-2 shadow-sm" onClick={() => {
+          <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto mt-4 md:mt-0">
+            <Button variant="outline" className="gap-2 shadow-sm w-full sm:w-auto" onClick={() => {
               window.open(`/api/v1/handoffs/${handoff.id}/fhir`, "_blank");
             }}>
               <FileText className="size-4" /> Export FHIR
@@ -206,7 +206,7 @@ export default function HandoffDetailPage() {
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="gap-2 shadow-sm">
+                <Button className="gap-2 shadow-sm w-full sm:w-auto">
                   <QrCode className="size-4" /> View QR
                 </Button>
               </DialogTrigger>
@@ -234,7 +234,7 @@ export default function HandoffDetailPage() {
               <>
                 <Button
                   variant="default"
-                  className="gap-2 shadow-sm"
+                  className="gap-2 shadow-sm w-full sm:w-auto"
                   onClick={() => {
                     setCloseError(null);
                     setCloseOpen(true);

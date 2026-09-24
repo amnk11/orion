@@ -26,9 +26,13 @@ function WizardContextHeader() {
         <div className="flex flex-col">
           <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient</span>
           <div className="flex items-center gap-2 mt-0.5">
-            <span className="font-semibold text-foreground">{draft.patientName || "Unknown"}</span>
-            <span className="text-xs text-muted-foreground font-mono bg-background border border-border px-1.5 py-0.5 rounded-sm">
-              {draft.patientId}
+            <span className="font-semibold text-foreground truncate max-w-[140px] sm:max-w-none">{draft.patientName || "Unknown"}</span>
+            <span 
+              className="text-xs text-muted-foreground font-mono bg-background border border-border px-1.5 py-0.5 rounded-sm" 
+              title={draft.patientId}
+            >
+              <span className="sm:hidden">{draft.patientId.split('-')[0]}</span>
+              <span className="hidden sm:inline">{draft.patientId}</span>
             </span>
           </div>
         </div>

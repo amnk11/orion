@@ -36,6 +36,7 @@ export default function PatientSelectionPage() {
   const [formError, setFormError] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const [isNavigating, setIsNavigating] = useState(false);
   const ITEMS_PER_PAGE = 5;
 
   const { data: patients, isLoading } = useQuery<{ ok: boolean; data: Patient[] }>({
@@ -141,6 +142,7 @@ export default function PatientSelectionPage() {
       return (await res.json()) as PatientCreationResult;
     },
     onSuccess: (res: PatientCreationResult) => {
+      setIsNavigating(true);
       const p = res.data;
       const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
       setPatientId(p.id, p.displayName, p.age, details);
@@ -154,6 +156,7 @@ export default function PatientSelectionPage() {
       }
     },
     onError: (err: Error) => {
+      setIsNavigating(false);
       setFormError(`${err.message} Your entered details are still on this screen. Check the connection and try again.`);
     }
   });
@@ -259,6 +262,7 @@ export default function PatientSelectionPage() {
                         draft.patientId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:bg-muted/50"
                       )}
                       onClick={() => {
+                        setIsNavigating(true);
                         const details = [p.age ? `${p.age}y` : null, p.sex].filter(Boolean).join(", ");
                         setPatientId(p.id, p.displayName, p.age, details);
                         router.push("/app/new/protocol");
@@ -368,9 +372,9 @@ export default function PatientSelectionPage() {
             </div>
             
             <div className="mt-8 flex justify-end">
-              <Button type="submit" size="lg" className="w-full md:w-auto px-8" disabled={createPatient.isPending}>
-                {createPatient.isPending ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
-                Register & Continue
+              <Button type="submit" size="lg" className="w-full md:w-auto px-8" disabled={createPatient.isPending || isNavigating}>
+                {(createPatient.isPending || isNavigating) ? <Loader2 className="size-4 animate-spin mr-2" /> : null}
+                {(createPatient.isPending || isNavigating) ? "Registering..." : "Register & Continue"}
               </Button>
             </div>
           </form>
