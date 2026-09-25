@@ -196,8 +196,11 @@ export default function DashboardLayout({
     );
   };
 
+  const isReferralFlow = pathname.startsWith('/app/new');
+  const hideMobileNav = isKeyboardVisible || isReferralFlow;
+
   const MobileBottomNav = () => {
-    if (isKeyboardVisible) return null;
+    if (hideMobileNav) return null;
 
     return (
       <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border pb-[env(safe-area-inset-bottom)]">
@@ -272,7 +275,7 @@ export default function DashboardLayout({
       {/* Mobile header */}
       <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-40 flex items-center justify-between px-4">
         <Link href="/app" className="hover:opacity-90 transition-opacity">
-          <Image src="/sahay-small.svg" alt="Sahay Logo" height={32} width={100} className="h-8 w-auto object-contain" />
+          <Image src="/sahay-small.svg" alt="Sahay Logo" height={32} width={100} className="h-8 w-auto object-contain" style={{ width: 'auto', height: 'auto' }} />
         </Link>
       </div>
 
@@ -283,7 +286,7 @@ export default function DashboardLayout({
       
       <main className={cn(
         "flex-1 flex flex-col overflow-hidden pt-14 md:pt-0 bg-background relative z-0 transition-all duration-200 ease-in-out",
-        !isKeyboardVisible ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : "pb-0"
+        !hideMobileNav ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : "pb-0"
       )}>
         <OfflineBanner />
         <div className="flex-1 overflow-y-auto w-full max-w-[100vw]">
