@@ -21,9 +21,9 @@ const badgeVariants = cva(
         "status-warning": "border-transparent bg-warning/20 text-warning",
         "status-danger": "border-transparent bg-danger/15 text-danger",
         "status-neutral": "border-transparent bg-muted text-muted-foreground",
-        "urgency-red": "border-transparent bg-danger text-danger-foreground",
-        "urgency-orange": "border-transparent bg-warning text-warning-foreground",
-        "urgency-green": "border-transparent bg-success text-success-foreground",
+        "urgency-red": "border-transparent bg-urgency-red text-white",
+        "urgency-orange": "border-transparent bg-urgency-orange text-white",
+        "urgency-low": "border-transparent bg-urgency-low text-white",
       },
     },
     defaultVariants: {

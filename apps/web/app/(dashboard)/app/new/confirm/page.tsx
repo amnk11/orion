@@ -13,6 +13,7 @@ import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { db } from "~/lib/offline/db";
 import { connectivity } from "~/lib/offline/connectivity";
 import { syncEngine } from "~/lib/offline/sync-engine";
+import { WizardActionBar } from "~/components/orion/wizard-action-bar";
 
 interface HandoffCreationResult {
   offline?: boolean;
@@ -325,8 +326,8 @@ export default function ConfirmReferralPage() {
       </div>
       
       {/* Fixed Action Bar on Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border p-4 md:static md:bg-transparent md:border-0 md:p-0 md:pt-8 mt-auto z-50">
-        <div className="max-w-3xl mx-auto flex items-center justify-between w-full pb-safe">
+      <WizardActionBar>
+        <div className="flex items-center justify-between w-full">
           <Button variant="ghost" onClick={() => router.back()} disabled={createHandoff.isPending}>
             Back
           </Button>
@@ -343,7 +344,7 @@ export default function ConfirmReferralPage() {
             Dispatch Handoff
           </Button>
         </div>
-      </div>
+      </WizardActionBar>
     </div>
   );
 }

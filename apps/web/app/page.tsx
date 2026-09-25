@@ -17,7 +17,7 @@ import {
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col font-sans">
+    <div className="min-h-dvh bg-background text-foreground flex flex-col font-sans">
       {/* ─── HEADER ─────────────────────────────────────────────────── */}
       <header className="sticky top-0 z-50 bg-background/95 backdrop-blur-md border-b border-border">
         <div className="max-w-6xl mx-auto px-6 h-18 flex items-center justify-between">
@@ -224,7 +224,7 @@ export default function LandingPage() {
               </p>
             </div>
 
-            <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
               {[
                 {
                   step: "01",
@@ -256,7 +256,7 @@ export default function LandingPage() {
                   key={item.step}
                   className="flex flex-col bg-card p-6 rounded-lg border border-border"
                 >
-                  <span className="font-mono text-sm font-bold text-muted-foreground mb-4">
+                  <span className="text-sm font-bold text-muted-foreground mb-4">
                     {item.step}
                   </span>
                   <h3 className="font-semibold text-foreground mb-2">{item.title}</h3>
@@ -431,7 +431,7 @@ export default function LandingPage() {
 
           <div className="flex flex-col sm:flex-row gap-12 sm:gap-24">
             <div className="space-y-4">
-              <span className="font-mono text-xs font-bold text-foreground">PRODUCT</span>
+              <span className="text-sm font-semibold text-foreground">Product</span>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <Link href="/login" className="hover:text-foreground">
@@ -451,7 +451,7 @@ export default function LandingPage() {
               </ul>
             </div>
             <div className="space-y-4">
-              <span className="font-mono text-xs font-bold text-foreground">SYSTEM</span>
+              <span className="text-sm font-semibold text-foreground">System</span>
               <ul className="space-y-2 text-sm text-muted-foreground">
                 <li>
                   <span className="text-muted-foreground">Internal Documentation</span>

@@ -46,7 +46,7 @@ export function ClinicalSummary({ packet, protocolCode }: ClinicalSummaryProps) 
       {/* 1. Danger Signs */}
       {dangerSigns.length > 0 && (
         <div className="bg-danger/5 border border-danger/20 rounded-md p-4">
-          <h3 className="text-sm font-bold text-danger uppercase tracking-wider mb-3 flex items-center gap-2">
+          <h3 className="text-sm font-semibold text-danger mb-3 flex items-center gap-2">
             <AlertCircle className="size-4" />
             Critical Findings
           </h3>
@@ -64,7 +64,7 @@ export function ClinicalSummary({ packet, protocolCode }: ClinicalSummaryProps) 
       {/* 2. Vital Signs Grid */}
       {vitals.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 border-b border-border pb-2">Vital Signs</h3>
+          <h3 className="text-xs font-medium text-muted-foreground mb-3 border-b border-border pb-2">Vital Signs</h3>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             {vitals.map(({ key, value, dict }) => (
               <div key={key} className="flex flex-col">
@@ -82,7 +82,7 @@ export function ClinicalSummary({ packet, protocolCode }: ClinicalSummaryProps) 
       {/* 3. Symptoms */}
       {symptoms.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 border-b border-border pb-2">Symptoms & Findings</h3>
+          <h3 className="text-xs font-medium text-muted-foreground mb-3 border-b border-border pb-2">Symptoms & Findings</h3>
           <div className="grid gap-y-2 text-sm">
             {symptoms.map(({ key, value, dict }) => (
               <div key={key} className="flex justify-between items-start py-1.5 border-b border-border/40 last:border-0">
@@ -99,7 +99,7 @@ export function ClinicalSummary({ packet, protocolCode }: ClinicalSummaryProps) 
       {/* 4. Additional Information */}
       {additional.length > 0 && (
         <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3 border-b border-border pb-2">Additional Information</h3>
+          <h3 className="text-xs font-medium text-muted-foreground mb-3 border-b border-border pb-2">Additional Information</h3>
           <div className="grid gap-y-2 text-sm">
             {additional.map(({ key, value, dict }) => (
               <div key={key} className="flex justify-between items-start py-1.5 border-b border-border/40 last:border-0">

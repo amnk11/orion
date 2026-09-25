@@ -18,6 +18,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { PageHeader } from "~/components/orion/page-header";
+import { PageShell } from "~/components/orion/page-shell";
 import { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "~/components/ui/empty";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
@@ -221,7 +222,7 @@ export default function DestinationInboxPage() {
 
 
   return (
-    <div className="p-4 md:p-8 w-full max-w-[1600px] mx-auto space-y-6 md:space-y-8">
+    <PageShell maxWidth="standard">
       <PageHeader
         title="Destination Inbox"
         description="Incoming patient referrals assigned to your facility."
@@ -317,7 +318,7 @@ export default function DestinationInboxPage() {
           )}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

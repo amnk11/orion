@@ -12,7 +12,7 @@ export function UrgencyBadge({ level, className, showLabel = true }: UrgencyBadg
   const isOrange = level === "orange";
   const isGreen = level === "green";
 
-  let variant: "urgency-red" | "urgency-orange" | "urgency-green" | "default" = "default";
+  let variant: "urgency-red" | "urgency-orange" | "urgency-low" | "default" = "default";
   let Icon = HelpCircle;
   let label = "Unknown";
 
@@ -25,7 +25,7 @@ export function UrgencyBadge({ level, className, showLabel = true }: UrgencyBadg
     Icon = ArrowUpCircle;
     label = "Urgent";
   } else if (isGreen) {
-    variant = "urgency-green";
+    variant = "urgency-low";
     Icon = CheckCircle2;
     label = "Routine";
   }

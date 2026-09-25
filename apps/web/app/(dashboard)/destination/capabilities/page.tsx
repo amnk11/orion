@@ -9,6 +9,7 @@ import { Button } from "~/components/ui/button";
 import { Badge } from "~/components/ui/badge";
 import { Input } from "~/components/ui/input";
 import { PageHeader } from "~/components/orion/page-header";
+import { PageShell } from "~/components/orion/page-shell";
 import { Spinner } from "~/components/ui/spinner";
 import { cn } from "~/lib/utils";
 import {
@@ -105,20 +106,20 @@ function CapabilityEditor({ facilityId, serviceCode, existing }: CapabilityEdito
   const canSave = isDirty && isNoteValid;
 
   return (
-    <div className="rounded-xl border border-border bg-card p-3.5 md:p-5 flex flex-col gap-3 md:gap-4">
+    <div className="rounded-lg border border-border bg-card p-3.5 md:p-5 flex flex-col gap-3 md:gap-4">
       <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2.5 sm:gap-3">
         <div>
           <h3 className="text-sm md:text-base font-semibold text-foreground">{SERVICE_LABELS[serviceCode]}</h3>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
             <span className="text-xs text-muted-foreground">Current:</span>
-            <Badge variant={STATUS_BADGE_VARIANT[currentStatus]} className="text-[10px] md:text-xs px-1.5 md:px-2.5">
+            <Badge variant={STATUS_BADGE_VARIANT[currentStatus]} className="text-xs px-1.5 md:px-2.5">
               {STATUS_LABEL[currentStatus]}
             </Badge>
           </div>
         </div>
         <div
           className={cn(
-            "flex items-center gap-1.5 text-[11px] md:text-xs",
+            "flex items-center gap-1.5 text-xs",
             isVeryStale
               ? "text-warning font-medium"
               : isStale
@@ -177,7 +178,7 @@ function CapabilityEditor({ facilityId, serviceCode, existing }: CapabilityEdito
         </div>
         <Button onClick={handleSave} disabled={isSaving || !canSave} size="sm" className="w-full sm:w-auto h-8 md:h-9">
           {isSaving && <Loader2 className="size-3.5 animate-spin mr-1.5" />}
-          Save
+          Verify & save
         </Button>
       </div>
     </div>
@@ -227,15 +228,11 @@ export default function DestinationCapabilitiesPage() {
   }
 
   return (
-    <div className="p-3 md:p-8 max-w-3xl mx-auto space-y-4 md:space-y-8">
-      <div className="flex flex-col gap-1.5 mb-2">
-        <h2 className="text-xl md:text-2xl font-semibold tracking-tight text-foreground">
-          Facility Capabilities
-        </h2>
-        <p className="text-xs md:text-sm text-muted-foreground leading-relaxed">
-          Report what your facility can currently provide. Origin teams see these as time-stamped snapshots when choosing a referral destination.
-        </p>
-      </div>
+    <PageShell maxWidth="standard">
+      <PageHeader 
+        title="Facility Capabilities" 
+        description="Keep your facility's operational capabilities up to date. This information directly influences where frontline workers route patients." 
+      />
 
       <div className="flex flex-col gap-3 rounded-lg border border-border bg-muted/30 px-3 md:px-4 py-3 md:py-4 text-xs text-muted-foreground leading-relaxed">
         <p>
@@ -267,6 +264,6 @@ export default function DestinationCapabilitiesPage() {
           ))}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }

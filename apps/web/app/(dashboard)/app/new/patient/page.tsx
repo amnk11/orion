@@ -8,6 +8,7 @@ import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
+import { SegmentedControl } from "~/components/ui/segmented-control";
 import { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "~/components/ui/empty";
 import { ArrowRight, ChevronRight, ChevronLeft, Search, Loader2, ArrowLeft, UserPlus } from "lucide-react";
 import { cn } from "~/lib/utils";
@@ -187,25 +188,15 @@ export default function PatientSelectionPage() {
         <p className="text-base text-muted-foreground mt-2">Select an existing patient or register a new one.</p>
       </div>
 
-      <div className="flex bg-muted/50 p-1 rounded-lg mb-8 w-full border border-border/50">
-        <button 
-          className={cn(
-            "flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200", 
-            mode === "search" ? "bg-background shadow-sm text-primary ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"
-          )} 
-          onClick={() => setMode("search")}
-        >
-          Search Existing
-        </button>
-        <button 
-          className={cn(
-            "flex-1 py-2 text-sm font-medium rounded-md transition-all duration-200", 
-            mode === "register" ? "bg-background shadow-sm text-primary ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"
-          )} 
-          onClick={() => setMode("register")}
-        >
-          Register New
-        </button>
+      <div className="mb-8">
+        <SegmentedControl
+          value={mode}
+          onValueChange={(val) => setMode(val as "search" | "register")}
+          options={[
+            { value: "search", label: "Search Existing" },
+            { value: "register", label: "Register New" },
+          ]}
+        />
       </div>
 
       <div className="flex-1">
@@ -256,10 +247,10 @@ export default function PatientSelectionPage() {
                   {paginatedPatients.map((p) => (
                     <Button
                       key={p.id}
-                      variant="outline"
+                      variant="ghost"
                       className={cn(
-                        "w-full justify-between items-center h-auto p-4 transition-all bg-background rounded-lg shadow-none",
-                        draft.patientId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "border-border hover:bg-muted/50"
+                        "w-full justify-between items-center h-auto p-4 transition-all bg-background border border-border rounded-lg shadow-none",
+                        draft.patientId === p.id ? "border-primary bg-primary/5 ring-1 ring-primary/20" : "hover:bg-muted/50"
                       )}
                       onClick={() => {
                         setIsNavigating(true);

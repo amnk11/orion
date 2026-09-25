@@ -12,6 +12,8 @@ import { ClinicalSummary } from "~/components/orion/clinical-summary";
 import { StateGuidancePanel } from "~/components/orion/state-guidance";
 import { Timeline } from "~/components/orion/timeline";
 import { PatientSummary } from "~/components/orion/patient-summary";
+import { PageShell } from "~/components/orion/page-shell";
+import { BackLink } from "~/components/orion/back-link";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
 import { SyncStatus, toSyncStatus } from "~/components/ui/sync-status";
 import { toast } from "sonner";
@@ -178,12 +180,12 @@ export default function HandoffDetailPage() {
   const localSync = toSyncStatus(detail.offlineSyncStatus);
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8 h-full flex flex-col">
+    <PageShell maxWidth="standard">
       {/* Header */}
       <div>
-        <Link href="/app" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
-          <ArrowLeft className="size-4 mr-1" /> Back to My Referrals
-        </Link>
+        <div className="mb-6">
+          <BackLink href="/app" label="Back to Dashboard" />
+        </div>
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <div className="flex flex-wrap items-center gap-3 mb-2">
@@ -217,7 +219,7 @@ export default function HandoffDetailPage() {
                     Scan this code to view the real-time public status of this referral. No clinical information is exposed.
                   </DialogDescription>
                 </DialogHeader>
-                <div className="flex justify-center p-6 bg-white rounded-md mt-4">
+                <div className="flex justify-center p-6 bg-surface rounded-md mt-4">
                   <QRCodeSVG 
                     value={`${window.location.origin}/status/${handoff.publicCode}`} 
                     size={200}
@@ -334,7 +336,7 @@ export default function HandoffDetailPage() {
         )}
 
         {/* 3 & 4. Destination & Timeline */}
-        <div className="grid md:grid-cols-2 gap-8">
+        <div className="flex flex-col gap-8">
           {/* Destination Placeholder - we would normally show destination details here */}
           
           <div className="space-y-6">
@@ -342,11 +344,11 @@ export default function HandoffDetailPage() {
               <Clock className="size-5 text-muted-foreground" /> Operational Timeline
             </h3>
             
-              <Timeline events={events} facilityNames={facilityNames} />
+            <Timeline events={events} facilityNames={facilityNames} />
           </div>
         </div>
       </div>
-    </div>
+    </PageShell>
   );
 }
 

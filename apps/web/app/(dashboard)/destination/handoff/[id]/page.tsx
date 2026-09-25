@@ -17,12 +17,22 @@ import {
   DialogDescription,
   DialogFooter,
 } from "~/components/ui/dialog";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
+import { Textarea } from "~/components/ui/textarea";
+import { Input } from "~/components/ui/input";
 import { Timeline } from "~/components/orion/timeline";
 import { StateGuidancePanel } from "~/components/orion/state-guidance";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { PatientSummary } from "~/components/orion/patient-summary";
 import { ClinicalSummary } from "~/components/orion/clinical-summary";
+import { PageShell } from "~/components/orion/page-shell";
 import { toast } from "sonner";
 const CANNOT_ACCEPT_REASONS = [
   "specialist_unavailable",
@@ -280,7 +290,7 @@ export default function DestinationHandoffDetail() {
   }
 
   return (
-    <div className="p-6 md:p-8 max-w-4xl mx-auto space-y-8 h-full flex flex-col">
+    <PageShell maxWidth="standard">
       {/* Header */}
       <div>
         <Link href="/destination" className="inline-flex items-center text-sm text-muted-foreground hover:text-foreground mb-6 transition-colors">
@@ -435,21 +445,18 @@ export default function DestinationHandoffDetail() {
             </p>
             <div className="space-y-2">
               <label htmlFor="cannot-accept-reason" className="text-sm font-medium text-foreground">Reason <span aria-hidden="true">*</span></label>
-              <select 
-                id="cannot-accept-reason"
-                className="w-full p-2 rounded-md border border-input bg-background text-foreground"
-                value={reason}
-                onChange={(e) => { setReason(e.target.value); setFormError(null); }}
-                required
-                aria-required="true"
-                aria-describedby="cannot-accept-help"
-                aria-invalid={formError ? true : undefined}
-              >
-                <option value="">Select a reason...</option>
-                {CANNOT_ACCEPT_REASONS.map(r => (
-                  <option key={r} value={r}>{r.replace(/_/g, " ")}</option>
-                ))}
-              </select>
+              <Select value={reason} onValueChange={(v) => { setReason(v); setFormError(null); }}>
+                <SelectTrigger id="cannot-accept-reason" aria-required="true" aria-describedby="cannot-accept-help" aria-invalid={formError ? true : undefined}>
+                  <SelectValue placeholder="Select a reason..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {CANNOT_ACCEPT_REASONS.map(r => (
+                    <SelectItem key={r} value={r}>
+                      {r.split('_').map(word => word.charAt(0).toUpperCase() + word.slice(1)).join(' ')}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             {formError && (
               <p role="alert" className="text-sm font-medium text-danger">{formError}</p>
@@ -496,27 +503,25 @@ export default function DestinationHandoffDetail() {
             
             <div className="space-y-2">
               <label htmlFor="redirect-destination" className="text-sm font-medium text-foreground">New destination <span aria-hidden="true">*</span></label>
-              <select 
-                id="redirect-destination"
-                className="w-full p-2 rounded-md border border-input bg-background text-foreground"
-                value={redirectTarget}
-                onChange={(e) => setRedirectTarget(e.target.value)}
-                disabled={handoff.redirectCount >= 3}
-              >
-                <option value="">Select destination...</option>
-                {facilitiesData?.data
-                  ?.filter((f: any) => f.id !== handoff.currentDestinationFacilityId && f.tier !== "sub_centre")
-                  .map((f: any) => (
-                    <option key={f.id} value={f.id}>{f.name} ({f.type})</option>
-                  ))}
-              </select>
+              <Select value={redirectTarget} onValueChange={(v) => setRedirectTarget(v)} disabled={handoff.redirectCount >= 3}>
+                <SelectTrigger id="redirect-destination">
+                  <SelectValue placeholder="Select destination..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {facilitiesData?.data
+                    ?.filter((f: any) => f.id !== handoff.currentDestinationFacilityId && f.tier !== "sub_centre")
+                    .map((f: any) => (
+                      <SelectItem key={f.id} value={f.id}>{f.name} ({f.type})</SelectItem>
+                    ))}
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
               <label htmlFor="redirect-reason" className="text-sm font-medium text-foreground">Reason for redirect <span aria-hidden="true">*</span></label>
-              <textarea 
+              <Textarea
                 id="redirect-reason"
-                className="w-full p-2 rounded-md border border-input bg-background text-foreground min-h-[80px]"
+                className="min-h-[80px]"
                 placeholder="e.g., Required specialist unavailable"
                 required
                 aria-required="true"
@@ -563,29 +568,32 @@ export default function DestinationHandoffDetail() {
           <div className="py-4 space-y-4">
             <div className="space-y-2">
               <label htmlFor="outcome-disposition" className="text-sm font-medium text-foreground">Disposition <span aria-hidden="true">*</span></label>
-              <select id="outcome-disposition" className="w-full p-2 rounded-md border border-input bg-background"
-                value={outcomeData.disposition} onChange={e => setOutcomeData({...outcomeData, disposition: e.target.value})}>
-                <option value="">Select...</option>
-                <option value="treated_returned">Treated & Returned</option>
-                <option value="admitted">Admitted</option>
-                <option value="referred_on">Referred On</option>
-                <option value="deceased">Deceased</option>
-                <option value="other">Other</option>
-              </select>
+              <Select value={outcomeData.disposition} onValueChange={v => setOutcomeData({...outcomeData, disposition: v})}>
+                <SelectTrigger id="outcome-disposition">
+                  <SelectValue placeholder="Select..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="treated_returned">Treated & Returned</SelectItem>
+                  <SelectItem value="admitted">Admitted</SelectItem>
+                  <SelectItem value="referred_on">Referred On</SelectItem>
+                  <SelectItem value="deceased">Deceased</SelectItem>
+                  <SelectItem value="other">Other</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <label htmlFor="outcome-summary" className="text-sm font-medium text-foreground">Summary <span aria-hidden="true">*</span></label>
-              <textarea id="outcome-summary" className="w-full p-2 rounded-md border border-input bg-background"
+              <Textarea id="outcome-summary"
                 value={outcomeData.summary} onChange={e => setOutcomeData({...outcomeData, summary: e.target.value})} />
             </div>
             <div className="space-y-2">
               <label htmlFor="outcome-advice" className="text-sm font-medium text-foreground">Advice summary</label>
-              <textarea id="outcome-advice" className="w-full p-2 rounded-md border border-input bg-background"
+              <Textarea id="outcome-advice"
                 value={outcomeData.adviceSummary} onChange={e => setOutcomeData({...outcomeData, adviceSummary: e.target.value})} />
             </div>
             <div className="space-y-2">
               <label htmlFor="outcome-follow-up" className="text-sm font-medium text-foreground">Follow-up due date</label>
-              <input id="outcome-follow-up" type="date" className="w-full p-2 rounded-md border border-input bg-background"
+              <Input id="outcome-follow-up" type="date"
                 value={outcomeData.followUpDueAt} onChange={e => setOutcomeData({...outcomeData, followUpDueAt: e.target.value})} />
             </div>
           </div>
@@ -597,7 +605,7 @@ export default function DestinationHandoffDetail() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
+    </PageShell>
   );
 }
 

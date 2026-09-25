@@ -21,7 +21,7 @@ export function PatientSummary({ publicCode, name, age, sex, protocolCode, urgen
             <h2 className="text-xl font-semibold tracking-tight text-foreground">
               {name || "Synthetic Patient"}
             </h2>
-            <span className="font-mono text-xs font-medium text-muted-foreground uppercase tracking-wider">
+            <span className="font-mono text-xs font-medium text-muted-foreground">
               {publicCode}
             </span>
             <UrgencyBadge level={urgency} />

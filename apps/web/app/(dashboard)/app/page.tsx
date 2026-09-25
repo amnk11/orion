@@ -7,6 +7,7 @@ import { FilePlus2, ArrowRight, Activity, Inbox, RefreshCw } from "lucide-react"
 import { Button } from "~/components/ui/button";
 import { Skeleton } from "~/components/ui/skeleton";
 import { PageHeader } from "~/components/orion/page-header";
+import { PageShell } from "~/components/orion/page-shell";
 import { Empty, EmptyMedia, EmptyTitle, EmptyDescription, EmptyContent } from "~/components/ui/empty";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { StatusBadge as StateBadge } from "~/components/ui/status-badge";
@@ -193,7 +194,7 @@ export default function MyReferralsPage() {
   );
 
   return (
-    <div className="p-4 md:p-8 max-w-4xl mx-auto space-y-6 md:space-y-8">
+    <PageShell maxWidth="standard">
       <PageHeader
         title="My Referrals"
         description="Track and manage outbound patient handoffs."
@@ -269,8 +270,7 @@ export default function MyReferralsPage() {
       {!isLoading && !error && handoffs.length > 0 && (
         <div className="space-y-6">
           <p className="text-sm text-muted-foreground" role="status">
-            Showing {handoffs.length} referral{handoffs.length === 1 ? "" : "s"} — {actionRequired.length} need
-            {actionRequired.length === 1 ? "s" : ""} your action.
+            Showing {handoffs.length} referral{handoffs.length === 1 ? "" : "s"} — {actionRequired.length} {actionRequired.length === 1 ? "needs" : "need"} your action.
           </p>
 
           {actionRequired.length > 0 && (
@@ -315,7 +315,7 @@ export default function MyReferralsPage() {
           )}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
 

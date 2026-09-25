@@ -1,4 +1,5 @@
 import * as React from "react";
+import Image from "next/image";
 import { notFound } from "next/navigation";
 import { Activity, Clock, MapPin, ShieldAlert } from "lucide-react";
 import { StatusBadge } from "~/components/ui/status-badge";
@@ -67,11 +68,12 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ c
   }
 
   return (
-    <main className="min-h-screen bg-surface-subtle flex flex-col items-center justify-center p-4">
+    <main className="min-h-screen bg-surface-subtle flex flex-col items-center justify-center p-4 gap-6">
+      <Image src="/sahay-small.svg" alt="Sahay" width={48} height={48} className="opacity-80" />
       <section className="max-w-md w-full bg-surface rounded-lg border border-border overflow-hidden" aria-labelledby="public-status-heading">
         
         {/* Header */}
-        <div className="bg-primary/5 p-6 border-b text-center space-y-2">
+        <div className="bg-muted/30 p-6 border-b text-center space-y-2">
           <Activity className="size-8 text-primary mx-auto" />
           <h1 id="public-status-heading" className="text-xl font-semibold tracking-tight">Referral Status</h1>
           <div className="font-mono text-sm text-muted-foreground bg-surface px-2 py-1 rounded-sm inline-block border border-border">
@@ -100,7 +102,7 @@ export default async function PublicStatusPage({ params }: { params: Promise<{ c
           )}
 
           <div className="space-y-1">
-            <p className="text-sm font-medium text-muted-foreground">Action Required</p>
+            <p className="text-sm font-medium text-muted-foreground">What to do next</p>
             <div className="p-3 bg-surface-inset text-foreground rounded-md text-sm font-medium border border-border" role="status">
               {nextStep}
             </div>

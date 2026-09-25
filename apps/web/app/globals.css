@@ -47,7 +47,7 @@
   --color-info-foreground: #ffffff;
   
   /* Clinical Urgency */
-  --color-urgency-green: var(--urgency-green);
+  --color-urgency-low: var(--urgency-low);
   --color-urgency-yellow: var(--urgency-yellow);
   --color-urgency-orange: var(--urgency-orange);
   --color-urgency-red: var(--urgency-red);
@@ -116,7 +116,7 @@
   --sync-conflict: #9a3412;
   
   /* Clinical Urgency (Distinct from brand) */
-  --urgency-green: #3b82f6; /* Blue 500 (Low Urgency) */
+  --urgency-low: #3b82f6; /* Blue 500 (Low Urgency — intentionally not green) */
   --urgency-yellow: #ca8a04;
   --urgency-orange: #ea580c;
   --urgency-red: #dc2626;

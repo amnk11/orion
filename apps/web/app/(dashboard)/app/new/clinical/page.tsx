@@ -11,6 +11,7 @@ import { Switch } from "~/components/ui/switch";
 import { AlertCircle, Loader2 } from "lucide-react";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 import { ClinicalDictionary } from "~/lib/clinical-dictionary";
+import { WizardActionBar } from "~/components/orion/wizard-action-bar";
 
 export default function ProtocolFormPage() {
   const router = useRouter();
@@ -133,7 +134,7 @@ export default function ProtocolFormPage() {
         {/* Live Triage Urgency */}
         {triageResult?.urgency && (
           <div className="flex flex-col items-end gap-1">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Calculated Urgency</span>
+            <span className="text-xs font-medium text-muted-foreground">Calculated Urgency</span>
             <UrgencyBadge level={triageResult.urgency} />
           </div>
         )}
@@ -143,7 +144,7 @@ export default function ProtocolFormPage() {
         
         {critical.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4 border-b border-border pb-2">Danger Signs & Critical Findings</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-4 border-b border-border pb-2">Danger Signs & Critical Findings</h2>
             <div className="space-y-1">
               {critical.map(renderField)}
             </div>
@@ -152,7 +153,7 @@ export default function ProtocolFormPage() {
 
         {vitals.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4 border-b border-border pb-2">Vital Signs</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-4 border-b border-border pb-2">Vital Signs</h2>
             <div className="space-y-1">
               {vitals.map(renderField)}
             </div>
@@ -161,7 +162,7 @@ export default function ProtocolFormPage() {
 
         {symptoms.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4 border-b border-border pb-2">Symptoms</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-4 border-b border-border pb-2">Symptoms</h2>
             <div className="space-y-1">
               {symptoms.map(renderField)}
             </div>
@@ -170,7 +171,7 @@ export default function ProtocolFormPage() {
 
         {additional.length > 0 && (
           <div className="mb-10">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-muted-foreground mb-4 border-b border-border pb-2">Additional Information</h2>
+            <h2 className="text-sm font-semibold text-foreground mb-4 border-b border-border pb-2">Additional Information</h2>
             <div className="space-y-1">
               {additional.map(renderField)}
             </div>
@@ -179,8 +180,8 @@ export default function ProtocolFormPage() {
       </div>
       
       {/* Fixed Action Bar on Mobile */}
-      <div className="fixed bottom-0 left-0 right-0 bg-background/80 backdrop-blur-md border-t border-border p-4 md:static md:bg-transparent md:border-0 md:p-0 md:pt-8 mt-auto z-50">
-        <div className="max-w-3xl mx-auto flex flex-col gap-4">
+      <WizardActionBar>
+        <div className="flex flex-col gap-4 w-full">
           {!triageResult?.can_submit && (triageResult?.completeness?.missing?.length ?? 0) > 0 && (
             <div className="flex items-start gap-2 text-sm text-danger bg-danger/5 p-3 rounded-md border border-danger/10">
               <AlertCircle className="size-4 shrink-0 mt-0.5" aria-hidden="true" />
@@ -195,7 +196,7 @@ export default function ProtocolFormPage() {
             </div>
           )}
           
-          <div className="flex items-center justify-between w-full pb-safe">
+          <div className="flex items-center justify-between w-full">
             <Button variant="ghost" onClick={() => router.push("/app/new/protocol")} disabled={isNavigating}>
               Back
             </Button>
@@ -213,7 +214,7 @@ export default function ProtocolFormPage() {
             </Button>
           </div>
         </div>
-      </div>
+      </WizardActionBar>
     </div>
   );
 }

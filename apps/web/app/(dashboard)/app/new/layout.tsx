@@ -4,7 +4,7 @@ import { usePathname } from "next/navigation";
 import Link from "next/link";
 import { ReferralDraftProvider, useReferralDraft } from "./components/referral-draft-context";
 import { cn } from "~/lib/utils";
-import { Info } from "lucide-react";
+import { Info, CheckCircle2 } from "lucide-react";
 import { UrgencyBadge } from "~/components/ui/urgency-badge";
 
 const STEPS = [
@@ -24,7 +24,7 @@ function WizardContextHeader() {
     <div className="bg-surface-inset border-b border-border sticky top-0 z-40">
       <div className="max-w-3xl mx-auto w-full px-4 py-3 flex items-center justify-between gap-4">
         <div className="flex flex-col">
-          <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Patient</span>
+          <span className="text-xs font-medium text-muted-foreground">Patient</span>
           <div className="flex items-center gap-2 mt-0.5">
             <span className="font-semibold text-foreground truncate max-w-[140px] sm:max-w-none">{draft.patientName || "Unknown"}</span>
             <span 
@@ -39,7 +39,7 @@ function WizardContextHeader() {
         
         {draft.protocolCode && (
           <div className="hidden sm:flex flex-col items-end sm:items-start border-l border-border pl-4">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Protocol</span>
+            <span className="text-xs font-medium text-muted-foreground">Protocol</span>
             <span className="text-sm font-medium text-foreground mt-0.5 capitalize">
               {draft.protocolCode.replace("_", " ")}
             </span>
@@ -48,7 +48,7 @@ function WizardContextHeader() {
         
         {draft.urgency && (
           <div className="flex flex-col items-end sm:border-l border-border sm:pl-4">
-            <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Urgency</span>
+            <span className="text-xs font-medium text-muted-foreground">Urgency</span>
             <div className="mt-0.5">
               <UrgencyBadge level={draft.urgency} />
             </div>
@@ -78,9 +78,9 @@ function WizardStepperVertical() {
                 {isCompleted ? (
                   <Link 
                     href={step.path}
-                    className="flex shrink-0 items-center justify-center size-[24px] rounded-full text-[11px] font-bold transition-all bg-primary/10 text-primary hover:bg-primary/20 ring-4 ring-background z-10"
+                    className="flex shrink-0 items-center justify-center size-[24px] rounded-full transition-all bg-primary/10 text-primary hover:bg-primary/20 ring-4 ring-background z-10"
                   >
-                    ✓
+                    <CheckCircle2 className="size-4" />
                   </Link>
                 ) : (
                   <div 
@@ -97,7 +97,7 @@ function WizardStepperVertical() {
                 )}
                 <div className="flex flex-col pt-0.5">
                   <span className={cn(
-                    "text-sm font-semibold tracking-wider uppercase",
+                    "text-sm font-medium",
                     isActive ? "text-primary" : isCompleted ? "text-foreground/90" : "text-muted-foreground/70"
                   )}>
                     {step.label}

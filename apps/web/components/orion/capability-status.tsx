@@ -105,16 +105,16 @@ export function CapabilityStatusRow({ capability, className }: CapabilityStatusR
           {capability.status === "UNKNOWN" && (
             <HelpCircle className="size-3 text-muted-foreground" aria-hidden="true" />
           )}
-          <Badge variant={STATUS_BADGE_VARIANT[capability.status]} className="text-[10px] px-1.5 py-0">
+          <Badge variant={STATUS_BADGE_VARIANT[capability.status]} className="text-xs px-1.5 py-0">
             {STATUS_LABEL[capability.status]}
           </Badge>
         </span>
       </div>
       <div
         className={cn(
-          "flex items-center flex-wrap gap-1.5 text-[11px]",
+          "flex items-center flex-wrap gap-1.5 text-xs",
           isVeryStale
-            ? "text-destructive font-semibold"
+            ? "text-danger font-semibold"
             : isStale
               ? "text-warning font-medium"
               : "text-muted-foreground"
@@ -124,12 +124,12 @@ export function CapabilityStatusRow({ capability, className }: CapabilityStatusR
         <span>{verifiedLabel(capability)}</span>
         
         {isVeryStale && (
-          <Badge variant="destructive" className="text-[9px] uppercase px-1 py-0 ml-auto h-4 rounded-sm tracking-wide">
+          <Badge variant="destructive" className="text-xs px-1.5 py-0 ml-auto h-4 rounded-sm">
             Critically Stale
           </Badge>
         )}
         {isStale && !isVeryStale && (
-          <Badge variant="outline" className="text-[9px] uppercase px-1 py-0 ml-auto h-4 rounded-sm tracking-wide text-warning border-warning/50 bg-warning/10">
+          <Badge variant="outline" className="text-xs px-1.5 py-0 ml-auto h-4 rounded-sm text-warning border-warning/50 bg-warning/10">
             Stale Data
           </Badge>
         )}

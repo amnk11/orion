@@ -162,7 +162,7 @@ export default function LoginPage() {
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="email" className="text-sm font-medium text-foreground">
                   Staff Email
                 </Label>
                 <Input
@@ -179,7 +179,7 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-xs font-medium uppercase tracking-wider text-muted-foreground">
+                <Label htmlFor="password" className="text-sm font-medium text-foreground">
                   Password
                 </Label>
                 <Input

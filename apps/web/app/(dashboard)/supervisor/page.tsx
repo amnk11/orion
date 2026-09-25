@@ -8,6 +8,9 @@ import { useSessionUser } from "~/hooks/use-session-user";
 import { Button } from "~/components/ui/button";
 import { Spinner } from "~/components/ui/spinner";
 import { cn } from "~/lib/utils";
+import { MetricCard } from "~/components/orion/metric-card";
+import { PageShell } from "~/components/orion/page-shell";
+import { PageHeader } from "~/components/orion/page-header";
 
 interface DashboardSummary {
   stateCounts: Record<string, number>;
@@ -17,19 +20,6 @@ interface DashboardSummary {
   outcomeRate: number;
   followUps: { total: number; completed: number; overdue: number; pending: number };
   capabilityFreshness: { FRESH: number; STALE: number; VERY_STALE: number; UNKNOWN: number };
-}
-
-interface MetricCardProps {
-  label: string;
-  count: number;
-  description: string;
-  icon: React.ReactNode;
-  tone?: "default" | "warning" | "danger";
-}
-
-function MetricCard({ label, count, description, icon, tone = "default" }: MetricCardProps) {
-  const toneClass = tone === "danger" ? "border-danger/30 bg-danger/5" : tone === "warning" ? "border-warning/30 bg-warning/5" : "border-border bg-card";
-  return <section className={`rounded-lg border p-4 ${toneClass}`} aria-label={`${label}: ${count}`}><div className="flex items-start justify-between gap-3"><p className="text-sm font-medium text-muted-foreground">{label}</p><span className="text-muted-foreground" aria-hidden="true">{icon}</span></div><p className="mt-3 text-3xl font-semibold tabular-nums text-foreground">{count}</p><p className="mt-1 text-sm leading-snug text-muted-foreground">{description}</p></section>;
 }
 
 export default function SupervisorDashboardPage() {
@@ -71,7 +61,7 @@ export default function SupervisorDashboardPage() {
   if (summaryQuery.error) {
     return (
       <main className="mx-auto flex w-full max-w-[1400px] flex-1 items-center p-4 md:p-8">
-        <section className="max-w-xl rounded-xl border border-danger/20 bg-danger/5 p-6" role="alert">
+        <section className="max-w-xl rounded-lg border border-danger/20 bg-danger/5 p-6" role="alert">
           <h1 className="text-lg font-semibold text-foreground tracking-tight">Dashboard unavailable</h1>
           <p className="mt-1.5 text-sm text-muted-foreground leading-relaxed">
             The operational summary could not be loaded. Check the connection and try again.
@@ -98,20 +88,16 @@ export default function SupervisorDashboardPage() {
   const redirectRows = Object.entries(summary.redirectReasons).map(([reason, count]) => ({ reason, count }));
 
   return (
-    <main className="mx-auto w-full max-w-[1400px] space-y-8 md:space-y-12 p-4 md:p-8 pb-20">
+    <PageShell maxWidth="wide" className="pb-20">
       
       {/* 1. PAGE HEADER */}
-      <header className="flex flex-col gap-1.5 max-w-3xl">
-        <p className="text-[11px] font-bold uppercase tracking-widest text-primary mb-1">
-          Supervisor view
-        </p>
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight text-foreground">
-          Operational intervention
-        </h1>
-        <p className="text-sm md:text-base text-muted-foreground leading-relaxed">
-          Start with work that needs follow-up, a destination decision, or refreshed information.
-        </p>
-      </header>
+      <div className="flex flex-col gap-1.5 max-w-3xl">
+        <p className="text-xs font-medium text-primary mb-1">Supervisor view</p>
+        <PageHeader 
+          title="Operational intervention" 
+          description="Start with work that needs follow-up, a destination decision, or refreshed information." 
+        />
+      </div>
 
       {/* 2. NEEDS ATTENTION */}
       <section aria-labelledby="attention-heading" className="flex flex-col gap-4">
@@ -128,7 +114,7 @@ export default function SupervisorDashboardPage() {
             <div 
               key={item.label} 
               className={cn(
-                "flex flex-col gap-3 rounded-xl border p-4 transition-colors",
+                "flex flex-col gap-3 rounded-lg border p-4 transition-colors",
                 item.tone === "danger" ? "border-danger/20 bg-danger/[0.02]" :
                 item.tone === "warning" ? "border-warning/20 bg-warning/[0.02]" :
                 "border-border bg-card"
@@ -167,7 +153,7 @@ export default function SupervisorDashboardPage() {
         <div className="grid gap-4 sm:gap-6 lg:grid-cols-2">
           
           {/* Waiting Time */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
             <div className="bg-muted/10 border-b border-border/50 px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Waiting time for pending referrals</h3>
             </div>
@@ -185,7 +171,7 @@ export default function SupervisorDashboardPage() {
           </div>
 
           {/* Follow-up Operations */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
             <div className="bg-muted/10 border-b border-border/50 px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Follow-up operations</h3>
             </div>
@@ -205,7 +191,7 @@ export default function SupervisorDashboardPage() {
           </div>
 
           {/* Capability Freshness */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
             <div className="bg-muted/10 border-b border-border/50 px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Capability freshness</h3>
             </div>
@@ -225,7 +211,7 @@ export default function SupervisorDashboardPage() {
           </div>
 
           {/* Redirect Reasons */}
-          <div className="flex flex-col overflow-hidden rounded-xl border border-border bg-card">
+          <div className="flex flex-col overflow-hidden rounded-lg border border-border bg-card">
             <div className="bg-muted/10 border-b border-border/50 px-4 py-3">
               <h3 className="text-sm font-medium text-foreground">Redirect reasons</h3>
             </div>
@@ -252,6 +238,6 @@ export default function SupervisorDashboardPage() {
         <CheckCircle2 className="size-3.5 text-success/80" aria-hidden="true" />
         No clinical details are shown in this supervisory summary.
       </footer>
-    </main>
+    </PageShell>
   );
 }

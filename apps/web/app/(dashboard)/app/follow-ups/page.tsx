@@ -8,15 +8,18 @@ import { Skeleton } from "~/components/ui/skeleton";
 import Link from "next/link";
 import { toast } from "sonner";
 import { useState } from "react";
+import { PageShell } from "~/components/orion/page-shell";
+import { SegmentedControl } from "~/components/ui/segmented-control";
 
 export default function FollowUpsPage() {
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<"pending" | "completed" | "">("pending");
+  const [filter, setFilter] = useState<string>("pending");
 
   const { data, isLoading } = useQuery({
     queryKey: ["follow-ups", filter],
     queryFn: async () => {
-      const res = await fetch(`/api/v1/follow-ups?status=${filter}`);
+      const statusParam = filter === "all" ? "" : filter;
+      const res = await fetch(`/api/v1/follow-ups?status=${statusParam}`);
       if (!res.ok) throw new Error("Failed to fetch follow-ups");
       return res.json();
     },
@@ -42,12 +45,12 @@ export default function FollowUpsPage() {
   const followUps = data?.data || [];
 
   return (
-    <div className="p-4 md:p-8 max-w-6xl mx-auto space-y-6">
+    <PageShell maxWidth="standard">
       
       {/* Premium Header Area */}
       <div className="flex flex-col gap-6 mb-2">
         <div>
-          <h2 className="text-3xl font-bold tracking-tight text-foreground">
+          <h2 className="text-3xl font-semibold tracking-tight text-foreground">
             Follow-Ups
           </h2>
           <p className="text-muted-foreground mt-1.5 text-base">
@@ -56,26 +59,15 @@ export default function FollowUpsPage() {
         </div>
 
         {/* Segmented Filter Control */}
-        <div className="inline-flex h-10 items-center justify-center rounded-lg bg-muted p-1 text-muted-foreground self-start w-full sm:w-auto">
-          <button 
-            className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${filter === "pending" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
-            onClick={() => setFilter("pending")}
-          >
-            Pending
-          </button>
-          <button 
-            className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${filter === "completed" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
-            onClick={() => setFilter("completed")}
-          >
-            Completed
-          </button>
-          <button 
-            className={`inline-flex items-center justify-center whitespace-nowrap rounded-md px-4 py-1.5 text-sm font-medium transition-all w-full sm:w-auto focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 ${filter === "" ? "bg-background text-foreground shadow-sm" : "hover:text-foreground hover:bg-background/50"}`}
-            onClick={() => setFilter("")}
-          >
-            All
-          </button>
-        </div>
+        <SegmentedControl
+          value={filter}
+          onValueChange={setFilter}
+          options={[
+            { value: "pending", label: "Pending" },
+            { value: "completed", label: "Completed" },
+            { value: "all", label: "All" },
+          ]}
+        />
       </div>
 
       {isLoading ? (
@@ -169,6 +161,7 @@ export default function FollowUpsPage() {
                       className="w-full md:w-auto md:min-w-[140px] font-medium"
                       onClick={() => completeMutation.mutate(fup.id)}
                       disabled={completeMutation.isPending}
+                      aria-label={`Mark follow-up for ${fup.patientName} complete`}
                     >
                       {completeMutation.isPending ? "Marking..." : "Mark Complete"}
                     </Button>
@@ -188,6 +181,6 @@ export default function FollowUpsPage() {
           })}
         </div>
       )}
-    </div>
+    </PageShell>
   );
 }
