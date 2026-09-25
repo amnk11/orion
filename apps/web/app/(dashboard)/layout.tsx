@@ -6,7 +6,7 @@ import Image from "next/image";
 import { signOut } from "~/lib/auth/auth-client";
 import { useSessionUser } from "~/hooks/use-session-user";
 import Link from "next/link";
-import { FilePlus2, Inbox, LogOut, Loader2, Menu, LayoutDashboard, ClipboardCheck, ListChecks } from "lucide-react";
+import { FilePlus2, Inbox, LogOut, Loader2, Menu, LayoutDashboard, ClipboardCheck, ListChecks, User } from "lucide-react";
 import { cn } from "~/lib/utils";
 import { Sheet, SheetContent, SheetTrigger, SheetTitle } from "~/components/ui/sheet";
 import { OfflineBanner } from "~/components/offline/offline-banner";
@@ -21,6 +21,29 @@ export default function DashboardLayout({
   const { user, isPending, isOrigin, isDestination, isSupervisor, isAdmin } = useSessionUser();
 
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [isKeyboardVisible, setIsKeyboardVisible] = useState(false);
+
+  useEffect(() => {
+    const handleFocus = (e: Event) => {
+      const target = e.target as HTMLElement;
+      if (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.tagName === 'SELECT') {
+        const type = (target as HTMLInputElement).type;
+        if (type !== 'checkbox' && type !== 'radio' && type !== 'submit' && type !== 'button') {
+          setIsKeyboardVisible(true);
+        }
+      }
+    };
+    const handleBlur = () => {
+      setIsKeyboardVisible(false);
+    };
+
+    window.addEventListener('focusin', handleFocus);
+    window.addEventListener('focusout', handleBlur);
+    return () => {
+      window.removeEventListener('focusin', handleFocus);
+      window.removeEventListener('focusout', handleBlur);
+    };
+  }, []);
 
   useEffect(() => {
     if (!isPending) {
@@ -152,22 +175,105 @@ export default function DashboardLayout({
     </>
   );
 
+  const BottomNavItem = ({ href, icon: Icon, label, exact = false }: { href: string; icon: any; label: string; exact?: boolean }) => {
+    const isActive = exact ? pathname === href : (pathname === href || pathname.startsWith(`${href}/`));
+    
+    return (
+      <Link
+        href={href}
+        className={cn(
+          "flex flex-col items-center justify-center w-16 gap-1 flex-1 py-1 transition-colors",
+          isActive 
+            ? "text-primary" 
+            : "text-muted-foreground hover:text-foreground"
+        )}
+      >
+        <div className={cn("flex items-center justify-center size-8 rounded-full transition-colors", isActive && "bg-primary/10")}>
+          <Icon className="size-5" />
+        </div>
+        <span className="text-[10px] font-medium tracking-wide">{label}</span>
+      </Link>
+    );
+  };
+
+  const MobileBottomNav = () => {
+    if (isKeyboardVisible) return null;
+
+    return (
+      <div className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-background border-t border-border pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around h-16 px-1">
+          {isOrigin && (
+            <>
+              <BottomNavItem href="/app" icon={Inbox} label="Referrals" exact />
+              <BottomNavItem href="/app/new/patient" icon={FilePlus2} label="New" />
+              <BottomNavItem href="/app/follow-ups" icon={ListChecks} label="Follow-ups" />
+            </>
+          )}
+          
+          {isDestination && (
+            <>
+              <BottomNavItem href="/destination" icon={Inbox} label="Referrals" exact />
+              <BottomNavItem href="/destination/capabilities" icon={ClipboardCheck} label="Capabilities" />
+            </>
+          )}
+
+          {isSupervisor && (
+            <>
+              <BottomNavItem href="/supervisor" icon={LayoutDashboard} label="Analytics" />
+            </>
+          )}
+
+          <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
+            <SheetTrigger asChild>
+              <button className={cn(
+                "flex flex-col items-center justify-center w-16 gap-1 flex-1 py-1 transition-colors outline-none",
+                isMobileMenuOpen ? "text-primary" : "text-muted-foreground hover:text-foreground"
+              )}>
+                <div className={cn("flex items-center justify-center size-8 rounded-full transition-colors", isMobileMenuOpen && "bg-primary/10")}>
+                  <Menu className="size-5" />
+                </div>
+                <span className="text-[10px] font-medium tracking-wide">More</span>
+              </button>
+            </SheetTrigger>
+            <SheetContent side="bottom" className="p-0 rounded-t-2xl max-h-[85vh] flex flex-col gap-0 border-t border-border bg-background">
+              <SheetTitle className="sr-only">More Options</SheetTitle>
+              <div className="p-4 border-b border-border bg-muted/30 flex flex-col items-center justify-center text-center">
+                <div className="size-14 rounded-full bg-primary/10 flex items-center justify-center mb-3">
+                  <User className="size-7 text-primary" />
+                </div>
+                <div className="text-base font-semibold text-foreground truncate w-full px-4">
+                  {user.name}
+                </div>
+                <div className="text-sm text-muted-foreground truncate w-full px-4">
+                  {user.email}
+                </div>
+                <div className="mt-3 text-[11px] font-semibold tracking-wider uppercase px-2.5 py-1 bg-secondary text-secondary-foreground rounded-full">
+                  {isAdmin ? "Admin" : isOrigin ? "Origin Desk" : isDestination ? "Destination Desk" : "Supervisor"}
+                </div>
+              </div>
+              <div className="p-2 pb-[calc(1rem+env(safe-area-inset-bottom))]">
+                <button
+                  onClick={handleLogout}
+                  className="flex w-full items-center gap-3 px-4 py-4 text-sm font-medium rounded-xl text-destructive hover:bg-destructive/10 transition-colors"
+                >
+                  <LogOut className="size-5" />
+                  Sign out
+                </button>
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="flex h-dvh bg-background overflow-hidden">
       {/* Mobile header */}
-      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-50 flex items-center justify-between px-4">
-        <Image src="/sahay-small.svg" alt="Sahay Logo" height={32} width={100} className="h-8 w-auto object-contain" />
-        <Sheet open={isMobileMenuOpen} onOpenChange={setIsMobileMenuOpen}>
-          <SheetTrigger asChild>
-            <button className="size-11 inline-flex items-center justify-center -mr-2 text-sidebar-foreground" aria-label="Toggle navigation menu">
-              <Menu className="size-5" />
-            </button>
-          </SheetTrigger>
-          <SheetContent side="left" className="w-64 p-0 bg-sidebar border-r-sidebar-border flex flex-col">
-            <SheetTitle className="sr-only">Navigation Menu</SheetTitle>
-            <SidebarContent />
-          </SheetContent>
-        </Sheet>
+      <div className="md:hidden fixed top-0 left-0 right-0 h-14 bg-sidebar border-b border-sidebar-border z-40 flex items-center justify-between px-4">
+        <Link href="/app" className="hover:opacity-90 transition-opacity">
+          <Image src="/sahay-small.svg" alt="Sahay Logo" height={32} width={100} className="h-8 w-auto object-contain" />
+        </Link>
       </div>
 
       {/* Desktop Sidebar */}
@@ -175,12 +281,17 @@ export default function DashboardLayout({
         <SidebarContent />
       </aside>
       
-      <main className="flex-1 flex flex-col overflow-hidden pt-14 md:pt-0 bg-background relative z-0">
+      <main className={cn(
+        "flex-1 flex flex-col overflow-hidden pt-14 md:pt-0 bg-background relative z-0 transition-all duration-200 ease-in-out",
+        !isKeyboardVisible ? "pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0" : "pb-0"
+      )}>
         <OfflineBanner />
         <div className="flex-1 overflow-y-auto w-full max-w-[100vw]">
           {children}
         </div>
       </main>
+      
+      <MobileBottomNav />
     </div>
   );
 }
