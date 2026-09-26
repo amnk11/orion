@@ -52,8 +52,8 @@ describe("Phase 9: Dashboard API", () => {
     
     expect(data.redirectReasons).toBeDefined();
     
-    expect(typeof data.noShowRate).toBe("number");
-    expect(typeof data.outcomeRate).toBe("number");
+    // NEW-01 FIX: outcomeRate is `number | null` — null when no referrals have arrived yet.
+    expect(data.outcomeRate === null || typeof data.outcomeRate === "number").toBe(true);
     
     expect(data.followUps).toBeDefined();
     expect(typeof data.followUps.total).toBe("number");

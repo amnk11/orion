@@ -57,9 +57,13 @@ export default function SupervisorDashboardPage() {
     enabled: !!(isSupervisor || isAdmin),
   });
 
-  // BUG-12 FIX: Use summaryQuery.isPending instead of deprecated summaryQuery.isLoading.
-  // isLoading returns false during background refetches (causing a stale-then-loading flash).
-  if (isPending || summaryQuery.isPending) {
+  // NEW-02 FIX: When `enabled` is false, TanStack Query keeps `isPending: true` indefinitely.
+  // We must also check `fetchStatus === "idle"` to detect the disabled-query case and avoid
+  // showing an infinite spinner for non-supervisor/non-admin users who are mid-redirect.
+  const queryLoading =
+    summaryQuery.isPending && summaryQuery.fetchStatus !== "idle";
+
+  if (isPending || queryLoading) {
     return (
       // BUG-11 FIX: Loading state rendered inside the scroll container, not a bare <main>.
       <div className="flex flex-1 items-center justify-center p-4">
@@ -135,9 +139,13 @@ export default function SupervisorDashboardPage() {
   const ageingRows = Object.entries(summary.ageing)
     .map(([bucket, count]) => ({ bucket, count }))
     .filter(({ count }) => count > 0);
-  const redirectRows = Object.entries(summary.redirectReasons).map(
-    ([reason, count]) => ({ reason, count })
-  );
+
+  // NEW-05 FIX: Add filter guard for consistency. redirectReasons starts as {} so
+  // this is safe today, but defensively filters zero-count entries if keys are ever
+  // pre-populated (e.g. by a future schema initializer).
+  const redirectRows = Object.entries(summary.redirectReasons)
+    .map(([reason, count]) => ({ reason, count }))
+    .filter(({ count }) => count > 0);
 
   // BUG-14 FIX: Detect when no capabilities have been reported for this facility.
   const totalCaps = summary.capabilityFreshness.total ?? 0;
@@ -218,6 +226,9 @@ export default function SupervisorDashboardPage() {
                 { label: "Completed", value: summary.followUps.completed },
                 // BUG-08 FIX: Show "—" when outcomeRate is null (no arrived referrals yet).
                 { label: "Outcome rate", value: summary.outcomeRate !== null ? `${summary.outcomeRate}%` : "—" },
+                // NEW-04 FIX: noShowRate was returned by the API but never shown in the UI.
+                { label: "No-show rate", value: `${summary.noShowRate}%` },
+                { label: "Total follow-ups", value: summary.followUps.total },
               ].map(({ label, value }) => (
                 <div key={label} className="flex flex-col gap-1 p-4">
                   <span className="text-xs text-muted-foreground">{label}</span>

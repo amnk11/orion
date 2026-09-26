@@ -117,20 +117,22 @@ export class DashboardService {
     // 3. Follow-up completion
     // BUG-13 FIX: Scope follow-ups to only those attached to handoffs visible to this
     //             supervisor (via handoffId), not every follow-up for the facility.
+    // NEW-03 FIX: followUps.handoffId is nullable. Some follow-ups may be created
+    //             without a linked handoff (handoffId = null). These were silently
+    //             excluded by the inArray filter. We run a second facilityId-scoped
+    //             query and de-duplicate by id so nothing is missed.
     let fTotal = 0;
     let fCompleted = 0;
     let fOverdue = 0;
     let fPending = 0;
 
     const visibleHandoffIds = allHandoffs.map((h) => h.id);
+    const seenFollowUpIds = new Set<string>();
 
-    if (visibleHandoffIds.length > 0) {
-      const scopedFollowUps = await db
-        .select()
-        .from(followUps)
-        .where(inArray(followUps.handoffId, visibleHandoffIds));
-
-      for (const f of scopedFollowUps) {
+    async function tallyFollowUps(rows: { id: string; status: string; dueAt: Date | null }[]) {
+      for (const f of rows) {
+        if (seenFollowUpIds.has(f.id)) continue;
+        seenFollowUpIds.add(f.id);
         fTotal++;
         if (f.status === "completed") {
           fCompleted++;
@@ -142,6 +144,26 @@ export class DashboardService {
         }
       }
     }
+
+    if (visibleHandoffIds.length > 0) {
+      const handoffLinked = await db
+        .select()
+        .from(followUps)
+        .where(inArray(followUps.handoffId, visibleHandoffIds));
+      await tallyFollowUps(handoffLinked);
+    }
+
+    // Also pick up orphaned follow-ups (handoffId IS NULL) assigned to this facility.
+    const facilityOrphaned = await db
+      .select()
+      .from(followUps)
+      .where(
+        and(
+          eq(followUps.facilityId, facilityId),
+          sql`${followUps.handoffId} IS NULL`
+        )
+      );
+    await tallyFollowUps(facilityOrphaned);
 
     // 4. Capability Freshness
     const caps = await facilitiesService.getCapabilitiesByFacility(facilityId);
