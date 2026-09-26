@@ -10,7 +10,7 @@ dashboardRouter.use(requireAuth);
  * GET /api/v1/dashboard/summary
  * Returns supervisor operations metrics
  */
-dashboardRouter.get("/summary", requireRole("supervisor"), async (req, res, next) => {
+dashboardRouter.get("/summary", requireRole("supervisor", "admin"), async (req, res, next) => {
   try {
     const facilityId = req.facilityId;
     if (!facilityId) {

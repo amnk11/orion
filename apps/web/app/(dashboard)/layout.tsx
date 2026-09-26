@@ -100,8 +100,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     );
   }
 
+  // BUG-16 FIX: All errors from signOut() are now caught — the user is always redirected
+  // to /login even if the network call fails.
   const handleLogout = async () => {
-    await signOut();
+    try {
+      await signOut();
+    } catch (e) {
+      console.error("[orion] signOut failed — forcing local logout", e);
+    }
     if (typeof window !== "undefined") localStorage.removeItem("orion-session-user");
     try {
       const { db } = await import("~/lib/offline/db");
@@ -112,6 +118,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     window.location.href = "/login";
   };
 
+  // BUG-17 FIX: icon typed as a proper React component type instead of `any`.
   const NavItem = ({
     href,
     icon: Icon,
@@ -119,7 +126,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     exact = false,
   }: {
     href: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     children: React.ReactNode;
     exact?: boolean;
   }) => {
@@ -229,7 +236,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     exact = false,
   }: {
     href: string;
-    icon: any;
+    icon: React.ComponentType<{ className?: string }>;
     label: string;
     exact?: boolean;
   }) => {

@@ -12,15 +12,18 @@ describe("Phase 9: Dashboard API", () => {
     const supRes = await request(app)
       .post("/api/auth/sign-in/email")
       .send({ email: "supervisor.pune@sahay.demo", password: "SahayDemoPass123!" });
-    
-    // Extract token from Set-Cookie header
+
+    // BUG-18 FIX: Assert login success before accessing the cookie — gives a clear
+    // failure message when seed data or env configuration is wrong.
+    expect(supRes.status).toBe(200);
     sessionToken = supRes.headers["set-cookie"]![0];
 
     // 2. Sign in as origin
     const originRes = await request(app)
       .post("/api/auth/sign-in/email")
       .send({ email: "cho.wadgaon@sahay.demo", password: "SahayDemoPass123!" });
-      
+
+    expect(originRes.status).toBe(200);
     originToken = originRes.headers["set-cookie"]![0];
   });
 

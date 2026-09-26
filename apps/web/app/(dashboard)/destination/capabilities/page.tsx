@@ -187,7 +187,7 @@ function CapabilityEditor({ facilityId, serviceCode, existing }: CapabilityEdito
 export default function DestinationCapabilitiesPage() {
   const router = useRouter();
   const { user, isPending, isDestination, isAdmin } = useSessionUser();
-  const facilityId: string | undefined = user?.facilityId;
+  const facilityId: string | undefined = user?.facilityId ?? undefined;
 
   React.useEffect(() => {
     if (!isPending) {
